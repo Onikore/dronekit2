@@ -68,7 +68,12 @@ class mavudpin_multi(mavutil.mavfile):
                 data, new_addr = self.port.recvfrom(65535)
             except socket.error as e:
                 if e.errno in [errno.EAGAIN, errno.EWOULDBLOCK, errno.ECONNREFUSED]:
-                    return ""
+                    return b""
+                # Any other socket error is unexpected - re-raise it so it is
+                # handled (and logged with its real type) by the except
+                # Exception clause below, instead of falling through to
+                # reference the undefined `new_addr`.
+                raise
             if self.udp_server:
                 self.addresses.add(new_addr)
             elif self.broadcast:
@@ -85,7 +90,9 @@ class mavudpin_multi(mavutil.mavfile):
                         self.port.sendto(buf, addr)
                 else:
                     if len(self.addresses) and self.broadcast:
-                        self.destination_addr = self.addresses[0]
+                        # self.addresses is a set - pick an arbitrary (the
+                        # only, in practice) element rather than indexing it.
+                        self.destination_addr = next(iter(self.addresses))
                         self.broadcast = False
                         self.port.connect(self.destination_addr)
                     self.port.sendto(buf, self.destination_addr)
