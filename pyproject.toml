@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dronekit2"
-version = "3.0.0.dev0"
+version = "3.0.0"
 description = "Developer tools for drones — maintained fork of DroneKit-Python."
 readme = "README.md"
 license = { text = "Apache-2.0" }

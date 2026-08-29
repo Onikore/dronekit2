@@ -65,7 +65,7 @@ from dronekit.mission import Command, CommandInt, CommandSequence
 from dronekit.vehicle import default_still_waiting_callback
 from dronekit.connect import connect
 
-__version__ = "3.0.0.dev0"
+__version__ = "3.0.0"
 
 __all__ = [
     "APIException",
