@@ -1,54 +1,39 @@
 import time
-from dronekit import connect, LocationGlobal, Command
+from dronekit import LocationGlobal, Command
 from pymavlink import mavutil
-from dronekit.test import with_sitl
-from nose.tools import assert_not_equals, assert_equals
 
 
-@with_sitl
-def test_empty_clear(connpath):
-    vehicle = connect(connpath)
-
+def test_empty_clear(vehicle):
     # Calling clear() on an empty object should not crash.
     vehicle.commands.clear()
     vehicle.commands.upload()
 
-    assert_equals(len(vehicle.commands), 0)
-
-    vehicle.close()
+    assert len(vehicle.commands) == 0
 
 
-@with_sitl
-def test_set_home(connpath):
-    vehicle = connect(connpath, wait_ready=True)
-
+def test_set_home(vehicle):
     # Wait for home position to be real and not 0, 0, 0
     # once we request it via cmds.download()
     time.sleep(10)
     vehicle.commands.download()
     vehicle.commands.wait_ready()
-    assert_not_equals(vehicle.home_location, None)
+    assert vehicle.home_location is not None
 
     # Note: If the GPS values differ heavily from EKF values, this command
-    # will basically fail silently. This GPS coordinate is tailored for that
-    # the with_sitl initializer uses to not fail.
+    # will basically fail silently. This GPS coordinate is tailored for the
+    # SITL home location used elsewhere in this suite, so it doesn't fail.
     vehicle.home_location = LocationGlobal(-35, 149, 600)
     vehicle.commands.download()
     vehicle.commands.wait_ready()
 
-    assert_equals(vehicle.home_location.lat, -35)
-    assert_equals(vehicle.home_location.lon, 149)
-    assert_equals(vehicle.home_location.alt, 600)
-
-    vehicle.close()
+    assert vehicle.home_location.lat == -35
+    assert vehicle.home_location.lon == 149
+    assert vehicle.home_location.alt == 600
 
 
-@with_sitl
-def test_parameter(connpath):
-    vehicle = connect(connpath, wait_ready=True)
-
+def test_parameter(vehicle):
     # Home should be None at first.
-    assert_equals(vehicle.home_location, None)
+    assert vehicle.home_location is None
 
     # Wait for home position to be real and not 0, 0, 0
     # once we request it via cmds.download()
@@ -57,8 +42,8 @@ def test_parameter(connpath):
     # Initial
     vehicle.commands.download()
     vehicle.commands.wait_ready()
-    assert_equals(len(vehicle.commands), 0)
-    assert_not_equals(vehicle.home_location, None)
+    assert len(vehicle.commands) == 0
+    assert vehicle.home_location is not None
 
     # Save home for comparison.
     home = vehicle.home_location
@@ -68,7 +53,7 @@ def test_parameter(connpath):
     vehicle.commands.upload()
     vehicle.commands.download()
     vehicle.commands.wait_ready()
-    assert_equals(len(vehicle.commands), 0)
+    assert len(vehicle.commands) == 0
 
     # Upload
     for command in [
@@ -87,50 +72,45 @@ def test_parameter(connpath):
     # After upload
     vehicle.commands.download()
     vehicle.commands.wait_ready()
-    assert_equals(len(vehicle.commands), 8)
+    assert len(vehicle.commands) == 8
 
     # Test iteration.
     count = 0
     for cmd in vehicle.commands:
-        assert_not_equals(cmd, None)
+        assert cmd is not None
         count += 1
-    assert_equals(count, 8)
+    assert count == 8
 
     # Test slicing
     count = 3
     for cmd in vehicle.commands[2:5]:
-        assert_not_equals(cmd, None)
-        assert_equals(cmd.seq, count)
+        assert cmd is not None
+        assert cmd.seq == count
         count += 1
-    assert_equals(count, 6)
+    assert count == 6
 
     # Test next property
-    assert_equals(vehicle.commands.next, 0)
+    assert vehicle.commands.next == 0
     vehicle.commands.next = 3
     while vehicle.commands.next != 3:
         time.sleep(0.1)
-    assert_equals(vehicle.commands.next, 3)
+    assert vehicle.commands.next == 3
 
     # Home should be preserved
-    assert_equals(home.lat, vehicle.home_location.lat)
-    assert_equals(home.lon, vehicle.home_location.lon)
-    assert_equals(home.alt, vehicle.home_location.alt)
-
-    vehicle.close()
+    assert home.lat == vehicle.home_location.lat
+    assert home.lon == vehicle.home_location.lon
+    assert home.alt == vehicle.home_location.alt
 
 
-@with_sitl
-def test_227(connpath):
+def test_227(vehicle):
     """
     Tests race condition when downloading items
     """
 
-    vehicle = connect(connpath, wait_ready=True)
-
     def assert_commands(count):
         vehicle.commands.download()
         vehicle.commands.wait_ready()
-        assert_equals(len(vehicle.commands), count)
+        assert len(vehicle.commands) == count
 
     assert_commands(0)
 
@@ -140,5 +120,3 @@ def test_227(connpath):
     vehicle.flush()  # Send commands
 
     assert_commands(1)
-
-    vehicle.close()

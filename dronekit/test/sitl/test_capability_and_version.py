@@ -1,15 +1,10 @@
 import time
 
-from dronekit import connect
-from dronekit.test import with_sitl
-from nose.tools import assert_false, assert_true
 
-
-@with_sitl
-def test_115(connpath):
-    v = connect(connpath, wait_ready=True)
+def test_115(vehicle):
+    v = vehicle
     time.sleep(5)
-    assert_false(v.capabilities.ftp)
+    assert not v.capabilities.ftp
 
     # versions of ArduCopter prior to v3.3 will send out capabilities
     # flags before they are initialised.  Vehicle attempts to refetch
@@ -23,14 +18,12 @@ def test_115(connpath):
         slept = True
     if v.capabilities.mission_float:
         if slept:
-            assert_true(v.version.major <= 3)
-            assert_true(v.version_minor <= 3)
+            assert v.version.major <= 3
+            assert v.version_minor <= 3
     else:
         # fail it
-        assert_true(v.capabilities.mission_float)
+        assert v.capabilities.mission_float
 
-    assert_true(v.version.major is not None)
-    assert_true(len(v.version.release_type()) >= 2)
-    assert_true(v.version.release_version() is not None)
-
-    v.close()
+    assert v.version.major is not None
+    assert len(v.version.release_type()) >= 2
+    assert v.version.release_version() is not None

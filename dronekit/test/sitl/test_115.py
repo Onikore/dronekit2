@@ -1,12 +1,10 @@
 import time
-from dronekit import connect, VehicleMode
-from dronekit.test import with_sitl
-from nose.tools import assert_equals
+
+from dronekit import VehicleMode
 
 
-@with_sitl
-def test_115(connpath):
-    v = connect(connpath, wait_ready=True)
+def test_115(vehicle):
+    v = vehicle
 
     # Dummy callback
     def mavlink_callback(*args):
@@ -35,11 +33,9 @@ def test_115(connpath):
     time.sleep(3)
 
     # Expect the callback to have been called
-    assert_equals(savecount, mavlink_callback.count)
+    assert savecount == mavlink_callback.count
 
     # Re-arm should not throw errors.
     v.armed = True
     # NOTE wait crudely for ACK on mode update
     time.sleep(3)
-
-    v.close()

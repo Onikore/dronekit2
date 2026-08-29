@@ -1,25 +1,23 @@
 import time
 import socket
 from dronekit import connect
-from dronekit.test import with_sitl
-from nose.tools import assert_equals
 
 
-@with_sitl
-def test_timeout(connpath):
+def test_timeout(sitl_connection_string):
     # Connect with timeout of 10s.
-    vehicle = connect(connpath, wait_ready=True, heartbeat_timeout=20)
+    vehicle = connect(sitl_connection_string, wait_ready=True, heartbeat_timeout=20)
 
-    # Stall input.
-    vehicle._handler._accept_input = False
+    try:
+        # Stall input.
+        vehicle._handler._accept_input = False
 
-    start = time.time()
-    while vehicle._handler._alive and time.time() - start < 30:
-        time.sleep(.1)
+        start = time.time()
+        while vehicle._handler._alive and time.time() - start < 30:
+            time.sleep(.1)
 
-    assert_equals(vehicle._handler._alive, False)
-
-    vehicle.close()
+        assert vehicle._handler._alive is False
+    finally:
+        vehicle.close()
 
 
 def test_timeout_empty():
@@ -37,5 +35,9 @@ def test_timeout_empty():
 
         # Should not pass
         assert False
-    except:
+    except AssertionError:
+        raise
+    except Exception:
         pass
+    finally:
+        s.close()

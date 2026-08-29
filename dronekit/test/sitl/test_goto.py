@@ -8,15 +8,10 @@ Full documentation is provided at http://python.dronekit.io/examples/simple_goto
 """
 
 import time
-from dronekit import connect, VehicleMode, LocationGlobalRelative
-from dronekit.test import with_sitl
-from nose.tools import assert_equals
+from dronekit import VehicleMode, LocationGlobalRelative
 
 
-@with_sitl
-def test_goto(connpath):
-    vehicle = connect(connpath, wait_ready=True)
-
+def test_goto(vehicle):
     # NOTE these are *very inappropriate settings*
     # to make on a real vehicle. They are leveraged
     # exclusively for simulation. Take heed!!!
@@ -33,7 +28,7 @@ def test_goto(connpath):
         while not vehicle.is_armable and i > 0:
             time.sleep(1)
             i = i - 1
-        assert_equals(vehicle.is_armable, True)
+        assert vehicle.is_armable is True
 
         # Copter should arm in GUIDED mode
         vehicle.mode = VehicleMode("GUIDED")
@@ -42,7 +37,7 @@ def test_goto(connpath):
             # print " Waiting for guided %s seconds..." % (i,)
             time.sleep(1)
             i = i - 1
-        assert_equals(vehicle.mode.name, 'GUIDED')
+        assert vehicle.mode.name == 'GUIDED'
 
         # Arm copter.
         vehicle.armed = True
@@ -51,7 +46,7 @@ def test_goto(connpath):
             # print " Waiting for arming %s seconds..." % (i,)
             time.sleep(1)
             i = i - 1
-        assert_equals(vehicle.armed, True)
+        assert vehicle.armed is True
 
         # Take off to target altitude
         vehicle.simple_takeoff(aTargetAltitude)
@@ -66,7 +61,7 @@ def test_goto(connpath):
                 # print "Reached target altitude"
                 break
 
-            assert_equals(vehicle.mode.name, 'GUIDED')
+            assert vehicle.mode.name == 'GUIDED'
             time.sleep(1)
 
     arm_and_takeoff(10)
@@ -87,5 +82,3 @@ def test_goto(connpath):
 
     # print "Returning to Launch"
     vehicle.mode = VehicleMode("RTL")
-
-    vehicle.close()

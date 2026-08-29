@@ -1,19 +1,17 @@
 from dronekit import connect
-from dronekit.test import with_sitl
-from nose.tools import assert_equals, assert_not_equals
 
 
-@with_sitl
-def test_battery_none(connpath):
-    vehicle = connect(connpath, _initialize=False)
+def test_battery_none(sitl_connection_string):
+    vehicle = connect(sitl_connection_string, _initialize=False)
 
-    # Ensure we can get (possibly unpopulated) battery object without throwing error.
-    assert_equals(vehicle.battery, None)
+    try:
+        # Ensure we can get (possibly unpopulated) battery object without throwing error.
+        assert vehicle.battery is None
 
-    vehicle.initialize()
+        vehicle.initialize()
 
-    # Ensure we can get battery object without throwing error.
-    vehicle.wait_ready('battery')
-    assert_not_equals(vehicle.battery, None)
-
-    vehicle.close()
+        # Ensure we can get battery object without throwing error.
+        vehicle.wait_ready('battery')
+        assert vehicle.battery is not None
+    finally:
+        vehicle.close()

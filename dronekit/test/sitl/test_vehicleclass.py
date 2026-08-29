@@ -1,6 +1,5 @@
 import time
 from dronekit import connect, Vehicle
-from dronekit.test import with_sitl
 
 
 class DummyVehicle(Vehicle):
@@ -15,11 +14,11 @@ class DummyVehicle(Vehicle):
         self.add_message_listener('HEARTBEAT', success_fn)
 
 
-@with_sitl
-def test_timeout(connpath):
-    v = connect(connpath, vehicle_class=DummyVehicle)
+def test_timeout(sitl_connection_string):
+    v = connect(sitl_connection_string, vehicle_class=DummyVehicle)
 
-    while not v.success:
-        time.sleep(0.1)
-
-    v.close()
+    try:
+        while not v.success:
+            time.sleep(0.1)
+    finally:
+        v.close()

@@ -1,13 +1,10 @@
 import time
-from dronekit import connect, VehicleMode
-from dronekit.test import with_sitl, wait_for
-from nose.tools import assert_equals
+
+from dronekit import VehicleMode
+from dronekit.test.conftest import wait_for
 
 
-@with_sitl
-def test_110(connpath):
-    vehicle = connect(connpath, wait_ready=True)
-
+def test_110(vehicle):
     # NOTE these are *very inappropriate settings*
     # to make on a real vehicle. They are leveraged
     # exclusively for simulation. Take heed!!!
@@ -63,7 +60,4 @@ def test_110(connpath):
     time.sleep(3)
 
     # Ensure the callback was called zero times.
-    assert_equals(armed_callback.called, callcount,
-                  "Callback should not have been called once removed.")
-
-    vehicle.close()
+    assert armed_callback.called == callcount, "Callback should not have been called once removed."
