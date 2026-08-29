@@ -63,3 +63,15 @@ markers = [
     "sitl: requires a running ArduPilot SITL instance",
 ]
 testpaths = ["dronekit/test"]
+
+[tool.mypy]
+# Minimal, permissive baseline: the codebase has no inline type annotations yet,
+# and pymavlink ships no py.typed marker / stubs. This section exists only so
+# CI's typecheck job has something concrete to run; it is intentionally not
+# strict and the job is continue-on-error until the codebase is ready for a
+# hard gate (see .github/workflows/ci.yml).
+# No python_version pin: current mypy (>=2.0) dropped 3.9 support for the
+# --python-version flag itself, even though this project still targets 3.9
+# at runtime (see requires-python). Leaving it unset lets mypy infer the
+# version from whatever interpreter CI runs it under.
+ignore_missing_imports = true
