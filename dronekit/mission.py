@@ -52,6 +52,99 @@ class Command(mavutil.mavlink.MAVLink_mission_item_message):
     pass
 
 
+class CommandInt(mavutil.mavlink.MAVLink_mission_item_int_message):
+    """
+    A waypoint object using the integer-encoded ``MISSION_ITEM_INT`` wire format.
+
+    This is the same mission-item concept as :py:class:`Command` (the same fields, in the same
+    order), but ``x``/``y`` (latitude/longitude) are transmitted as ``int32`` values holding
+    degrees multiplied by 1e7, instead of :py:class:`Command`'s ``float32`` degrees. Use
+    ``CommandInt`` instead of :py:class:`Command` when a mission needs consistent centimetre-scale
+    precision rather than float32's roughly decimetre-scale precision.
+
+    **Why this matters, with real numbers.** float32 carries only ~7 significant decimal digits.
+    Encoding the coordinate pair used in :py:class:`Command`'s own docstring example
+    (``-34.364114, 149.166022`` - 8 significant digits each) through
+    ``struct.unpack('f', struct.pack('f', value))[0]`` and comparing to the original value gives:
+
+    * latitude ``-34.364114`` -> ``-34.364112854003906``, an error of about **12.8 cm** on the ground.
+    * longitude ``149.166022`` -> ``149.166015625``, an error of about **71.0 cm** on the ground
+      (longitude error varies with which mantissa bits round; it is not always this large, but it
+      is not bounded to sub-centimetre either - that is exactly the problem ``CommandInt`` fixes).
+
+    The ``int32 x 1e7`` encoding used by ``MISSION_ITEM_INT`` has a fixed resolution of 1e-7
+    degree per unit, which is **~1.11 cm** at the equator (and finer moving towards the poles,
+    since a degree of longitude shrinks with latitude while a degree of latitude stays constant).
+    For the coordinate above, round-tripping through ``int(round(value * 1e7))`` and back is exact
+    to within that fixed 1.11 cm grid - no float32 mantissa rounding is involved at all.
+
+    Aside from the ``x``/``y`` encoding, ``CommandInt`` is built exactly like :py:class:`Command`:
+    same constructor, same argument order, same way of being added to a mission.
+
+    .. code:: python
+
+        cmd_int = CommandInt(0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+            mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0,
+            int(-34.364114 * 1e7), int(149.166022 * 1e7), 30)
+
+    Most users will not want to hand-compute that ``* 1e7`` scaling. Build a normal
+    :py:class:`Command` as usual and convert it with :py:meth:`CommandInt.from_command`:
+
+    .. code:: python
+
+        cmd = Command(0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+            mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, -34.364114, 149.166022, 30)
+        cmd_int = CommandInt.from_command(cmd)
+        cmds.add(cmd_int)
+
+    :param target_system: This can be set to any value
+        (DroneKit changes the value to the MAVLink ID of the connected vehicle before the command is sent).
+    :param target_component: The component id if the message is intended for a particular component
+        within the target system (for example, the camera). Set to zero (broadcast) in most cases.
+    :param seq: The sequence number within the mission (the autopilot will reject messages sent out of sequence).
+        This should be set to zero as the API will automatically set the correct value when uploading a mission.
+    :param frame: The frame of reference used for the location parameters (x, y, z).
+        See :py:class:`Command` for details.
+    :param command: The specific mission command (e.g. ``mavutil.mavlink.MAV_CMD_NAV_WAYPOINT``).
+        See :py:class:`Command` for details.
+    :param current: Set to zero (not supported).
+    :param autocontinue: Set to zero (not supported).
+    :param param1: Command specific parameter (depends on specific `Mission Command (MAV_CMD) <http://planner.ardupilot.com/wiki/common-mavlink-mission-command-messages-mav_cmd/>`_).
+    :param param2: Command specific parameter.
+    :param param3: Command specific parameter.
+    :param param4: Command specific parameter.
+    :param x: (param5) Latitude in degrees, multiplied by 1e7 and rounded to the nearest ``int32``
+        (e.g. latitude ``-34.364114`` is passed as ``-343641140``). Prefer :py:meth:`from_command`
+        over computing this by hand.
+    :param y: (param6) Longitude in degrees, multiplied by 1e7 and rounded to the nearest ``int32``
+        (e.g. longitude ``149.166022`` is passed as ``1491660220``). Prefer :py:meth:`from_command`
+        over computing this by hand.
+    :param z: (param7) Command specific parameter used for altitude (if relevant). Same units/frame
+        semantics as :py:class:`Command` - unlike x/y, z is a plain float in both message types.
+
+    """
+
+    @classmethod
+    def from_command(cls, cmd: Command) -> CommandInt:
+        """
+        Build a :py:class:`CommandInt` from an existing :py:class:`Command`, converting its
+        float-degree ``x``/``y`` into the ``int32 x 1e7`` representation ``CommandInt`` needs.
+
+        This is the recommended way to opt in to :py:class:`CommandInt`'s precision: build (or
+        receive) an ordinary :py:class:`Command` as usual, then convert it just before adding it
+        to the mission, instead of hand-computing the ``* 1e7`` scaling yourself.
+
+        :param cmd: The :py:class:`Command` (or any object exposing the same field names -
+            a plain pymavlink ``MAVLink_mission_item_message`` works too) to convert.
+        :return: An equivalent :py:class:`CommandInt`, with ``x``/``y`` rescaled to ``int32``.
+        """
+        return cls(
+            cmd.target_system, cmd.target_component, cmd.seq, cmd.frame, cmd.command,
+            cmd.current, cmd.autocontinue, cmd.param1, cmd.param2, cmd.param3, cmd.param4,
+            int(round(cmd.x * 1e7)), int(round(cmd.y * 1e7)), cmd.z,
+        )
+
+
 class CommandSequence(object):
     """
     A sequence of vehicle waypoints (a "mission").
@@ -134,7 +227,7 @@ class CommandSequence(object):
             self._vehicle._wploader.add(home, comment='Added by DroneKit')
         self._vehicle._wpts_dirty = True
 
-    def add(self, cmd: Command) -> None:
+    def add(self, cmd: Command | CommandInt) -> None:
         '''
         Add a new command (waypoint) at the end of the command list.
 
@@ -142,7 +235,13 @@ class CommandSequence(object):
 
             Commands are sent to the vehicle only after you call ::py:func:`upload() <Vehicle.commands.upload>`.
 
-        :param Command cmd: The command to be added.
+        :param cmd: The command to be added: either a :py:class:`Command` (float32 ``MISSION_ITEM``,
+            the default) or a :py:class:`CommandInt` (int32 x 1e7 ``MISSION_ITEM_INT``, for
+            centimetre-precision uploads). Both are accepted interchangeably - the underlying
+            waypoint loader (and the upload path built on it) only ever calls generic,
+            message-class-agnostic operations (``.clear()``, ``.count()``, ``.add()``, ``.wp()``,
+            ``.set()``, keyed purely by ``.seq``), so nothing here requires the float variant
+            specifically.
         '''
         self.wait_ready()
         self._vehicle._handler.fix_targets(cmd)

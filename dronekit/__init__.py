@@ -61,7 +61,7 @@ from dronekit.locations import Locations
 from dronekit.vehicle import Vehicle
 from dronekit.gimbal import Gimbal
 from dronekit.parameters import Parameters
-from dronekit.mission import Command, CommandSequence
+from dronekit.mission import Command, CommandInt, CommandSequence
 from dronekit.vehicle import default_still_waiting_callback
 from dronekit.connect import connect
 
@@ -90,6 +90,7 @@ __all__ = [
     "Gimbal",
     "Parameters",
     "Command",
+    "CommandInt",
     "CommandSequence",
     "default_still_waiting_callback",
     "connect",

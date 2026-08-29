@@ -349,12 +349,19 @@ class Vehicle(HasObservers):
             self._home_location = LocationGlobal(msg.latitude / 1.0e7, msg.longitude / 1.0e7, msg.altitude / 1000.0)
             self.notify_attribute_listeners('home_location', self.home_location, cache=True)
 
-        @self.on_message(['WAYPOINT', 'MISSION_ITEM'])
+        @self.on_message(['WAYPOINT', 'MISSION_ITEM', 'MISSION_ITEM_INT'])
         def listener(self, name, msg):
             if not self._wp_loaded:
                 if msg.seq == 0:
                     if not (msg.x == 0 and msg.y == 0 and msg.z == 0):
-                        self._home_location = LocationGlobal(msg.x, msg.y, msg.z)
+                        if name == 'MISSION_ITEM_INT':
+                            # MISSION_ITEM_INT carries x/y as int32 degrees * 1e7
+                            # (see dronekit.mission.CommandInt); MISSION_ITEM/WAYPOINT
+                            # carry them as plain float32 degrees. z (altitude) is a
+                            # float in both message types.
+                            self._home_location = LocationGlobal(msg.x / 1.0e7, msg.y / 1.0e7, msg.z)
+                        else:
+                            self._home_location = LocationGlobal(msg.x, msg.y, msg.z)
 
                 if msg.seq > self._wploader.count():
                     # Unexpected waypoint
