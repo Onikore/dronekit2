@@ -745,7 +745,7 @@ class ChannelsOverride(dict):
         if not value:
             try:
                 dict.__delitem__(self, str(key))
-            except:
+            except Exception:
                 pass
         else:
             dict.__setitem__(self, str(key), value)
@@ -862,7 +862,7 @@ class Channels(dict):
             else:
                 try:
                     del self._overrides[str(k)]
-                except:
+                except Exception:
                     pass
         self._overrides._active = True
         self._overrides._send()
@@ -1369,7 +1369,7 @@ class Vehicle(HasObservers):
                 self._params_map[msg.param_id] = msg.param_value
                 self._parameters.notify_attribute_listeners(msg.param_id, msg.param_value,
                                                             cache=True)
-            except:
+            except Exception:
                 import traceback
                 traceback.print_exc()
 
@@ -1601,7 +1601,7 @@ class Vehicle(HasObservers):
                 mode = mavutil.interpret_px4_mode(basemode_code, custommode_code)
                 return mode in self._mode_mapping
             return custommode_code in self._mode_mapping_bynumber
-        except:
+        except Exception:
             return False
 
     #
@@ -3024,7 +3024,7 @@ class CommandSequence(object):
         home = None
         try:
             home = self._vehicle._wploader.wp(0)
-        except:
+        except Exception:
             pass
         self._vehicle._wploader.clear()
         if home:

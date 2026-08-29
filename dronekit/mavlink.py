@@ -286,7 +286,7 @@ class MAVConnection(object):
         else:
             try:
                 self.master.close()
-            except:
+            except Exception:
                 pass
             self.master = mavutil.mavlink_connection(self.master.address)
 
@@ -329,11 +329,11 @@ class MAVConnection(object):
         def callback(_, msg):
             try:
                 target.out_queue.put(msg.pack(target.master.mav))
-            except:
+            except Exception:
                 try:
                     assert len(msg.get_msgbuf()) > 0
                     target.out_queue.put(msg.get_msgbuf())
-                except:
+                except Exception:
                     self._logger.exception('Could not pack this object on receive: %s' % type(msg), exc_info=True)
 
         # target -> self -> vehicle
@@ -343,11 +343,11 @@ class MAVConnection(object):
             target.fix_targets(msg)
             try:
                 self.out_queue.put(msg.pack(self.master.mav))
-            except:
+            except Exception:
                 try:
                     assert len(msg.get_msgbuf()) > 0
                     self.out_queue.put(msg.get_msgbuf())
-                except:
+                except Exception:
                     self._logger.exception('Could not pack this object on forward: %s' % type(msg), exc_info=True)
 
         return target
