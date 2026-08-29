@@ -8,10 +8,13 @@ existed in the *other* direction - those sub-object modules reaching
 back into Vehicle - not in Vehicle constructing them.
 """
 
+from __future__ import annotations
+
 import copy
 import logging
 import math
 import time
+from typing import TYPE_CHECKING, Any, Callable
 
 from pymavlink import mavutil, mavwp
 from pymavlink.dialects.v10 import ardupilotmega
@@ -36,6 +39,16 @@ from dronekit.types import (
     Version,
     Wind,
 )
+
+if TYPE_CHECKING:
+    # Only needed for the `handler` parameter's type. Importing this for
+    # real (i.e. outside TYPE_CHECKING) would be a circular import:
+    # mavlink.py does `from dronekit import APIException` at module level,
+    # which runs dronekit/__init__.py, which imports this module - so
+    # dronekit.mavlink can't be imported here at runtime. See connect.py's
+    # deferred `from dronekit.mavlink import MAVConnection` for the same
+    # constraint on the other side of that cycle.
+    from dronekit.mavlink import MAVConnection
 
 
 class Vehicle(HasObservers):
@@ -85,13 +98,13 @@ class Vehicle(HasObservers):
         to the project!
     """
 
-    def __init__(self, handler):
+    def __init__(self, handler: MAVConnection) -> None:
         super(Vehicle, self).__init__()
 
         self._logger = logging.getLogger(__name__)  # Logger for DroneKit
         self._autopilot_logger = logging.getLogger('autopilot')  # Logger for the autopilot messages
         # MAVLink-to-logging-module log severity mappings
-        self._mavlink_statustext_severity = {
+        self._mavlink_statustext_severity: dict[int, int] = {
             0: logging.CRITICAL,
             1: logging.CRITICAL,
             2: logging.CRITICAL,
@@ -103,11 +116,11 @@ class Vehicle(HasObservers):
         }
 
         self._handler = handler
-        self._master = handler.master
+        self._master: Any = handler.master
 
         # Cache all updated attributes for wait_ready.
         # By default, we presume all "commands" are loaded.
-        self._ready_attrs = {'commands'}
+        self._ready_attrs: set[str] = {'commands'}
 
         # Default parameters when calling wait_ready() or wait_ready(True).
         self._default_ready_attrs = ['parameters', 'gps_0', 'armed', 'mode', 'attitude']
@@ -117,21 +130,21 @@ class Vehicle(HasObservers):
             self._ready_attrs.add(name)
 
         # Attaches message listeners.
-        self._message_listeners = dict()
+        self._message_listeners: dict[str, list[Callable[..., Any]]] = dict()
 
         @handler.forward_message
         def listener(_, msg):
             self.notify_message_listeners(msg.get_type(), msg)
 
         self._location = Locations(self)
-        self._vx = None
-        self._vy = None
-        self._vz = None
+        self._vx: float | None = None
+        self._vy: float | None = None
+        self._vz: float | None = None
 
 
-        self._wind_direction = None
-        self._wind_speed = None
-        self._wind_speed_z = None
+        self._wind_direction: float | None = None
+        self._wind_speed: float | None = None
+        self._wind_speed_z: float | None = None
 
         @self.on_message('WIND')
         def listener(self,name, m):
@@ -154,12 +167,12 @@ class Vehicle(HasObservers):
             (self._vx, self._vy, self._vz) = (m.vx / 100.0, m.vy / 100.0, m.vz / 100.0)
             self.notify_attribute_listeners('velocity', self.velocity)
 
-        self._pitch = None
-        self._yaw = None
-        self._roll = None
-        self._pitchspeed = None
-        self._yawspeed = None
-        self._rollspeed = None
+        self._pitch: float | None = None
+        self._yaw: float | None = None
+        self._roll: float | None = None
+        self._pitchspeed: float | None = None
+        self._yawspeed: float | None = None
+        self._rollspeed: float | None = None
 
         @self.on_message('ATTITUDE')
         def listener(self, name, m):
@@ -171,9 +184,9 @@ class Vehicle(HasObservers):
             self._rollspeed = m.rollspeed
             self.notify_attribute_listeners('attitude', self.attitude)
 
-        self._heading = None
-        self._airspeed = None
-        self._groundspeed = None
+        self._heading: int | None = None
+        self._airspeed: float | None = None
+        self._groundspeed: float | None = None
 
         @self.on_message('VFR_HUD')
         def listener(self, name, m):
@@ -184,8 +197,8 @@ class Vehicle(HasObservers):
             self._groundspeed = m.groundspeed
             self.notify_attribute_listeners('groundspeed', self.groundspeed)
 
-        self._rngfnd_distance = None
-        self._rngfnd_voltage = None
+        self._rngfnd_distance: float | None = None
+        self._rngfnd_voltage: float | None = None
 
         @self.on_message('RANGEFINDER')
         def listener(self, name, m):
@@ -193,9 +206,9 @@ class Vehicle(HasObservers):
             self._rngfnd_voltage = m.voltage
             self.notify_attribute_listeners('rangefinder', self.rangefinder)
 
-        self._mount_pitch = None
-        self._mount_yaw = None
-        self._mount_roll = None
+        self._mount_pitch: float | None = None
+        self._mount_yaw: float | None = None
+        self._mount_roll: float | None = None
 
         @self.on_message('MOUNT_STATUS')
         def listener(self, name, m):
@@ -204,8 +217,8 @@ class Vehicle(HasObservers):
             self._mount_yaw = m.pointing_c / 100.0
             self.notify_attribute_listeners('mount', self.mount_status)
 
-        self._capabilities = None
-        self._raw_version = None
+        self._capabilities: int | None = None
+        self._raw_version: int | None = None
         self._autopilot_version_msg_count = 0
 
         @self.on_message('AUTOPILOT_VERSION')
@@ -239,9 +252,9 @@ class Vehicle(HasObservers):
 
             self.notify_attribute_listeners('channels', self.channels)
 
-        self._voltage = None
-        self._current = None
-        self._level = None
+        self._voltage: float | None = None
+        self._current: float | None = None
+        self._level: float | None = None
 
         @self.on_message('SYS_STATUS')
         def listener(self, name, m):
@@ -250,10 +263,10 @@ class Vehicle(HasObservers):
             self._level = m.battery_remaining
             self.notify_attribute_listeners('battery', self.battery)
 
-        self._eph = None
-        self._epv = None
-        self._satellites_visible = None
-        self._fix_type = None  # FIXME support multiple GPSs per vehicle - possibly by using componentId
+        self._eph: int | None = None
+        self._epv: int | None = None
+        self._satellites_visible: int | None = None
+        self._fix_type: int | None = None  # FIXME support multiple GPSs per vehicle - possibly by using componentId
 
         @self.on_message('GPS_RAW_INT')
         def listener(self, name, m):
@@ -286,9 +299,9 @@ class Vehicle(HasObservers):
 
         self._flightmode = 'AUTO'
         self._armed = False
-        self._system_status = None
-        self._autopilot_type = None  # PX4, ArduPilot, etc.
-        self._vehicle_type = None  # quadcopter, plane, etc.
+        self._system_status: int | None = None
+        self._autopilot_type: int | None = None  # PX4, ArduPilot, etc.
+        self._vehicle_type: int | None = None  # quadcopter, plane, etc.
 
         @self.on_message('HEARTBEAT')
         def listener(self, name, m):
@@ -311,10 +324,10 @@ class Vehicle(HasObservers):
 
         # Waypoints.
 
-        self._home_location = None
-        self._wploader = mavwp.MAVWPLoader()
+        self._home_location: LocationGlobal | None = None
+        self._wploader: Any = mavwp.MAVWPLoader()
         self._wp_loaded = True
-        self._wp_uploaded = None
+        self._wp_uploaded: list[bool] | None = None
         self._wpts_dirty = False
         # Set by CommandSequence.download() and cleared once the async
         # download actually completes (see the WAYPOINT/MISSION_ITEM
@@ -376,10 +389,10 @@ class Vehicle(HasObservers):
         repeat_duration = 1
 
         self._params_count = -1
-        self._params_set = []
+        self._params_set: list[Any] = []
         self._params_loaded = False
         self._params_start = False
-        self._params_map = {}
+        self._params_map: dict[str, float] = {}
         self._params_last = time.monotonic()  # Last new param.
         self._params_duration = start_duration
         self._parameters = Parameters(self)
@@ -435,13 +448,13 @@ class Vehicle(HasObservers):
         # Heartbeats.
 
         self._heartbeat_started = False
-        self._heartbeat_lastsent = 0
-        self._heartbeat_lastreceived = 0
+        self._heartbeat_lastsent: float = 0
+        self._heartbeat_lastreceived: float = 0
         self._heartbeat_timeout = False
 
-        self._heartbeat_warning = 5
-        self._heartbeat_error = 30
-        self._heartbeat_system = None
+        self._heartbeat_warning: float = 5
+        self._heartbeat_error: float = 30
+        self._heartbeat_system: int | None = None
 
         @handler.forward_loop
         def listener(_):
@@ -472,7 +485,7 @@ class Vehicle(HasObservers):
                 self._logger.info('...link restored.')
             self._heartbeat_timeout = False
 
-        self._last_heartbeat = None
+        self._last_heartbeat: float | None = None
 
         @handler.forward_loop
         def listener(_):
@@ -481,7 +494,7 @@ class Vehicle(HasObservers):
                 self.notify_attribute_listeners('last_heartbeat', self.last_heartbeat)
 
     @property
-    def last_heartbeat(self):
+    def last_heartbeat(self) -> float | None:
         """
         Time since last MAVLink heartbeat was received (in seconds).
 
@@ -517,7 +530,7 @@ class Vehicle(HasObservers):
         """
         return self._last_heartbeat
 
-    def on_message(self, name):
+    def on_message(self, name: str | list[str]) -> Callable[[Callable[..., Any]], None]:
         """
         Decorator for message listener callback functions.
 
@@ -548,7 +561,7 @@ class Vehicle(HasObservers):
         :param String name: The name of the message to be intercepted by the decorated listener function (or '*' to get all messages).
         """
 
-        def decorator(fn):
+        def decorator(fn: Callable[..., Any]) -> None:
             if isinstance(name, list):
                 for n in name:
                     self.add_message_listener(n, fn)
@@ -557,7 +570,7 @@ class Vehicle(HasObservers):
 
         return decorator
 
-    def add_message_listener(self, name, fn):
+    def add_message_listener(self, name: str, fn: Callable[..., Any]) -> None:
         """
         Adds a message listener function that will be called every time the specified message is received.
 
@@ -595,7 +608,7 @@ class Vehicle(HasObservers):
         if fn not in self._message_listeners[name]:
             self._message_listeners[name].append(fn)
 
-    def remove_message_listener(self, name, fn):
+    def remove_message_listener(self, name: str, fn: Callable[..., Any]) -> None:
         """
         Removes a message listener (that was previously added using :py:func:`add_message_listener`).
 
@@ -612,7 +625,7 @@ class Vehicle(HasObservers):
                 if len(self._message_listeners[name]) == 0:
                     del self._message_listeners[name]
 
-    def notify_message_listeners(self, name, msg):
+    def notify_message_listeners(self, name: str, msg: Any) -> None:
         for fn in self._message_listeners.get(name, []):
             try:
                 fn(self, name, msg)
@@ -625,10 +638,10 @@ class Vehicle(HasObservers):
             except Exception:
                 self._logger.exception('Exception in message handler for %s' % msg.get_type(), exc_info=True)
 
-    def close(self):
+    def close(self) -> None:
         return self._handler.close()
 
-    def flush(self):
+    def flush(self) -> None:
         """
         Call ``flush()`` after :py:func:`adding <CommandSequence.add>` or :py:func:`clearing <CommandSequence.clear>` mission commands.
 
@@ -647,14 +660,14 @@ class Vehicle(HasObservers):
     #
 
     @property
-    def _mode_mapping(self):
+    def _mode_mapping(self) -> Any:
         return self._master.mode_mapping()
 
     @property
-    def _mode_mapping_bynumber(self):
+    def _mode_mapping_bynumber(self) -> Any:
         return mavutil.mode_mapping_bynumber(self._vehicle_type)
 
-    def _is_mode_available(self, custommode_code, basemode_code=0):
+    def _is_mode_available(self, custommode_code: int, basemode_code: int = 0) -> bool:
         try:
             if self._autopilot_type == mavutil.mavlink.MAV_AUTOPILOT_PX4:
                 mode = mavutil.interpret_px4_mode(basemode_code, custommode_code)
@@ -668,7 +681,7 @@ class Vehicle(HasObservers):
     #
 
     @property
-    def mode(self):
+    def mode(self) -> VehicleMode | None:
         """
         This attribute is used to get and set the current flight mode. You
         can specify the value as a :py:class:`VehicleMode`, like this:
@@ -696,19 +709,24 @@ class Vehicle(HasObservers):
         return VehicleMode(self._flightmode)
 
     @mode.setter
-    def mode(self, v):
+    def mode(self, v: VehicleMode | str | int) -> None:
         if isinstance(v, str):
             v = VehicleMode(v)
 
         if self._autopilot_type == mavutil.mavlink.MAV_AUTOPILOT_PX4:
-            self._master.set_mode(v.name)
+            # Pre-existing gap (not introduced by this typing pass): if a
+            # caller passes an int mode on a PX4 autopilot, `v` is still
+            # `int` here (only the `isinstance(v, str)` branch above
+            # converts to VehicleMode) and `.name` does not exist on int.
+            # Not fixed here per the typing-only scope of this change.
+            self._master.set_mode(v.name)  # type: ignore[union-attr]
         elif isinstance(v, int):
             self._master.set_mode(v)
         else:
             self._master.set_mode(self._mode_mapping[v.name])
 
     @property
-    def location(self):
+    def location(self) -> Locations:
         """
         The vehicle location in global, global relative and local frames (:py:class:`Locations`).
 
@@ -770,7 +788,7 @@ class Vehicle(HasObservers):
         return self._location
 
     @property
-    def wind(self):
+    def wind(self) -> Wind | None:
         """
         Current wind status (:pu:class: `Wind`)
         """
@@ -779,7 +797,7 @@ class Vehicle(HasObservers):
         return Wind(self._wind_direction, self._wind_speed, self._wind_speed_z)
 
     @property
-    def battery(self):
+    def battery(self) -> Battery | None:
         """
         Current system batter status (:py:class:`Battery`).
         """
@@ -788,21 +806,21 @@ class Vehicle(HasObservers):
         return Battery(self._voltage, self._current, self._level)
 
     @property
-    def rangefinder(self):
+    def rangefinder(self) -> Rangefinder:
         """
         Rangefinder distance and voltage values (:py:class:`Rangefinder`).
         """
         return Rangefinder(self._rngfnd_distance, self._rngfnd_voltage)
 
     @property
-    def velocity(self):
+    def velocity(self) -> list[float | None]:
         """
         Current velocity as a three element list ``[ vx, vy, vz ]`` (in meter/sec).
         """
         return [self._vx, self._vy, self._vz]
 
     @property
-    def version(self):
+    def version(self) -> Version:
         """
         The autopilot version and type in a :py:class:`Version` object.
 
@@ -811,30 +829,36 @@ class Vehicle(HasObservers):
         return Version(self._raw_version, self._autopilot_type, self._vehicle_type)
 
     @property
-    def capabilities(self):
+    def capabilities(self) -> Capabilities:
         """
         The autopilot capabilities in a :py:class:`Capabilities` object.
 
         .. versionadded:: 2.0.3
         """
-        return Capabilities(self._capabilities)
+        # Pre-existing gap (not introduced by this typing pass): unlike
+        # `wind`/`battery` above, this never guarded against
+        # self._capabilities still being None (before any
+        # AUTOPILOT_VERSION message has been received) - Capabilities()
+        # would raise TypeError on the bitwise ops in that case. Not
+        # fixed here per the typing-only scope of this change.
+        return Capabilities(self._capabilities)  # type: ignore[arg-type]
 
     @property
-    def attitude(self):
+    def attitude(self) -> Attitude:
         """
         Current vehicle attitude - pitch, yaw, roll (:py:class:`Attitude`).
         """
         return Attitude(self._pitch, self._yaw, self._roll)
 
     @property
-    def gps_0(self):
+    def gps_0(self) -> GPSInfo:
         """
         GPS position information (:py:class:`GPSInfo`).
         """
         return GPSInfo(self._eph, self._epv, self._fix_type, self._satellites_visible)
 
     @property
-    def armed(self):
+    def armed(self) -> bool:
         """
         This attribute can be used to get and set the ``armed`` state of the vehicle (``boolean``).
 
@@ -854,7 +878,7 @@ class Vehicle(HasObservers):
         return self._armed
 
     @armed.setter
-    def armed(self, value):
+    def armed(self, value: bool) -> None:
         if bool(value) != self._armed:
             if value:
                 self._master.arducopter_arm()
@@ -862,7 +886,7 @@ class Vehicle(HasObservers):
                 self._master.arducopter_disarm()
 
     @property
-    def is_armable(self):
+    def is_armable(self) -> bool:
         """
         Returns ``True`` if the vehicle is ready to arm, false otherwise (``Boolean``).
 
@@ -875,7 +899,7 @@ class Vehicle(HasObservers):
         return self.mode != 'INITIALISING' and (self.gps_0.fix_type is not None and self.gps_0.fix_type > 1) and self._ekf_predposhorizabs
 
     @property
-    def system_status(self):
+    def system_status(self) -> SystemStatus | None:
         """
         System status (:py:class:`SystemStatus`).
 
@@ -891,6 +915,11 @@ class Vehicle(HasObservers):
           or over the whole airframe. It is in mayday and going down.
         * ``POWEROFF``: System just initialized its power-down sequence, will shut down now.
         """
+        # self._system_status is int | None; dict.get()'s key parameter is
+        # invariant on the dict's declared key type (int here), so passing
+        # None is a type mismatch even though it is semantically safe at
+        # runtime (None simply never matches any of the int keys below,
+        # so .get() falls through to its default).
         return {
             0: SystemStatus('UNINIT'),
             1: SystemStatus('BOOT'),
@@ -900,17 +929,17 @@ class Vehicle(HasObservers):
             5: SystemStatus('CRITICAL'),
             6: SystemStatus('EMERGENCY'),
             7: SystemStatus('POWEROFF'),
-        }.get(self._system_status, None)
+        }.get(self._system_status, None)  # type: ignore[arg-type]
 
     @property
-    def heading(self):
+    def heading(self) -> int | None:
         """
         Current heading in degrees - 0..360, where North = 0 (``int``).
         """
         return self._heading
 
     @property
-    def groundspeed(self):
+    def groundspeed(self) -> float | None:
         """
         Current groundspeed in metres/second (``double``).
 
@@ -921,7 +950,7 @@ class Vehicle(HasObservers):
         return self._groundspeed
 
     @groundspeed.setter
-    def groundspeed(self, speed):
+    def groundspeed(self, speed: float) -> None:
         speed_type = 1  # ground speed
         msg = self.message_factory.command_long_encode(
             0, 0,    # target system, target component
@@ -936,7 +965,7 @@ class Vehicle(HasObservers):
         self.send_mavlink(msg)
 
     @property
-    def airspeed(self):
+    def airspeed(self) -> float | None:
         """
         Current airspeed in metres/second (``double``).
 
@@ -947,7 +976,7 @@ class Vehicle(HasObservers):
         return self._airspeed
 
     @airspeed.setter
-    def airspeed(self, speed):
+    def airspeed(self, speed: float) -> None:
         speed_type = 0  # air speed
         msg = self.message_factory.command_long_encode(
             0, 0,    # target system, target component
@@ -962,7 +991,7 @@ class Vehicle(HasObservers):
         self.send_mavlink(msg)
 
     @property
-    def gimbal(self):
+    def gimbal(self) -> Gimbal:
         """
         Gimbal object for controlling, viewing and observing gimbal status (:py:class:`Gimbal`).
 
@@ -971,7 +1000,7 @@ class Vehicle(HasObservers):
         return self._gimbal
 
     @property
-    def mount_status(self):
+    def mount_status(self) -> list[float | None]:
         """
         .. warning:: This method is deprecated. It has been replaced by :py:attr:`gimbal`.
 
@@ -982,7 +1011,7 @@ class Vehicle(HasObservers):
         return [self._mount_pitch, self._mount_yaw, self._mount_roll]
 
     @property
-    def ekf_ok(self):
+    def ekf_ok(self) -> bool:
         """
         ``True`` if the EKF status is considered acceptable, ``False`` otherwise (``boolean``).
         """
@@ -994,7 +1023,7 @@ class Vehicle(HasObservers):
             return self._ekf_poshorizabs or self._ekf_predposhorizabs
 
     @property
-    def channels(self):
+    def channels(self) -> Channels:
         """
         The RC channel values from the RC Transmitter (:py:class:`Channels`).
 
@@ -1019,7 +1048,7 @@ class Vehicle(HasObservers):
         return self._channels
 
     @property
-    def home_location(self):
+    def home_location(self) -> LocationGlobal | None:
         """
         The current home location (:py:class:`LocationGlobal`).
 
@@ -1055,7 +1084,7 @@ class Vehicle(HasObservers):
         return copy.copy(self._home_location)
 
     @home_location.setter
-    def home_location(self, pos):
+    def home_location(self, pos: LocationGlobal) -> None:
         """
         Sets the home location (``LocationGlobal``).
 
@@ -1083,7 +1112,7 @@ class Vehicle(HasObservers):
             pos.lat, pos.lon, pos.alt))
 
     @property
-    def commands(self):
+    def commands(self) -> CommandSequence:
         """
         Gets the editable waypoints/current mission for this vehicle (:py:class:`CommandSequence`).
 
@@ -1094,13 +1123,14 @@ class Vehicle(HasObservers):
         return self._commands
 
     @property
-    def parameters(self):
+    def parameters(self) -> Parameters:
         """
         The (editable) parameters for this vehicle (:py:class:`Parameters`).
         """
         return self._parameters
 
-    def wait_for(self, condition, timeout=None, interval=0.1, errmsg=None):
+    def wait_for(self, condition: Callable[[], bool], timeout: float | None = None,
+                 interval: float = 0.1, errmsg: str | None = None) -> None:
         '''Wait for a condition to be True.
 
         Wait for condition, a callable, to return True.  If timeout is
@@ -1117,19 +1147,19 @@ class Vehicle(HasObservers):
 
             time.sleep(interval)
 
-    def wait_for_armable(self, timeout=None):
+    def wait_for_armable(self, timeout: float | None = None) -> None:
         '''Wait for the vehicle to become armable.
 
         If timeout is nonzero, raise a TimeoutError if the vehicle
         is not armable after timeout seconds.
         '''
 
-        def check_armable():
+        def check_armable() -> bool:
             return self.is_armable
 
         self.wait_for(check_armable, timeout=timeout)
 
-    def arm(self, wait=True, timeout=None):
+    def arm(self, wait: bool = True, timeout: float | None = None) -> None:
         '''Arm the vehicle.
 
         If wait is True, wait for arm operation to complete before
@@ -1143,7 +1173,7 @@ class Vehicle(HasObservers):
             self.wait_for(lambda: self.armed, timeout=timeout,
                           errmsg='failed to arm vehicle')
 
-    def disarm(self, wait=True, timeout=None):
+    def disarm(self, wait: bool = True, timeout: float | None = None) -> None:
         '''Disarm the vehicle.
 
         If wait is True, wait for disarm operation to complete before
@@ -1156,7 +1186,7 @@ class Vehicle(HasObservers):
             self.wait_for(lambda: not self.armed, timeout=timeout,
                           errmsg='failed to disarm vehicle')
 
-    def wait_for_mode(self, mode, timeout=None):
+    def wait_for_mode(self, mode: VehicleMode | str, timeout: float | None = None) -> None:
         '''Set the flight mode.
 
         If wait is True, wait for the mode to change before returning.
@@ -1169,11 +1199,11 @@ class Vehicle(HasObservers):
 
         self.mode = mode
 
-        self.wait_for(lambda: self.mode.name == mode.name,
+        self.wait_for(lambda: self.mode is not None and self.mode.name == mode.name,
                       timeout=timeout,
                       errmsg='failed to set flight mode')
 
-    def wait_for_alt(self, alt, epsilon=0.1, rel=True, timeout=None):
+    def wait_for_alt(self, alt: float, epsilon: float = 0.1, rel: bool = True, timeout: float | None = None) -> None:
         '''Wait for the vehicle to reach the specified altitude.
 
         Wait for the vehicle to get within epsilon meters of the
@@ -1183,7 +1213,7 @@ class Vehicle(HasObservers):
         altitude has not been reached after timeout seconds.
         '''
 
-        def get_alt():
+        def get_alt() -> float | None:
             if rel:
                 alt = self.location.global_relative_frame.alt
             else:
@@ -1191,14 +1221,20 @@ class Vehicle(HasObservers):
 
             return alt
 
-        def check_alt():
+        def check_alt() -> bool:
             cur = get_alt()
-            delta = abs(alt - cur)
+            # Pre-existing gap (not introduced by this typing pass): `cur`
+            # and `start` are float | None (LocationGlobal*.alt can be
+            # None before it has been populated), and this has never
+            # guarded against that - it would raise TypeError at runtime
+            # if reached before altitude data is available. Not fixed
+            # here per the typing-only scope of this change.
+            delta = abs(alt - cur)  # type: ignore[operator]
 
             return (
                 (delta < epsilon) or
-                (cur > alt > start) or
-                (cur < alt < start)
+                (cur > alt > start) or  # type: ignore[operator]
+                (cur < alt < start)  # type: ignore[operator]
             )
 
         start = get_alt()
@@ -1208,13 +1244,13 @@ class Vehicle(HasObservers):
             timeout=timeout,
             errmsg='failed to reach specified altitude')
 
-    def wait_simple_takeoff(self, alt=None, epsilon=0.1, timeout=None):
+    def wait_simple_takeoff(self, alt: float | None = None, epsilon: float = 0.1, timeout: float | None = None) -> None:
         self.simple_takeoff(alt)
 
         if alt is not None:
             self.wait_for_alt(alt, epsilon=epsilon, timeout=timeout)
 
-    def simple_takeoff(self, alt=None):
+    def simple_takeoff(self, alt: float | None = None) -> None:
         """
         Take off and fly the vehicle to the specified altitude (in metres) and then wait for another command.
 
@@ -1242,7 +1278,8 @@ class Vehicle(HasObservers):
             self._master.mav.command_long_send(0, 0, mavutil.mavlink.MAV_CMD_NAV_TAKEOFF,
                                                0, 0, 0, 0, 0, 0, 0, altitude)
 
-    def simple_goto(self, location, airspeed=None, groundspeed=None):
+    def simple_goto(self, location: LocationGlobal | LocationGlobalRelative, airspeed: float | None = None,
+                     groundspeed: float | None = None) -> None:
         '''
         Go to a specified global location (:py:class:`LocationGlobal` or :py:class:`LocationGlobalRelative`).
 
@@ -1280,7 +1317,14 @@ class Vehicle(HasObservers):
             if not self.home_location:
                 self.commands.download()
                 self.commands.wait_ready()
-            alt = location.alt - self.home_location.alt
+            # Pre-existing gap (not introduced by this typing pass):
+            # download()+wait_ready() only block on the "commands"
+            # ready-flag, not specifically on home_location becoming
+            # non-None (it is set separately, from a HOME_POSITION
+            # message) - so this can still be None here, and
+            # location.alt can independently be None too. Not fixed here
+            # per the typing-only scope of this change.
+            alt = location.alt - self.home_location.alt  # type: ignore[operator, union-attr]
         else:
             raise ValueError('Expecting location to be LocationGlobal or LocationGlobalRelative.')
 
@@ -1294,7 +1338,7 @@ class Vehicle(HasObservers):
         if groundspeed is not None:
             self.groundspeed = groundspeed
 
-    def send_mavlink(self, message):
+    def send_mavlink(self, message: Any) -> None:
         """
         This method is used to send raw MAVLink "custom messages" to the vehicle.
 
@@ -1311,7 +1355,7 @@ class Vehicle(HasObservers):
         self._master.mav.send(message)
 
     @property
-    def message_factory(self):
+    def message_factory(self) -> Any:
         """
         Returns an object that can be used to create 'raw' MAVLink messages that are appropriate for this vehicle.
         The message can then be sent using :py:func:`send_mavlink(message) <dronekit.Vehicle.send_mavlink>`.
@@ -1352,7 +1396,7 @@ class Vehicle(HasObservers):
         """
         return self._master.mav
 
-    def initialize(self, rate=4, heartbeat_timeout=30):
+    def initialize(self, rate: int = 4, heartbeat_timeout: float = 30) -> None:
         self._handler.start()
 
         # Start heartbeat polling.
@@ -1371,7 +1415,11 @@ class Vehicle(HasObservers):
             raise APIException('Timeout in initializing connection.')
 
         # Register target_system now.
-        self._handler.target_system = self._heartbeat_system
+        # self._heartbeat_system is int | None, but the loop above only
+        # exits once a heartbeat has actually been received (or raises),
+        # at which point the HEARTBEAT listener has already set it - a
+        # runtime invariant mypy cannot see through the polling loop.
+        self._handler.target_system = self._heartbeat_system  # type: ignore[assignment]
 
         # Wait until board has booted.
         while True:
@@ -1395,7 +1443,7 @@ class Vehicle(HasObservers):
             if self._params_count > -1:
                 break
 
-    def send_capabilties_request(self, vehicle, name, m):
+    def send_capabilties_request(self, vehicle: Vehicle, name: str, m: Any) -> None:
         '''An alias for send_capabilities_request.
 
         The word "capabilities" was misspelled in previous versions of this code. This is simply
@@ -1403,17 +1451,17 @@ class Vehicle(HasObservers):
         '''
         return self.send_capabilities_request(vehicle, name, m)
 
-    def send_capabilities_request(self, vehicle, name, m):
+    def send_capabilities_request(self, vehicle: Vehicle, name: str, m: Any) -> None:
         '''Request an AUTOPILOT_VERSION packet'''
         capability_msg = vehicle.message_factory.command_long_encode(0, 0, mavutil.mavlink.MAV_CMD_REQUEST_AUTOPILOT_CAPABILITIES, 0, 1, 0, 0, 0, 0, 0, 0)
         vehicle.send_mavlink(capability_msg)
 
-    def play_tune(self, tune):
+    def play_tune(self, tune: str) -> None:
         '''Play a tune on the vehicle'''
         msg = self.message_factory.play_tune_encode(0, 0, tune)
         self.send_mavlink(msg)
 
-    def wait_ready(self, *types, **kwargs):
+    def wait_ready(self, *types: Any, **kwargs: Any) -> bool:
         """
         Waits for specified attributes to be populated from the vehicle (values are initially ``None``).
 
@@ -1449,8 +1497,12 @@ class Vehicle(HasObservers):
         raise_exception = kwargs.get('raise_exception', True)
 
         # Vehicle defaults for wait_ready(True) or wait_ready()
+        # `types` is a tuple (from *types); reassigning it to the list
+        # self._default_ready_attrs is a pre-existing type mismatch that
+        # is harmless at runtime - both are only ever iterated or passed
+        # to set()/all() below, never treated as specifically tuple-shaped.
         if list(types) == [True] or list(types) == []:
-            types = self._default_ready_attrs
+            types = self._default_ready_attrs  # type: ignore[assignment]
 
         if not all(isinstance(item, str) for item in types):
             raise ValueError('wait_ready expects one or more string arguments.')
@@ -1479,7 +1531,7 @@ class Vehicle(HasObservers):
 
         return True
 
-    def reboot(self):
+    def reboot(self) -> None:
         """Requests an autopilot reboot by sending a ``MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN`` command."""
 
         reboot_msg = self.message_factory.command_long_encode(
@@ -1494,7 +1546,7 @@ class Vehicle(HasObservers):
 
         self.send_mavlink(reboot_msg)
 
-    def send_calibrate_gyro(self):
+    def send_calibrate_gyro(self) -> None:
         """Request gyroscope calibration."""
 
         calibration_command = self.message_factory.command_long_encode(
@@ -1511,7 +1563,7 @@ class Vehicle(HasObservers):
         )
         self.send_mavlink(calibration_command)
 
-    def send_calibrate_magnetometer(self):
+    def send_calibrate_magnetometer(self) -> None:
         """Request magnetometer calibration."""
 
         # ArduPilot requires the MAV_CMD_DO_START_MAG_CAL command, only present in the ardupilotmega.xml definition
@@ -1544,7 +1596,7 @@ class Vehicle(HasObservers):
 
         self.send_mavlink(calibration_command)
 
-    def send_calibrate_accelerometer(self, simple=False):
+    def send_calibrate_accelerometer(self, simple: bool = False) -> None:
         """Request accelerometer calibration.
 
         :param simple: if True, perform simple accelerometer calibration
@@ -1564,7 +1616,7 @@ class Vehicle(HasObservers):
         )
         self.send_mavlink(calibration_command)
 
-    def send_calibrate_vehicle_level(self):
+    def send_calibrate_vehicle_level(self) -> None:
         """Request vehicle level (accelerometer trim) calibration."""
 
         calibration_command = self.message_factory.command_long_encode(
@@ -1581,7 +1633,7 @@ class Vehicle(HasObservers):
         )
         self.send_mavlink(calibration_command)
 
-    def send_calibrate_barometer(self):
+    def send_calibrate_barometer(self) -> None:
         """Request barometer calibration."""
 
         calibration_command = self.message_factory.command_long_encode(
@@ -1600,5 +1652,5 @@ class Vehicle(HasObservers):
 
 
 
-def default_still_waiting_callback(atts):
+def default_still_waiting_callback(atts: Any) -> None:
     logging.getLogger(__name__).debug("Still waiting for data from vehicle: %s" % ','.join(atts))
