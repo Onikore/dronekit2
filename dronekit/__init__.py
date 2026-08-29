@@ -1264,6 +1264,12 @@ class Vehicle(HasObservers):
         self._wp_loaded = True
         self._wp_uploaded = None
         self._wpts_dirty = False
+        # Set by CommandSequence.download() and cleared once the async
+        # download actually completes (see the WAYPOINT/MISSION_ITEM
+        # listener below). CommandSequence.__len__/__getitem__ check this so
+        # that reading commands mid-download raises loudly instead of
+        # silently returning a torn/incomplete result.
+        self._wp_download_in_progress = False
         self._commands = CommandSequence(self)
 
         @self.on_message(['WAYPOINT_COUNT', 'MISSION_COUNT'])
@@ -1298,6 +1304,7 @@ class Vehicle(HasObservers):
                         self._master.waypoint_request_send(msg.seq + 1)
                     else:
                         self._wp_loaded = True
+                        self._wp_download_in_progress = False
                         self.notify_attribute_listeners('commands', self.commands)
 
         # Waypoint send to master
@@ -3001,6 +3008,7 @@ class CommandSequence(object):
         self.wait_ready()
         self._vehicle._ready_attrs.remove('commands')
         self._vehicle._wp_loaded = False
+        self._vehicle._wp_download_in_progress = True
         self._vehicle._master.waypoint_request_list_send()
         # BIG FIXME - wait for full wpt download before allowing any of the accessors to work
 
@@ -3091,15 +3099,25 @@ class CommandSequence(object):
         """
         self._vehicle._master.waypoint_set_current_send(index)
 
+    def _raise_if_download_in_progress(self):
+        if self._vehicle._wp_download_in_progress:
+            raise APIException(
+                "CommandSequence was read while a commands.download() was still in "
+                "progress. Call commands.wait_ready() after download() before reading "
+                "commands, len(), or indexing them."
+            )
+
     def __len__(self):
         '''
         Return number of waypoints.
 
         :return: The number of waypoints in the sequence.
         '''
+        self._raise_if_download_in_progress()
         return max(self._vehicle._wploader.count() - 1, 0)
 
     def __getitem__(self, index):
+        self._raise_if_download_in_progress()
         if isinstance(index, slice):
             return [self[ii] for ii in range(*index.indices(len(self)))]
         elif isinstance(index, int):

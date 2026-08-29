@@ -1,4 +1,14 @@
 """Regression tests for task E4's D5/D6/D8/D10 fixes.
+
+D8 and D10 need a Vehicle instance, but not a live one - Vehicle.__init__
+only registers message listener callbacks, it never talks to the network by
+itself. So these tests build a real Vehicle around a real (but never
+started - no threads, no actual traffic) MAVConnection bound to a local
+udpin socket, then drive its message listeners directly by calling
+vehicle.notify_message_listeners(name, fake_msg) with small fake message
+objects that carry just the fields the listener under test reads. This
+exercises the actual production listener closures in dronekit/__init__.py,
+not a reimplementation of them.
 """
 
 import ast
@@ -8,8 +18,9 @@ import pytest
 
 import dronekit
 import dronekit.mavlink
-from dronekit import CommandSequence, Vehicle
+from dronekit import APIException, CommandSequence, Vehicle
 from dronekit import TimeoutError as DKTimeoutError
+from dronekit.mavlink import MAVConnection
 
 
 # ---------------------------------------------------------------------------
@@ -86,3 +97,86 @@ def test_command_sequence_upload_timeout_uses_monotonic_not_walltime(monkeypatch
     cmds = CommandSequence(_StubVehicleForUpload())
     with pytest.raises(DKTimeoutError):
         cmds.upload(timeout=0.05)
+
+
+# ---------------------------------------------------------------------------
+# Shared fixture / fakes for D8 and D10
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def vehicle():
+    handler = MAVConnection('udpin:127.0.0.1:0')
+    v = Vehicle(handler)
+    try:
+        yield v
+    finally:
+        # handler.close() would block forever waiting for out_queue to
+        # drain (nothing is consuming it - the out thread was never
+        # started), so release the underlying socket directly instead.
+        handler.master.close()
+
+
+class _FakeMissionCountMsg:
+    def __init__(self, count):
+        self.count = count
+
+    def get_type(self):
+        return 'MISSION_COUNT'
+
+
+class _FakeMissionItemMsg:
+    def __init__(self, seq, x=0, y=0, z=0):
+        self.seq = seq
+        self.x = x
+        self.y = y
+        self.z = z
+
+    def get_type(self):
+        return 'MISSION_ITEM'
+
+
+def _complete_download(vehicle, n_wp=1):
+    """Drive a commands.download() to completion the way the vehicle's
+    real MISSION_COUNT/MISSION_ITEM listeners would, given a mission of
+    n_wp waypoints (including the home waypoint at seq 0)."""
+    vehicle.notify_message_listeners('MISSION_COUNT', _FakeMissionCountMsg(n_wp))
+    for seq in range(n_wp):
+        vehicle.notify_message_listeners('MISSION_ITEM', _FakeMissionItemMsg(seq))
+
+
+# ---------------------------------------------------------------------------
+# D8 - CommandSequence.__len__/__getitem__ during an in-progress download()
+# ---------------------------------------------------------------------------
+
+def test_len_raises_while_download_in_progress(vehicle):
+    vehicle.commands.download()
+    with pytest.raises(APIException):
+        len(vehicle.commands)
+
+
+def test_getitem_raises_while_download_in_progress(vehicle):
+    vehicle.commands.download()
+    with pytest.raises(APIException):
+        vehicle.commands[0]
+
+
+def test_len_works_before_any_download():
+    """Sanity check: a Vehicle that has never had download() called on it
+    (the common case - _wp_download_in_progress defaults to False) must not
+    be affected by the guard."""
+    handler = MAVConnection('udpin:127.0.0.1:0')
+    try:
+        v = Vehicle(handler)
+        assert len(v.commands) == 0
+    finally:
+        handler.master.close()
+
+
+def test_len_and_getitem_work_again_once_download_completes(vehicle):
+    vehicle.commands.download()
+    assert vehicle._wp_download_in_progress is True
+
+    _complete_download(vehicle, n_wp=1)
+
+    assert vehicle._wp_download_in_progress is False
+    assert len(vehicle.commands) == 0  # 1 wp downloaded (home only) -> count() - 1
