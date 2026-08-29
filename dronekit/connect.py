@@ -24,7 +24,8 @@ def connect(ip: str,
             use_native: bool = False) -> Vehicle:
     """
     Returns a :py:class:`Vehicle` object connected to the address specified by string parameter ``ip``.
-    Connection string parameters (``ip``) for different targets are listed in the :ref:`getting started guide <get_started_connecting>`.
+    Connection string parameters (``ip``) for different targets are listed in the
+    :ref:`getting started guide <get_started_connecting>`.
 
     The method is usually called with ``wait_ready=True`` to ensure that vehicle parameters and (most) attributes are
     available when ``connect()`` returns.
@@ -57,7 +58,8 @@ def connect(ip: str,
     :param int heartbeat_timeout: Connection timeout value in seconds (default is 30s).
         If a heartbeat is not detected within this time an exception will be raised.
     :param int source_system: The MAVLink ID of the :py:class:`Vehicle` object returned by this method (by default 255).
-    :param int source_component: The MAVLink Component ID fo the :py:class:`Vehicle` object returned by this method (by default 0).
+    :param int source_component: The MAVLink Component ID fo the :py:class:`Vehicle` object returned by this
+        method (by default 0).
     :param bool use_native: Use precompiled MAVLink parser.
 
         .. note::
@@ -82,7 +84,8 @@ def connect(ip: str,
     if not vehicle_class:
         vehicle_class = Vehicle
 
-    handler = MAVConnection(ip, baud=baud, source_system=source_system, source_component=source_component, use_native=use_native)
+    handler = MAVConnection(ip, baud=baud, source_system=source_system,
+                             source_component=source_component, use_native=use_native)
     # If anything below raises (vehicle_class construction, initialize()'s
     # heartbeat timeout, wait_ready()'s timeout, ...) the caller never gets
     # a reference to `handler` or `vehicle`, so nothing else can close the

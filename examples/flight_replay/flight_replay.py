@@ -25,7 +25,8 @@ import argparse
 
 from _common import add_connection_argument, get_connection_string
 
-parser = argparse.ArgumentParser(description='Load a telemetry log and use position data to create mission waypoints for a vehicle.')
+parser = argparse.ArgumentParser(
+    description='Load a telemetry log and use position data to create mission waypoints for a vehicle.')
 add_connection_argument(parser)
 parser.add_argument('--tlog', default='flight.tlog',
                    help="Telemetry log containing path to replay")

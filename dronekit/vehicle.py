@@ -473,7 +473,8 @@ class Vehicle(HasObservers):
 
             # Timeouts.
             if self._heartbeat_started:
-                if self._heartbeat_error and time.monotonic() - self._heartbeat_lastreceived > self._heartbeat_error > 0:
+                if (self._heartbeat_error and
+                        time.monotonic() - self._heartbeat_lastreceived > self._heartbeat_error > 0):
                     raise APIException(f'No heartbeat in {self._heartbeat_error} seconds, aborting.')
                 elif time.monotonic() - self._heartbeat_lastreceived > self._heartbeat_warning:
                     if self._heartbeat_timeout is False:
@@ -564,7 +565,8 @@ class Vehicle(HasObservers):
 
         See :ref:`mavlink_messages` for more information.
 
-        :param String name: The name of the message to be intercepted by the decorated listener function (or '*' to get all messages).
+        :param String name: The name of the message to be intercepted by the decorated listener function
+            (or '*' to get all messages).
         """
 
         def decorator(fn: Callable[..., Any]) -> None:
@@ -605,7 +607,8 @@ class Vehicle(HasObservers):
 
         See :ref:`mavlink_messages` for more information.
 
-        :param String name: The name of the message to be intercepted by the listener function (or '*' to get all messages).
+        :param String name: The name of the message to be intercepted by the listener function
+            (or '*' to get all messages).
         :param fn: The listener function that will be called if a message is received.
         """
         name = str(name)
@@ -620,7 +623,8 @@ class Vehicle(HasObservers):
 
         See :ref:`mavlink_messages` for more information.
 
-        :param String name: The name of the message for which the listener is to be removed (or '*' to remove an 'all messages' observer).
+        :param String name: The name of the message for which the listener is to be removed (or '*' to remove
+            an 'all messages' observer).
         :param fn: The listener callback function to remove.
 
         """
@@ -649,7 +653,8 @@ class Vehicle(HasObservers):
 
     def flush(self) -> None:
         """
-        Call ``flush()`` after :py:func:`adding <CommandSequence.add>` or :py:func:`clearing <CommandSequence.clear>` mission commands.
+        Call ``flush()`` after :py:func:`adding <CommandSequence.add>` or
+        :py:func:`clearing <CommandSequence.clear>` mission commands.
 
         After the return from ``flush()`` any writes are guaranteed to have completed (or thrown an
         exception) and future reads will see their effects.
@@ -739,7 +744,8 @@ class Vehicle(HasObservers):
         The different frames are accessed through its members:
 
         * :py:attr:`global_frame <dronekit.Locations.global_frame>` (:py:class:`LocationGlobal`)
-        * :py:attr:`global_relative_frame <dronekit.Locations.global_relative_frame>` (:py:class:`LocationGlobalRelative`)
+        * :py:attr:`global_relative_frame <dronekit.Locations.global_relative_frame>`
+          (:py:class:`LocationGlobalRelative`)
         * :py:attr:`local_frame <dronekit.Locations.local_frame>` (:py:class:`LocationLocal`)
 
         For example, to print the location in each frame for a ``vehicle``:
@@ -773,7 +779,8 @@ class Vehicle(HasObservers):
             def listener(self, attr_name, value):
                 # `self`: :py:class:`Vehicle` object that has been updated.
                 # `attr_name`: name of the observed attribute - 'location'
-                # `value` is the updated attribute value (a :py:class:`Locations`). This can be queried for the frame information
+                # `value` is the updated attribute value (a :py:class:`Locations`). This can be queried
+                # for the frame information
                 print " Global: %s" % value.global_frame
                 print " GlobalRelative: %s" % value.global_relative_frame
                 print " Local: %s" % value.local_frame
@@ -902,7 +909,9 @@ class Vehicle(HasObservers):
         # check that mode is not INITIALSING
         # check that we have a GPS fix
         # check that EKF pre-arm is complete
-        return self.mode != 'INITIALISING' and (self.gps_0.fix_type is not None and self.gps_0.fix_type > 1) and self._ekf_predposhorizabs
+        return (self.mode != 'INITIALISING' and
+                (self.gps_0.fix_type is not None and self.gps_0.fix_type > 1) and
+                self._ekf_predposhorizabs)
 
     @property
     def system_status(self) -> SystemStatus | None:
@@ -1348,15 +1357,19 @@ class Vehicle(HasObservers):
         """
         This method is used to send raw MAVLink "custom messages" to the vehicle.
 
-        The function can send arbitrary messages/commands to the connected vehicle at any time and in any vehicle mode.
+        The function can send arbitrary messages/commands to the connected vehicle at any time and in any
+        vehicle mode.
         It is particularly useful for controlling vehicles outside of missions (for example, in GUIDED mode).
 
-        The :py:func:`message_factory <dronekit.Vehicle.message_factory>` is used to create messages in the appropriate format.
+        The :py:func:`message_factory <dronekit.Vehicle.message_factory>` is used to create messages in the
+        appropriate format.
 
         For more information see the guide topic: :ref:`guided_mode_how_to_send_commands`.
 
-        :param message: A ``MAVLink_message`` instance, created using :py:func:`message_factory <dronekit.Vehicle.message_factory>`.
-            There is need to specify the system id, component id or sequence number of messages as the API will set these appropriately.
+        :param message: A ``MAVLink_message`` instance, created using
+            :py:func:`message_factory <dronekit.Vehicle.message_factory>`.
+            There is need to specify the system id, component id or sequence number of messages as the API
+            will set these appropriately.
         """
         self._master.mav.send(message)
 
@@ -1382,18 +1395,19 @@ class Vehicle(HasObservers):
                <field type="uint8_t" name="enable">0 to disable, 1 to enable</field>
           </message>
 
-        The name of the factory method will always be the lower case version of the message name with *_encode* appended.
-        Each field in the XML message definition must be listed as arguments to this factory method.  So for this example
-        message, the call would be:
+        The name of the factory method will always be the lower case version of the message name with
+        *_encode* appended.
+        Each field in the XML message definition must be listed as arguments to this factory method.  So for
+        this example message, the call would be:
 
         .. code:: python
 
             msg = vehicle.message_factory.image_trigger_control_encode(True)
             vehicle.send_mavlink(msg)
 
-        Some message types include "addressing information". If present, there is no need to specify the ``target_system``
-        id (just set to zero) as DroneKit will automatically update messages with the correct ID for the connected
-        vehicle before sending.
+        Some message types include "addressing information". If present, there is no need to specify the
+        ``target_system`` id (just set to zero) as DroneKit will automatically update messages with the
+        correct ID for the connected vehicle before sending.
         The ``target_component`` should be set to 0 (broadcast) unless the message is to specific component.
         CRC fields and sequence numbers (if defined in the message type) are automatically set by DroneKit and can also
         be ignored/set to zero.
@@ -1459,7 +1473,8 @@ class Vehicle(HasObservers):
 
     def send_capabilities_request(self, vehicle: Vehicle, name: str, m: Any) -> None:
         '''Request an AUTOPILOT_VERSION packet'''
-        capability_msg = vehicle.message_factory.command_long_encode(0, 0, mavutil.mavlink.MAV_CMD_REQUEST_AUTOPILOT_CAPABILITIES, 0, 1, 0, 0, 0, 0, 0, 0)
+        capability_msg = vehicle.message_factory.command_long_encode(
+            0, 0, mavutil.mavlink.MAV_CMD_REQUEST_AUTOPILOT_CAPABILITIES, 0, 1, 0, 0, 0, 0, 0, 0)
         vehicle.send_mavlink(capability_msg)
 
     def play_tune(self, tune: str) -> None:
@@ -1562,7 +1577,7 @@ class Vehicle(HasObservers):
             0,  # param 2, 1: magnetometer calibration
             0,  # param 3, 1: ground pressure calibration
             0,  # param 4, 1: radio RC calibration, 2: RC trim calibration
-            0,  # param 5, 1: accelerometer calibration, 2: board level calibration, 3: accelerometer temperature calibration, 4: simple accelerometer calibration
+            0,  # param 5, 1: accelerometer calibration, 2: board level calibration, 3: accelerometer temperature calibration, 4: simple accelerometer calibration  # noqa: E501 - keeps the same one-line-per-param comment style as its siblings above/below
             0,  # param 6, 2: airspeed calibration
             0,  # param 7, 1: ESC calibration, 3: barometer temperature calibration
         )
@@ -1594,7 +1609,7 @@ class Vehicle(HasObservers):
                 1,  # param 2, 1: magnetometer calibration
                 0,  # param 3, 1: ground pressure calibration
                 0,  # param 4, 1: radio RC calibration, 2: RC trim calibration
-                0,  # param 5, 1: accelerometer calibration, 2: board level calibration, 3: accelerometer temperature calibration, 4: simple accelerometer calibration
+                0,  # param 5, 1: accelerometer calibration, 2: board level calibration, 3: accelerometer temperature calibration, 4: simple accelerometer calibration  # noqa: E501 - keeps the same one-line-per-param comment style as its siblings above/below
                 0,  # param 6, 2: airspeed calibration
                 0,  # param 7, 1: ESC calibration, 3: barometer temperature calibration
             )
@@ -1615,7 +1630,7 @@ class Vehicle(HasObservers):
             0,  # param 2, 1: magnetometer calibration
             0,  # param 3, 1: ground pressure calibration
             0,  # param 4, 1: radio RC calibration, 2: RC trim calibration
-            4 if simple else 1,  # param 5, 1: accelerometer calibration, 2: board level calibration, 3: accelerometer temperature calibration, 4: simple accelerometer calibration
+            4 if simple else 1,  # param 5, 1: accelerometer calibration, 2: board level calibration, 3: accelerometer temperature calibration, 4: simple accelerometer calibration  # noqa: E501 - keeps the same one-line-per-param comment style as its siblings above/below
             0,  # param 6, 2: airspeed calibration
             0,  # param 7, 1: ESC calibration, 3: barometer temperature calibration
         )
@@ -1632,7 +1647,7 @@ class Vehicle(HasObservers):
             0,  # param 2, 1: magnetometer calibration
             0,  # param 3, 1: ground pressure calibration
             0,  # param 4, 1: radio RC calibration, 2: RC trim calibration
-            2,  # param 5, 1: accelerometer calibration, 2: board level calibration, 3: accelerometer temperature calibration, 4: simple accelerometer calibration
+            2,  # param 5, 1: accelerometer calibration, 2: board level calibration, 3: accelerometer temperature calibration, 4: simple accelerometer calibration  # noqa: E501 - keeps the same one-line-per-param comment style as its siblings above/below
             0,  # param 6, 2: airspeed calibration
             0,  # param 7, 1: ESC calibration, 3: barometer temperature calibration
         )
@@ -1649,7 +1664,7 @@ class Vehicle(HasObservers):
             0,  # param 2, 1: magnetometer calibration
             1,  # param 3, 1: ground pressure calibration
             0,  # param 4, 1: radio RC calibration, 2: RC trim calibration
-            0,  # param 5, 1: accelerometer calibration, 2: board level calibration, 3: accelerometer temperature calibration, 4: simple accelerometer calibration
+            0,  # param 5, 1: accelerometer calibration, 2: board level calibration, 3: accelerometer temperature calibration, 4: simple accelerometer calibration  # noqa: E501 - keeps the same one-line-per-param comment style as its siblings above/below
             0,  # param 6, 2: airspeed calibration
             0,  # param 7, 1: ESC calibration, 3: barometer temperature calibration
         )

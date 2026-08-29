@@ -85,7 +85,8 @@ class LocationGlobalRelative:
     The latitude and longitude are relative to the `WGS84 coordinate system <http://en.wikipedia.org/wiki/World_Geodetic_System>`_.
     The altitude is relative to the *home position*.
 
-    For example, a ``LocationGlobalRelative`` object with an altitude of 30 metres above the home location might be defined as:
+    For example, a ``LocationGlobalRelative`` object with an altitude of 30 metres above the home location
+    might be defined as:
 
     .. code:: python
 
@@ -118,7 +119,8 @@ class LocationLocal:
     """
     A local location object.
 
-    The north, east and down are relative to the EKF origin.  This is most likely the location where the vehicle was turned on.
+    The north, east and down are relative to the EKF origin.  This is most likely the location where the
+    vehicle was turned on.
 
     An object of this type is owned by :py:attr:`Vehicle.location`. See that class for information on
     reading and observing location in the local frame.
@@ -190,7 +192,8 @@ class Wind:
         self.wind_speed_z = wind_speed_z
 
     def __str__(self) -> str:
-        return f"Wind: wind direction: {self.wind_direction}, wind speed: {self.wind_speed}, wind speed z: {self.wind_speed_z}"
+        return (f"Wind: wind direction: {self.wind_direction}, wind speed: {self.wind_speed}, "
+                f"wind speed z: {self.wind_speed_z}")
 
 
 class Battery:
@@ -200,7 +203,8 @@ class Battery:
     An object of this type is returned by :py:attr:`Vehicle.battery`.
 
     :param voltage: Battery voltage in millivolts.
-    :param current: Battery current, in 10 * milliamperes. ``None`` if the autopilot does not support current measurement.
+    :param current: Battery current, in 10 * milliamperes. ``None`` if the autopilot does not support
+        current measurement.
     :param level: Remaining battery energy. ``None`` if the autopilot cannot estimate the remaining battery.
     """
 
@@ -441,8 +445,8 @@ class VehicleMode:
     The available set of supported flight modes is vehicle-specific (see
     `Copter Modes <http://copter.ardupilot.com/wiki/flying-arducopter/flight-modes/>`_,
     `Plane Modes <http://plane.ardupilot.com/wiki/flying/flight-modes/>`_,
-    `Rover Modes <http://rover.ardupilot.com/wiki/configuration-2/#mode_meanings>`_). If an unsupported mode is set the script
-    will raise a ``KeyError`` exception.
+    `Rover Modes <http://rover.ardupilot.com/wiki/configuration-2/#mode_meanings>`_). If an unsupported mode
+    is set the script will raise a ``KeyError`` exception.
 
     The :py:attr:`Vehicle.mode` attribute can be queried for the current mode.
     The code snippet below shows how to observe changes to the mode and then read the value:

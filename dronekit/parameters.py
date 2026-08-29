@@ -15,8 +15,9 @@ from dronekit.protocols import VehicleLike
 
 class Parameters(MutableMapping, HasObservers):
     """
-    This object is used to get and set the values of named parameters for a vehicle. See the following links for information about
-    the supported parameters for each platform: `Copter Parameters <http://copter.ardupilot.com/wiki/configuration/arducopter-parameters/>`_,
+    This object is used to get and set the values of named parameters for a vehicle. See the following
+    links for information about the supported parameters for each platform:
+    `Copter Parameters <http://copter.ardupilot.com/wiki/configuration/arducopter-parameters/>`_,
     `Plane Parameters <http://plane.ardupilot.com/wiki/arduplane-parameters/>`_, `Rover Parameters <http://rover.ardupilot.com/wiki/apmrover2-parameters/>`_.
 
     The code fragment below shows how to get and set the value of a parameter.
@@ -151,7 +152,8 @@ class Parameters(MutableMapping, HasObservers):
 
         See :ref:`vehicle_state_observing_parameters` for more information.
 
-        :param String attr_name: The parameter name that is to have an observer removed (or '*' to remove an 'all attribute' observer).
+        :param String attr_name: The parameter name that is to have an observer removed (or '*' to remove an
+            'all attribute' observer).
         :param args: The callback function to remove.
 
         """

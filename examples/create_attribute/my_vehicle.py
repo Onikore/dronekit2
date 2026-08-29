@@ -29,7 +29,8 @@ class RawIMU:
     :param ymag: Y Magnetic field (milli tesla)
     :param zmag: Z Magnetic field (milli tesla)
     """
-    def __init__(self, time_boot_us=None, xacc=None, yacc=None, zacc=None, xygro=None, ygyro=None, zgyro=None, xmag=None, ymag=None, zmag=None):
+    def __init__(self, time_boot_us=None, xacc=None, yacc=None, zacc=None, xygro=None, ygyro=None, zgyro=None,
+                 xmag=None, ymag=None, zmag=None):
         """
         RawIMU object constructor.
         """
@@ -48,7 +49,9 @@ class RawIMU:
         """
         String representation used to print the RawIMU object.
         """
-        return f"RAW_IMU: time_boot_us={self.time_boot_us},xacc={self.xacc},yacc={self.yacc},zacc={self.zacc},xgyro={self.xgyro},ygyro={self.ygyro},zgyro={self.zgyro},xmag={self.xmag},ymag={self.ymag},zmag={self.zmag}"
+        return (f"RAW_IMU: time_boot_us={self.time_boot_us},xacc={self.xacc},yacc={self.yacc},zacc={self.zacc},"
+                f"xgyro={self.xgyro},ygyro={self.ygyro},zgyro={self.zgyro},xmag={self.xmag},ymag={self.ymag},"
+                f"zmag={self.zmag}")
 
 
 class MyVehicle(Vehicle):

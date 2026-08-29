@@ -221,7 +221,8 @@ def get_bearing(aLocation1, aLocation2):
 
 
 """
-Functions to move the vehicle to a specified position (as opposed to controlling movement by setting velocity components).
+Functions to move the vehicle to a specified position (as opposed to controlling movement by setting
+velocity components).
 
 The methods include:
 * goto_position_target_global_int - Sets position using SET_POSITION_TARGET_GLOBAL_INT command in
@@ -250,7 +251,9 @@ def goto_position_target_global_int(aLocation):
         0b0000111111111000, # type_mask (only speeds enabled)
         aLocation.lat*1e7, # lat_int - X Position in WGS84 frame in 1e7 * meters
         aLocation.lon*1e7, # lon_int - Y Position in WGS84 frame in 1e7 * meters
-        aLocation.alt, # alt - Altitude in meters in AMSL altitude, not WGS84 if absolute or relative, above terrain if GLOBAL_TERRAIN_ALT_INT
+        # alt - Altitude in meters in AMSL altitude, not WGS84 if absolute or relative, above terrain if
+        # GLOBAL_TERRAIN_ALT_INT
+        aLocation.alt,
         0, # X velocity in NED frame in m/s
         0, # Y velocity in NED frame in m/s
         0, # Z velocity in NED frame in m/s

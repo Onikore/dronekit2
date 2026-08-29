@@ -4,7 +4,8 @@
 © Copyright 2015-2016, 3D Robotics.
 drone_delivery.py:
 
-A Flask based web application that displays a mapbox map to let you view the current vehicle position and send the vehicle commands to fly to a particular latitude and longitude.
+A Flask based web application that displays a mapbox map to let you view the current vehicle position and
+send the vehicle commands to fly to a particular latitude and longitude.
 """
 
 import json
@@ -23,10 +24,14 @@ import argparse
 
 from _common import add_connection_argument, get_connection_string
 
-parser = argparse.ArgumentParser(description='Creates a Flask based web application that displays a mapbox map to let you view the current vehicle position and send the vehicle commands to fly to a particular latitude and longitude.')
+parser = argparse.ArgumentParser(
+    description='Creates a Flask based web application that displays a mapbox map to let you view the '
+                'current vehicle position and send the vehicle commands to fly to a particular latitude '
+                'and longitude.')
 add_connection_argument(parser)
 parser.add_argument('--mapbox-token',
-                    help="Mapbox access token used to render the map. Overrides the MAPBOX_ACCESS_TOKEN environment variable.")
+                    help="Mapbox access token used to render the map. Overrides the MAPBOX_ACCESS_TOKEN "
+                         "environment variable.")
 args = parser.parse_args()
 
 connection_string = get_connection_string(args.connect)

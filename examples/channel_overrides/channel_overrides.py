@@ -27,7 +27,8 @@ import argparse
 
 from _common import add_connection_argument, get_connection_string
 
-parser = argparse.ArgumentParser(description='Example showing how to set and clear vehicle channel-override information.')
+parser = argparse.ArgumentParser(
+    description='Example showing how to set and clear vehicle channel-override information.')
 add_connection_argument(parser)
 args = parser.parse_args()
 

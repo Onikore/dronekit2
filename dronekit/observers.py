@@ -78,7 +78,8 @@ class HasObservers:
 
         See :ref:`vehicle_state_observe_attributes` for more information.
 
-        :param String attr_name: The attribute name that is to have an observer removed (or '*' to remove an 'all attribute' observer).
+        :param String attr_name: The attribute name that is to have an observer removed (or '*' to remove an
+            'all attribute' observer).
         :param observer: The callback function to remove.
 
         """

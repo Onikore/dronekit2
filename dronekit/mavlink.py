@@ -66,7 +66,8 @@ class mavudpin_multi(mavutil.mavfile):
                 self.broadcast = True
         mavutil.set_close_on_exec(self.port.fileno())
         self.port.setblocking(False)
-        mavutil.mavfile.__init__(self, self.port.fileno(), device, source_system=source_system, source_component=source_component, input=input, use_native=use_native)
+        mavutil.mavfile.__init__(self, self.port.fileno(), device, source_system=source_system,
+                                  source_component=source_component, input=input, use_native=use_native)
 
     def close(self) -> None:
         self.port.close()
@@ -160,7 +161,8 @@ class MAVConnection:
             self.master: Any = mavudpin_multi(ip[6:], input=True, baud=baud, source_system=source_system,
                                                source_component=source_component)
         else:
-            self.master = mavutil.mavlink_connection(ip, baud=baud, source_system=source_system, source_component=source_component)
+            self.master = mavutil.mavlink_connection(ip, baud=baud, source_system=source_system,
+                                                      source_component=source_component)
 
         # TODO get rid of "master" object as exposed,
         # keep it private, expose something smaller for dronekit

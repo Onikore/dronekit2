@@ -100,7 +100,8 @@ class Gimbal:
             #Point the gimbal straight down
             vehicle.gimbal.rotate(-90, 0, 0)
 
-        :param pitch: Gimbal pitch in degrees relative to the vehicle (see diagram for :ref:`attitude <figure_attitude>`).
+        :param pitch: Gimbal pitch in degrees relative to the vehicle (see diagram for
+            :ref:`attitude <figure_attitude>`).
             A value of 0 represents a camera pointed straight ahead relative to the front of the vehicle,
             while -90 points the camera straight down.
         :param roll: Gimbal roll in degrees relative to the vehicle (see diagram for :ref:`attitude <figure_attitude>`).

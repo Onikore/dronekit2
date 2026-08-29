@@ -52,8 +52,10 @@ print(f"   Supports COMMAND_INT message type: {vehicle.capabilities.command_int}
 print(f"   Supports PARAM_UNION message type: {vehicle.capabilities.param_union}")
 print(f"   Supports ftp for file transfers: {vehicle.capabilities.ftp}")
 print(f"   Supports commanding attitude offboard: {vehicle.capabilities.set_attitude_target}")
-print(f"   Supports commanding position and velocity targets in local NED frame: {vehicle.capabilities.set_attitude_target_local_ned}")
-print(f"   Supports set position + velocity targets in global scaled integers: {vehicle.capabilities.set_altitude_target_global_int}")
+print(f"   Supports commanding position and velocity targets in local NED frame: "
+      f"{vehicle.capabilities.set_attitude_target_local_ned}")
+print(f"   Supports set position + velocity targets in global scaled integers: "
+      f"{vehicle.capabilities.set_altitude_target_global_int}")
 print(f"   Supports terrain protocol / data handling: {vehicle.capabilities.terrain}")
 print(f"   Supports direct actuator control: {vehicle.capabilities.set_actuator_target}")
 print(f"   Supports the flight termination command: {vehicle.capabilities.flight_termination}")

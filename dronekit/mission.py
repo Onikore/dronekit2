@@ -28,16 +28,18 @@ class Command(mavutil.mavlink.MAVLink_mission_item_message):
 
     :param target_system: This can be set to any value
         (DroneKit changes the value to the MAVLink ID of the connected vehicle before the command is sent).
-    :param target_component: The component id if the message is intended for a particular component within the target system
-        (for example, the camera). Set to zero (broadcast) in most cases.
+    :param target_component: The component id if the message is intended for a particular component within
+        the target system (for example, the camera). Set to zero (broadcast) in most cases.
     :param seq: The sequence number within the mission (the autopilot will reject messages sent out of sequence).
         This should be set to zero as the API will automatically set the correct value when uploading a mission.
     :param frame: The frame of reference used for the location parameters (x, y, z). In most cases this will be
-        ``mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT``, which uses the WGS84 global coordinate system for latitude and longitude, but sets altitude
-        as relative to the home position in metres (home altitude = 0). For more information `see the wiki here
+        ``mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT``, which uses the WGS84 global coordinate system for
+        latitude and longitude, but sets altitude as relative to the home position in metres (home altitude = 0).
+        For more information `see the wiki here
         <http://planner.ardupilot.com/wiki/common-mavlink-mission-command-messages-mav_cmd/#frames_of_reference>`_.
-    :param command: The specific mission command (e.g. ``mavutil.mavlink.MAV_CMD_NAV_WAYPOINT``). The supported commands (and command parameters
-        are listed `on the wiki <http://planner.ardupilot.com/wiki/common-mavlink-mission-command-messages-mav_cmd/>`_.
+    :param command: The specific mission command (e.g. ``mavutil.mavlink.MAV_CMD_NAV_WAYPOINT``). The supported
+        commands (and command parameters are listed `on the wiki
+        <http://planner.ardupilot.com/wiki/common-mavlink-mission-command-messages-mav_cmd/>`_.
     :param current: Set to zero (not supported).
     :param autocontinue: Set to zero (not supported).
     :param param1: Command specific parameter (depends on specific `Mission Command (MAV_CMD) <http://planner.ardupilot.com/wiki/common-mavlink-mission-command-messages-mav_cmd/>`_).
@@ -46,7 +48,8 @@ class Command(mavutil.mavlink.MAVLink_mission_item_message):
     :param param4: Command specific parameter.
     :param x: (param5) Command specific parameter used for latitude (if relevant to command).
     :param y: (param6) Command specific parameter used for longitude (if relevant to command).
-    :param z: (param7) Command specific parameter used for altitude (if relevant). The reference frame for altitude depends on the ``frame``.
+    :param z: (param7) Command specific parameter used for altitude (if relevant). The reference frame for
+        altitude depends on the ``frame``.
 
     """
     pass
@@ -250,7 +253,8 @@ class CommandSequence:
 
     def upload(self, timeout: float | None = None) -> None:
         """
-        Call ``upload()`` after :py:func:`adding <CommandSequence.add>` or :py:func:`clearing <CommandSequence.clear>` mission commands.
+        Call ``upload()`` after :py:func:`adding <CommandSequence.add>` or
+        :py:func:`clearing <CommandSequence.clear>` mission commands.
 
         After the return from ``upload()`` any writes are guaranteed to have completed (or thrown an
         exception) and future reads will see their effects.

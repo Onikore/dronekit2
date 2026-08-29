@@ -23,7 +23,8 @@ Vehicle movement is primarily controlled using the :py:attr:`Vehicle.armed` attr
 Velocity-based movement and control over other vehicle features can be achieved using custom MAVLink messages
 (:py:func:`Vehicle.send_mavlink`, :py:func:`Vehicle.message_factory`).
 
-It is also possible to work with vehicle "missions" using the :py:attr:`Vehicle.commands` attribute, and run them in AUTO mode.
+It is also possible to work with vehicle "missions" using the :py:attr:`Vehicle.commands` attribute, and run
+them in AUTO mode.
 
 All the logging is handled through the builtin Python `logging` module.
 

@@ -26,7 +26,8 @@ import argparse
 
 from _common import add_connection_argument, get_connection_string
 
-parser = argparse.ArgumentParser(description='Generates max, min and current interval between message sent and ack recieved.')
+parser = argparse.ArgumentParser(
+    description='Generates max, min and current interval between message sent and ack recieved.')
 add_connection_argument(parser)
 args = parser.parse_args()
 
@@ -62,7 +63,8 @@ class MeasureTime:
         #print "Interval", self.previnterval
         #print "MaxInterval", self.maxinterval
         #print "MinInterval", self.mininterval
-        sys.stdout.write(f'MaxInterval: {self.maxinterval}\tMinInterval: {self.mininterval}\tInterval: {self.previnterval}\r')
+        sys.stdout.write(f'MaxInterval: {self.maxinterval}\tMinInterval: {self.mininterval}\t'
+                         f'Interval: {self.previnterval}\r')
         sys.stdout.flush()
 
 
