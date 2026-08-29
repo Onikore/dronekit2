@@ -48,16 +48,7 @@ from dronekit.util import ErrprinterHandler
 __version__ = "3.0.0.dev0"
 
 
-class APIException(Exception):
-    """
-    Base class for DroneKit related exceptions.
-
-    :param String message: Message string describing the exception
-    """
-
-
-class TimeoutError(APIException):
-    '''Raised by operations that have timeouts.'''
+from dronekit.errors import APIException, TimeoutError
 
 
 class Attitude(object):
