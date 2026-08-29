@@ -89,7 +89,7 @@ class Parameters(MutableMapping, HasObservers):
                 time.sleep(0.1)
 
         if retries > 0:
-            self._logger.error("timeout setting parameter %s to %f" % (name, value))
+            self._logger.error(f"timeout setting parameter {name} to {value:f}")
         return False
 
     def wait_ready(self, **kwargs: Any) -> None:

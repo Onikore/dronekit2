@@ -33,7 +33,7 @@ connection_string = get_connection_string(args.connect)
 
 
 # Connect to the Vehicle
-print('Connecting to vehicle on: %s' % connection_string)
+print(f'Connecting to vehicle on: {connection_string}')
 vehicle = connect(connection_string, wait_ready=True)
 
 def arm_and_takeoff_nogps(aTargetAltitude):
@@ -69,8 +69,7 @@ def arm_and_takeoff_nogps(aTargetAltitude):
     thrust = DEFAULT_TAKEOFF_THRUST
     while True:
         current_altitude = vehicle.location.global_relative_frame.alt
-        print(" Altitude: %f  Desired: %f" %
-              (current_altitude, aTargetAltitude))
+        print(f" Altitude: {current_altitude:f}  Desired: {aTargetAltitude:f}")
         if current_altitude >= aTargetAltitude*0.95: # Trigger just below target alt.
             print("Reached target altitude")
             break

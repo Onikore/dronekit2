@@ -42,7 +42,7 @@ def test_110(vehicle):
     wait_for(lambda: armed_callback.called, time_max)
 
     # Ensure the callback was called.
-    assert armed_callback.called > 0, "Callback should have been called within %d seconds" % (time_max,)
+    assert armed_callback.called > 0, f"Callback should have been called within {time_max} seconds"
 
     # Rmove all listeners. The first call should remove all listeners
     # we've added; the second call should be ignored and not throw.

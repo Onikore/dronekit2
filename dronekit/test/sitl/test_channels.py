@@ -11,7 +11,7 @@ def assert_readback(vehicle, values):
                 continue
         break
     if i <= 0:
-        raise Exception('Did not match in channels readback %s' % values)
+        raise Exception(f'Did not match in channels readback {values}')
 
 
 def test_timeout(vehicle):

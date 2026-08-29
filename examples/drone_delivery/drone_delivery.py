@@ -39,7 +39,7 @@ if not mapbox_token:
     )
 
 local_path = os.path.dirname(os.path.abspath(__file__))
-print("local path: %s" % local_path)
+print(f"local path: {local_path}")
 
 
 class Drone:
@@ -213,7 +213,7 @@ class Templates:
 
 
 # Connect to the Vehicle
-print('Connecting to vehicle on: %s' % connection_string)
+print(f'Connecting to vehicle on: {connection_string}')
 vehicle = connect(connection_string, wait_ready=True)
 
 print('Launching Drone...')

@@ -30,55 +30,55 @@ connection_string = get_connection_string(args.connect)
 
 # Connect to the Vehicle.
 #   Set `wait_ready=True` to ensure default attributes are populated before `connect()` returns.
-print("\nConnecting to vehicle on: %s" % connection_string)
+print(f"\nConnecting to vehicle on: {connection_string}")
 vehicle = connect(connection_string, wait_ready=True)
 
 vehicle.wait_ready('autopilot_version')
 
 # Get all vehicle attributes (state)
 print("\nGet all vehicle attribute values:")
-print(" Autopilot Firmware version: %s" % vehicle.version)
-print("   Major version number: %s" % vehicle.version.major)
-print("   Minor version number: %s" % vehicle.version.minor)
-print("   Patch version number: %s" % vehicle.version.patch)
-print("   Release type: %s" % vehicle.version.release_type())
-print("   Release version: %s" % vehicle.version.release_version())
-print("   Stable release?: %s" % vehicle.version.is_stable())
+print(f" Autopilot Firmware version: {vehicle.version}")
+print(f"   Major version number: {vehicle.version.major}")
+print(f"   Minor version number: {vehicle.version.minor}")
+print(f"   Patch version number: {vehicle.version.patch}")
+print(f"   Release type: {vehicle.version.release_type()}")
+print(f"   Release version: {vehicle.version.release_version()}")
+print(f"   Stable release?: {vehicle.version.is_stable()}")
 print(" Autopilot capabilities")
-print("   Supports MISSION_FLOAT message type: %s" % vehicle.capabilities.mission_float)
-print("   Supports PARAM_FLOAT message type: %s" % vehicle.capabilities.param_float)
-print("   Supports MISSION_INT message type: %s" % vehicle.capabilities.mission_int)
-print("   Supports COMMAND_INT message type: %s" % vehicle.capabilities.command_int)
-print("   Supports PARAM_UNION message type: %s" % vehicle.capabilities.param_union)
-print("   Supports ftp for file transfers: %s" % vehicle.capabilities.ftp)
-print("   Supports commanding attitude offboard: %s" % vehicle.capabilities.set_attitude_target)
-print("   Supports commanding position and velocity targets in local NED frame: %s" % vehicle.capabilities.set_attitude_target_local_ned)
-print("   Supports set position + velocity targets in global scaled integers: %s" % vehicle.capabilities.set_altitude_target_global_int)
-print("   Supports terrain protocol / data handling: %s" % vehicle.capabilities.terrain)
-print("   Supports direct actuator control: %s" % vehicle.capabilities.set_actuator_target)
-print("   Supports the flight termination command: %s" % vehicle.capabilities.flight_termination)
-print("   Supports mission_float message type: %s" % vehicle.capabilities.mission_float)
-print("   Supports onboard compass calibration: %s" % vehicle.capabilities.compass_calibration)
-print(" Global Location: %s" % vehicle.location.global_frame)
-print(" Global Location (relative altitude): %s" % vehicle.location.global_relative_frame)
-print(" Local Location: %s" % vehicle.location.local_frame)
-print(" Attitude: %s" % vehicle.attitude)
-print(" Velocity: %s" % vehicle.velocity)
-print(" GPS: %s" % vehicle.gps_0)
-print(" Gimbal status: %s" % vehicle.gimbal)
-print(" Battery: %s" % vehicle.battery)
-print(" EKF OK?: %s" % vehicle.ekf_ok)
-print(" Last Heartbeat: %s" % vehicle.last_heartbeat)
-print(" Rangefinder: %s" % vehicle.rangefinder)
-print(" Rangefinder distance: %s" % vehicle.rangefinder.distance)
-print(" Rangefinder voltage: %s" % vehicle.rangefinder.voltage)
-print(" Heading: %s" % vehicle.heading)
-print(" Is Armable?: %s" % vehicle.is_armable)
-print(" System status: %s" % vehicle.system_status.state)
-print(" Groundspeed: %s" % vehicle.groundspeed)    # settable
-print(" Airspeed: %s" % vehicle.airspeed)    # settable
-print(" Mode: %s" % vehicle.mode.name)    # settable
-print(" Armed: %s" % vehicle.armed)    # settable
+print(f"   Supports MISSION_FLOAT message type: {vehicle.capabilities.mission_float}")
+print(f"   Supports PARAM_FLOAT message type: {vehicle.capabilities.param_float}")
+print(f"   Supports MISSION_INT message type: {vehicle.capabilities.mission_int}")
+print(f"   Supports COMMAND_INT message type: {vehicle.capabilities.command_int}")
+print(f"   Supports PARAM_UNION message type: {vehicle.capabilities.param_union}")
+print(f"   Supports ftp for file transfers: {vehicle.capabilities.ftp}")
+print(f"   Supports commanding attitude offboard: {vehicle.capabilities.set_attitude_target}")
+print(f"   Supports commanding position and velocity targets in local NED frame: {vehicle.capabilities.set_attitude_target_local_ned}")
+print(f"   Supports set position + velocity targets in global scaled integers: {vehicle.capabilities.set_altitude_target_global_int}")
+print(f"   Supports terrain protocol / data handling: {vehicle.capabilities.terrain}")
+print(f"   Supports direct actuator control: {vehicle.capabilities.set_actuator_target}")
+print(f"   Supports the flight termination command: {vehicle.capabilities.flight_termination}")
+print(f"   Supports mission_float message type: {vehicle.capabilities.mission_float}")
+print(f"   Supports onboard compass calibration: {vehicle.capabilities.compass_calibration}")
+print(f" Global Location: {vehicle.location.global_frame}")
+print(f" Global Location (relative altitude): {vehicle.location.global_relative_frame}")
+print(f" Local Location: {vehicle.location.local_frame}")
+print(f" Attitude: {vehicle.attitude}")
+print(f" Velocity: {vehicle.velocity}")
+print(f" GPS: {vehicle.gps_0}")
+print(f" Gimbal status: {vehicle.gimbal}")
+print(f" Battery: {vehicle.battery}")
+print(f" EKF OK?: {vehicle.ekf_ok}")
+print(f" Last Heartbeat: {vehicle.last_heartbeat}")
+print(f" Rangefinder: {vehicle.rangefinder}")
+print(f" Rangefinder distance: {vehicle.rangefinder.distance}")
+print(f" Rangefinder voltage: {vehicle.rangefinder.voltage}")
+print(f" Heading: {vehicle.heading}")
+print(f" Is Armable?: {vehicle.is_armable}")
+print(f" System status: {vehicle.system_status.state}")
+print(f" Groundspeed: {vehicle.groundspeed}")    # settable
+print(f" Airspeed: {vehicle.airspeed}")    # settable
+print(f" Mode: {vehicle.mode.name}")    # settable
+print(f" Armed: {vehicle.armed}")    # settable
 
 
 
@@ -90,7 +90,7 @@ while not vehicle.home_location:
     if not vehicle.home_location:
         print(" Waiting for home location ...")
 # We have a home location, so print it!
-print("\n Home location: %s" % vehicle.home_location)
+print(f"\n Home location: {vehicle.home_location}")
 
 
 # Set vehicle home_location, mode, and armed attributes (the only settable attributes)
@@ -101,16 +101,16 @@ print("\nSet new home location")
 my_location_alt = vehicle.location.global_frame
 my_location_alt.alt = 222.0
 vehicle.home_location = my_location_alt
-print(" New Home Location (from attribute - altitude should be 222): %s" % vehicle.home_location)
+print(f" New Home Location (from attribute - altitude should be 222): {vehicle.home_location}")
 
 #Confirm current value on vehicle by re-downloading commands
 cmds = vehicle.commands
 cmds.download()
 cmds.wait_ready()
-print(" New Home Location (from vehicle - altitude should be 222): %s" % vehicle.home_location)
+print(f" New Home Location (from vehicle - altitude should be 222): {vehicle.home_location}")
 
 
-print("\nSet Vehicle.mode = GUIDED (currently: %s)" % vehicle.mode.name)
+print(f"\nSet Vehicle.mode = GUIDED (currently: {vehicle.mode.name})")
 vehicle.mode = VehicleMode("GUIDED")
 while not vehicle.mode.name=='GUIDED':  #Wait until mode has changed
     print(" Waiting for mode change ...")
@@ -167,7 +167,7 @@ def decorated_mode_callback(self, attr_name, value):
     # `value` is the updated attribute value.
     print(" CALLBACK: Mode changed to", value)
 
-print(" Set mode=STABILIZE (currently: %s) and wait for callback" % vehicle.mode.name)
+print(f" Set mode=STABILIZE (currently: {vehicle.mode.name}) and wait for callback")
 vehicle.mode = VehicleMode("STABILIZE")
 
 print(" Wait 2s so callback invoked before moving to next example")
@@ -184,7 +184,7 @@ except:
 
 # Demonstrate getting callback on any attribute change
 def wildcard_callback(self, attr_name, value):
-    print(" CALLBACK: (%s): %s" % (attr_name,value))
+    print(f" CALLBACK: ({attr_name}): {value}")
 
 print("\nAdd attribute callback detecting ANY attribute change")
 vehicle.add_attribute_listener('*', wildcard_callback)
@@ -201,16 +201,16 @@ vehicle.remove_attribute_listener('*', wildcard_callback)
 
 # Get/Set Vehicle Parameters
 print("\nRead and write parameters")
-print(" Read vehicle param 'THR_MIN': %s" % vehicle.parameters['THR_MIN'])
+print(f" Read vehicle param 'THR_MIN': {vehicle.parameters['THR_MIN']}")
 
 print(" Write vehicle param 'THR_MIN' : 10")
 vehicle.parameters['THR_MIN']=10
-print(" Read new value of param 'THR_MIN': %s" % vehicle.parameters['THR_MIN'])
+print(f" Read new value of param 'THR_MIN': {vehicle.parameters['THR_MIN']}")
 
 
 print("\nPrint all parameters (iterate `vehicle.parameters`):")
 for key, value in vehicle.parameters.items():
-    print(" Key:%s Value:%s" % (key,value))
+    print(f" Key:{key} Value:{value}")
 
 
 print("\nCreate parameter observer using decorator")
@@ -220,7 +220,7 @@ print("\nCreate parameter observer using decorator")
 
 @vehicle.parameters.on_attribute('THR_MIN')
 def decorated_thr_min_callback(self, attr_name, value):
-    print(" PARAMETER CALLBACK: %s changed to: %s" % (attr_name, value))
+    print(f" PARAMETER CALLBACK: {attr_name} changed to: {value}")
 
 
 print("Write vehicle param 'THR_MIN' : 20 (and wait for callback)")
@@ -235,7 +235,7 @@ for x in range(1,5):
 #Callback function for "any" parameter
 print("\nCreate (removable) observer for any parameter using wildcard string")
 def any_parameter_callback(self, attr_name, value):
-    print(" ANY PARAMETER CALLBACK: %s changed to: %s" % (attr_name, value))
+    print(f" ANY PARAMETER CALLBACK: {attr_name} changed to: {value}")
 
 #Add observer for the vehicle's any/all parameters parameter (defined using wildcard string ``'*'``)
 vehicle.parameters.add_attribute_listener('*', any_parameter_callback)

@@ -38,14 +38,14 @@ def test_no_bare_except_clauses_in_dronekit_init():
     assert lines == [], (
         "Bare `except:` clauses (swallow BaseException, incl. "
         "KeyboardInterrupt/SystemExit) found at dronekit/__init__.py "
-        "line(s): %r" % lines
+        f"line(s): {lines!r}"
     )
 
 
 def test_no_bare_except_clauses_in_mavlink_module():
     lines = _bare_except_lines(dronekit.mavlink)
     assert lines == [], (
-        "Bare `except:` clauses found at dronekit/mavlink.py line(s): %r" % lines
+        f"Bare `except:` clauses found at dronekit/mavlink.py line(s): {lines!r}"
     )
 
 

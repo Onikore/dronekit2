@@ -34,7 +34,7 @@ args = parser.parse_args()
 connection_string = get_connection_string(args.connect)
 
 # Connect to the Vehicle
-print('Connecting to vehicle on: %s' % connection_string)
+print(f'Connecting to vehicle on: {connection_string}')
 vehicle = connect(connection_string, wait_ready=True, timeout=300)
 
 
@@ -94,7 +94,7 @@ try:
         if (gpsd.valid & gps.LATLON_SET) != 0:
             altitude = 30  # in meters
             dest = LocationGlobalRelative(gpsd.fix.latitude, gpsd.fix.longitude, altitude)
-            print("Going to: %s" % dest)
+            print(f"Going to: {dest}")
 
             # A better implementation would only send new waypoints if the position had changed significantly
             vehicle.simple_goto(dest)

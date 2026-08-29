@@ -313,7 +313,7 @@ class Vehicle(HasObservers):
             self._autopilot_type = m.autopilot
             self._vehicle_type = m.type
             if self._is_mode_available(m.custom_mode, m.base_mode) is False:
-                raise APIException("mode (%s, %s) not available on mavlink definition" % (m.custom_mode, m.base_mode))
+                raise APIException(f"mode ({m.custom_mode}, {m.base_mode}) not available on mavlink definition")
             if self._autopilot_type == mavutil.mavlink.MAV_AUTOPILOT_PX4:
                 self._flightmode = mavutil.interpret_px4_mode(m.base_mode, m.custom_mode)
             else:
@@ -474,11 +474,10 @@ class Vehicle(HasObservers):
             # Timeouts.
             if self._heartbeat_started:
                 if self._heartbeat_error and time.monotonic() - self._heartbeat_lastreceived > self._heartbeat_error > 0:
-                    raise APIException('No heartbeat in %s seconds, aborting.' %
-                                       self._heartbeat_error)
+                    raise APIException(f'No heartbeat in {self._heartbeat_error} seconds, aborting.')
                 elif time.monotonic() - self._heartbeat_lastreceived > self._heartbeat_warning:
                     if self._heartbeat_timeout is False:
-                        self._logger.warning('Link timeout, no heartbeat in last %s seconds' % self._heartbeat_warning)
+                        self._logger.warning(f'Link timeout, no heartbeat in last {self._heartbeat_warning} seconds')
                         self._heartbeat_timeout = True
 
         @self.on_message(['HEARTBEAT'])
@@ -637,13 +636,13 @@ class Vehicle(HasObservers):
             try:
                 fn(self, name, msg)
             except Exception:
-                self._logger.exception('Exception in message handler for %s' % msg.get_type(), exc_info=True)
+                self._logger.exception(f'Exception in message handler for {msg.get_type()}', exc_info=True)
 
         for fn in self._message_listeners.get('*', []):
             try:
                 fn(self, name, msg)
             except Exception:
-                self._logger.exception('Exception in message handler for %s' % msg.get_type(), exc_info=True)
+                self._logger.exception(f'Exception in message handler for {msg.get_type()}', exc_info=True)
 
     def close(self) -> None:
         return self._handler.close()
@@ -1526,8 +1525,7 @@ class Vehicle(HasObservers):
             now = time.monotonic()
             if now - start > timeout:
                 if raise_exception:
-                    raise TimeoutError('wait_ready experienced a timeout after %s seconds.' %
-                                       timeout)
+                    raise TimeoutError(f'wait_ready experienced a timeout after {timeout} seconds.')
                 else:
                     return False
             if (still_waiting_callback and
@@ -1660,4 +1658,4 @@ class Vehicle(HasObservers):
 
 
 def default_still_waiting_callback(atts: Any) -> None:
-    logging.getLogger(__name__).debug("Still waiting for data from vehicle: %s" % ','.join(atts))
+    logging.getLogger(__name__).debug(f"Still waiting for data from vehicle: {','.join(atts)}")

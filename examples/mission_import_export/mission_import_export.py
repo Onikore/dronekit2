@@ -32,7 +32,7 @@ connection_string = get_connection_string(args.connect)
 
 
 # Connect to the Vehicle
-print('Connecting to vehicle on: %s' % connection_string)
+print(f'Connecting to vehicle on: {connection_string}')
 vehicle = connect(connection_string, wait_ready=True)
 
 # Check that vehicle is armable.
@@ -55,7 +55,7 @@ def readmission(aFileName):
     round-tripping MISSION_ITEM_INT missions), `dronekit.CommandInt` is a drop-in alternative
     with the same constructor signature.
     """
-    print("\nReading mission from file: %s" % aFileName)
+    print(f"\nReading mission from file: {aFileName}")
     cmds = vehicle.commands
     missionlist=[]
     with open(aFileName) as f:
@@ -89,7 +89,7 @@ def upload_mission(aFileName):
     #Read mission from file
     missionlist = readmission(aFileName)
 
-    print("\nUpload mission from a file: %s" % aFileName)
+    print(f"\nUpload mission from a file: {aFileName}")
     #Clear existing mission from vehicle
     print(' Clear mission')
     cmds = vehicle.commands
@@ -120,17 +120,17 @@ def save_mission(aFileName):
     Save a mission in the Waypoint file format
     (http://qgroundcontrol.org/mavlink/waypoint_protocol#waypoint_file_format).
     """
-    print("\nSave mission from Vehicle to file: %s" % aFileName)
+    print(f"\nSave mission from Vehicle to file: {aFileName}")
     #Download mission from vehicle
     missionlist = download_mission()
     #Add file-format information
     output='QGC WPL 110\n'
     #Add home location as 0th waypoint
     home = vehicle.home_location
-    output+="%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (0,1,0,16,0,0,0,0,home.lat,home.lon,home.alt,1)
+    output+=f"{0}\t{1}\t{0}\t{16}\t{0}\t{0}\t{0}\t{0}\t{home.lat}\t{home.lon}\t{home.alt}\t{1}\n"
     #Add commands
     for cmd in missionlist:
-        commandline="%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (cmd.seq,cmd.current,cmd.frame,cmd.command,cmd.param1,cmd.param2,cmd.param3,cmd.param4,cmd.x,cmd.y,cmd.z,cmd.autocontinue)
+        commandline=f"{cmd.seq}\t{cmd.current}\t{cmd.frame}\t{cmd.command}\t{cmd.param1}\t{cmd.param2}\t{cmd.param3}\t{cmd.param4}\t{cmd.x}\t{cmd.y}\t{cmd.z}\t{cmd.autocontinue}\n"
         output+=commandline
     with open(aFileName, 'w') as file_:
         print(" Write mission to file")
@@ -141,10 +141,10 @@ def printfile(aFileName):
     """
     Print a mission file to demonstrate "round trip"
     """
-    print("\nMission file: %s" % aFileName)
+    print(f"\nMission file: {aFileName}")
     with open(aFileName) as f:
         for line in f:
-            print(' %s' % line.strip())
+            print(f' {line.strip()}')
 
 
 import_mission_filename = 'mpmission.txt'

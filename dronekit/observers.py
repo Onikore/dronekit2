@@ -120,13 +120,13 @@ class HasObservers:
             try:
                 fn(self, attr_name, value)
             except Exception:
-                self._logger.exception('Exception in attribute handler for %s' % attr_name, exc_info=True)
+                self._logger.exception(f'Exception in attribute handler for {attr_name}', exc_info=True)
 
         for fn in self._attribute_listeners.get('*', []):
             try:
                 fn(self, attr_name, value)
             except Exception:
-                self._logger.exception('Exception in attribute handler for %s' % attr_name, exc_info=True)
+                self._logger.exception(f'Exception in attribute handler for {attr_name}', exc_info=True)
 
     def on_attribute(self, name: str | list[str]) -> Callable[[Callable[..., Any]], None]:
         """

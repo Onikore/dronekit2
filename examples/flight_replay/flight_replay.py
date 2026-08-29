@@ -137,16 +137,15 @@ def arm_and_takeoff(aTargetAltitude):
         requiredAlt = aTargetAltitude*0.95
         #Break and return from function just below target altitude.
         if vehicle.location.global_relative_frame.alt>=requiredAlt:
-            print(" Reached target altitude of ~%f" % (aTargetAltitude))
+            print(f" Reached target altitude of ~{aTargetAltitude:f}")
             break
-        print(" Altitude: %f < %f" % (vehicle.location.global_relative_frame.alt,
-                                      requiredAlt))
+        print(f" Altitude: {vehicle.location.global_relative_frame.alt:f} < {requiredAlt:f}")
         time.sleep(1)
 
 
 print("Generating waypoints from tlog...")
 messages = position_messages_from_tlog(args.tlog)
-print(" Generated %d waypoints from tlog" % len(messages))
+print(f" Generated {len(messages)} waypoints from tlog")
 if len(messages) == 0:
     print("No position messages found in log")
     exit(0)
@@ -159,7 +158,7 @@ if len(messages) == 0:
 connection_string = get_connection_string(args.connect)
 
 # Connect to the Vehicle
-print('Connecting to vehicle on: %s' % connection_string)
+print(f'Connecting to vehicle on: {connection_string}')
 vehicle = connect(connection_string, wait_ready=True)
 
 
@@ -191,7 +190,7 @@ for pt in messages:
     cmds.add(cmd)
 
 #Upload clear message and command messages to vehicle.
-print("Uploading %d waypoints to vehicle..." % len(messages))
+print(f"Uploading {len(messages)} waypoints to vehicle...")
 cmds.upload()
 
 print("Arm and Takeoff")
@@ -212,7 +211,7 @@ while (vehicle.mode.name != "AUTO"):
 time_start = time.time()
 while time.time() - time_start < 60:
     nextwaypoint=vehicle.commands.next
-    print('Distance to waypoint (%s): %s' % (nextwaypoint, distance_to_current_waypoint()))
+    print(f'Distance to waypoint ({nextwaypoint}): {distance_to_current_waypoint()}')
 
     if nextwaypoint==len(messages):
         print("Exit 'standard' mission when start heading to final waypoint")

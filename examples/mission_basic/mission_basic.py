@@ -30,7 +30,7 @@ connection_string = get_connection_string(args.connect)
 
 
 # Connect to the Vehicle
-print('Connecting to vehicle on: %s' % connection_string)
+print(f'Connecting to vehicle on: {connection_string}')
 vehicle = connect(connection_string, wait_ready=True)
 
 
@@ -194,7 +194,7 @@ vehicle.mode = VehicleMode("AUTO")
 
 while True:
     nextwaypoint=vehicle.commands.next
-    print('Distance to waypoint (%s): %s' % (nextwaypoint, distance_to_current_waypoint()))
+    print(f'Distance to waypoint ({nextwaypoint}): {distance_to_current_waypoint()}')
 
     if nextwaypoint==3: #Skip to next waypoint
         print('Skipping to Waypoint 5 when reach waypoint 3')

@@ -32,7 +32,7 @@ connection_string = get_connection_string(args.connect)
 
 
 # Connect to the Vehicle
-print('Connecting to vehicle on: %s' % connection_string)
+print(f'Connecting to vehicle on: {connection_string}')
 vehicle = connect(connection_string, wait_ready=True)
 
 
@@ -480,7 +480,7 @@ camera gimbal at the the selected location (in this case it aligns the whole veh
 print("SQUARE path using SET_POSITION_TARGET_LOCAL_NED and position parameters")
 DURATION = 20 #Set duration for each segment.
 
-print("North 50m, East 0m, 10m altitude for %s seconds" % DURATION)
+print(f"North 50m, East 0m, 10m altitude for {DURATION} seconds")
 goto_position_target_local_ned(50,0,-10)
 print("Point ROI at current location (home position)")
 # NOTE that this has to be called after the goto command as first "move" command of a particular type
@@ -607,7 +607,7 @@ print("Get new home location")
 cmds = vehicle.commands
 cmds.download()
 cmds.wait_ready()
-print(" Home Location: %s" % vehicle.home_location)
+print(f" Home Location: {vehicle.home_location}")
 
 
 print("Yaw 90 relative (to previous yaw heading)")

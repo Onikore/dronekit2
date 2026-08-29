@@ -152,8 +152,8 @@ def test_recv_reraises_unexpected_socket_error_instead_of_unboundlocalerror():
     logged_type = logged_exc_types[0]
     assert logged_type is not None
     assert not issubclass(logged_type, (UnboundLocalError, NameError)), (
-        "recv() logged %r - the original socket.error was swallowed and "
-        "replaced by a bug in the fallthrough path" % logged_type
+        f"recv() logged {logged_type!r} - the original socket.error was swallowed and "
+        "replaced by a bug in the fallthrough path"
     )
     assert issubclass(logged_type, OSError)  # socket.error is an OSError alias
 

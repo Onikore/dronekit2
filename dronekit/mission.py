@@ -317,7 +317,7 @@ class CommandSequence:
         elif isinstance(index, int):
             item = self._vehicle._wploader.wp(index + 1)
             if not item:
-                raise IndexError('Index %s out of range.' % index)
+                raise IndexError(f'Index {index} out of range.')
             return item
         else:
             raise TypeError('Invalid argument type.')

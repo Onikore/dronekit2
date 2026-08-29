@@ -224,7 +224,7 @@ class MAVConnection:
                             raise APIException('Connection aborting during read')
                         raise
                     except Exception as e:
-                        self._logger.exception('mav send error: %s' % str(e))
+                        self._logger.exception(f'mav send error: {str(e)}')
                         break
             except APIException as e:
                 self._logger.exception("Exception in MAVLink write loop", exc_info=True)
@@ -267,7 +267,7 @@ class MAVConnection:
                             # Avoid
                             #   invalid MAVLink prefix '73'
                             #   invalid MAVLink prefix '13'
-                            self._logger.debug('mav recv error: %s' % str(e))
+                            self._logger.debug(f'mav recv error: {str(e)}')
                             msg = None
                         except Exception:
                             # Log any other unexpected exception
@@ -282,7 +282,7 @@ class MAVConnection:
                                 fn(self, msg)
                             except Exception:
                                 self._logger.exception(
-                                    'Exception in message handler for %s' % msg.get_type(),
+                                    f'Exception in message handler for {msg.get_type()}',
                                     exc_info=True
                                 )
 
@@ -373,7 +373,7 @@ class MAVConnection:
                     assert len(msg.get_msgbuf()) > 0
                     target.out_queue.put(msg.get_msgbuf())
                 except Exception:
-                    self._logger.exception('Could not pack this object on receive: %s' % type(msg), exc_info=True)
+                    self._logger.exception(f'Could not pack this object on receive: {type(msg)}', exc_info=True)
 
         # target -> self -> vehicle
         @target.forward_message
@@ -387,6 +387,6 @@ class MAVConnection:
                     assert len(msg.get_msgbuf()) > 0
                     self.out_queue.put(msg.get_msgbuf())
                 except Exception:
-                    self._logger.exception('Could not pack this object on forward: %s' % type(msg), exc_info=True)
+                    self._logger.exception(f'Could not pack this object on forward: {type(msg)}', exc_info=True)
 
         return target

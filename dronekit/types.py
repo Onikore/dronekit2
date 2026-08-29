@@ -75,7 +75,7 @@ class LocationGlobal:
         self.global_frame = None
 
     def __str__(self) -> str:
-        return "LocationGlobal:lat=%s,lon=%s,alt=%s" % (self.lat, self.lon, self.alt)
+        return f"LocationGlobal:lat={self.lat},lon={self.lon},alt={self.alt}"
 
 
 class LocationGlobalRelative:
@@ -111,7 +111,7 @@ class LocationGlobalRelative:
         self.global_frame = None
 
     def __str__(self) -> str:
-        return "LocationGlobalRelative:lat=%s,lon=%s,alt=%s" % (self.lat, self.lon, self.alt)
+        return f"LocationGlobalRelative:lat={self.lat},lon={self.lon},alt={self.alt}"
 
 
 class LocationLocal:
@@ -134,7 +134,7 @@ class LocationLocal:
         self.down = down
 
     def __str__(self) -> str:
-        return "LocationLocal:north=%s,east=%s,down=%s" % (self.north, self.east, self.down)
+        return f"LocationLocal:north={self.north},east={self.east},down={self.down}"
 
     def distance_home(self) -> float | None:
         """
@@ -171,7 +171,7 @@ class GPSInfo:
         self.satellites_visible = satellites_visible
 
     def __str__(self) -> str:
-        return "GPSInfo:fix=%s,num_sat=%s" % (self.fix_type, self.satellites_visible)
+        return f"GPSInfo:fix={self.fix_type},num_sat={self.satellites_visible}"
 
 
 class Wind:
@@ -332,7 +332,7 @@ class Version:
             # has been received), and this branch never guarded against
             # that - %d on None would raise TypeError at runtime. Not
             # fixed here per the typing-only scope of this change.
-            prefix += "UnknownVehicleType%d-" % self.vehicle_type  # type: ignore[str-format]
+            prefix += f"UnknownVehicleType{self.vehicle_type:d}-"  # type: ignore[str-format]
 
         if self.release_type() is None:
             release_type = "UnknownReleaseType"
@@ -342,7 +342,7 @@ class Version:
             # e.g. "-rc23"
             release_type = "-" + str(self.release_type()) + str(self.release_version())
 
-        return prefix + "%s.%s.%s" % (self.major, self.minor, self.patch) + release_type
+        return prefix + f"{self.major}.{self.minor}.{self.patch}" + release_type
 
 
 class Capabilities:
@@ -475,7 +475,7 @@ class VehicleMode:
         self.name = name
 
     def __str__(self) -> str:
-        return "VehicleMode:%s" % self.name
+        return f"VehicleMode:{self.name}"
 
     def __eq__(self, other: object) -> bool:
         return self.name == other
@@ -499,7 +499,7 @@ class SystemStatus:
         self.state = state
 
     def __str__(self) -> str:
-        return "SystemStatus:%s" % self.state
+        return f"SystemStatus:{self.state}"
 
     def __eq__(self, other: object) -> bool:
         return self.state == other

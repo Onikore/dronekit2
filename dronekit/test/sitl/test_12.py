@@ -26,4 +26,4 @@ def test_timeout(vehicle):
 
     # Checks that time to set parameter was <1s
     # see https://github.com/dronekit/dronekit-python/issues/12
-    assert end - start < 1000, 'time to set parameter was %s, over 1s' % (end - start, )
+    assert end - start < 1000, f'time to set parameter was {end - start}, over 1s'

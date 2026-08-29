@@ -34,7 +34,7 @@ connection_string = get_connection_string(args.connect)
 
 
 # Connect to the Vehicle
-print('Connecting to vehicle on: %s' % connection_string)
+print(f'Connecting to vehicle on: {connection_string}')
 vehicle = connect(connection_string, wait_ready=True)
 
 #global vehicle
@@ -62,7 +62,7 @@ class MeasureTime:
         #print "Interval", self.previnterval
         #print "MaxInterval", self.maxinterval
         #print "MinInterval", self.mininterval
-        sys.stdout.write('MaxInterval: %s\tMinInterval: %s\tInterval: %s\r' % (self.maxinterval,self.mininterval, self.previnterval) )
+        sys.stdout.write(f'MaxInterval: {self.maxinterval}\tMinInterval: {self.mininterval}\tInterval: {self.previnterval}\r')
         sys.stdout.flush()
 
 

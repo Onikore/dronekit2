@@ -30,7 +30,7 @@ class ChannelsOverride(dict):
 
     def __setitem__(self, key: Any, value: Any) -> None:
         if not (0 < int(key) <= self._count):
-            raise KeyError('Invalid channel index %s' % key)
+            raise KeyError(f'Invalid channel index {key}')
         if not value:
             try:
                 dict.__delitem__(self, str(key))
