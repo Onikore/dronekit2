@@ -17,7 +17,7 @@ import time
 from typing import TYPE_CHECKING, Any, Callable
 
 from pymavlink import mavutil, mavwp
-from pymavlink.dialects.v10 import ardupilotmega
+from pymavlink.dialects.v20 import ardupilotmega
 
 from dronekit.channels import Channels
 from dronekit.errors import APIException, TimeoutError
