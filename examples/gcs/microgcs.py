@@ -10,26 +10,23 @@
 
 from dronekit import connect, VehicleMode
 from pymavlink import mavutil
-from Tkinter import *
+from tkinter import *
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from _common import add_connection_argument, get_connection_string
 
 # The tkinter root object
 global root
 
 #Set up option parsing to get connection string
-import argparse  
-parser = argparse.ArgumentParser(description='Tracks GPS position of your computer (Linux only). Connects to SITL on local PC by default.')
-parser.add_argument('--connect',
-                   help="vehicle connection target.")
+import argparse
+parser = argparse.ArgumentParser(description='Tracks GPS position of your computer (Linux only).')
+add_connection_argument(parser)
 args = parser.parse_args()
 
-connection_string = args.connect
-sitl = None
-
-#Start SITL if no connection string specified
-if not connection_string:
-    import dronekit_sitl
-    sitl = dronekit_sitl.start_default()
-    connection_string = sitl.connection_string()
+connection_string = get_connection_string(args.connect)
 
 # Connect to the Vehicle
 print('Connecting to vehicle on: %s' % connection_string)
@@ -67,7 +64,3 @@ Button(frame, text = "Auto", command = lambda : setMode("AUTO")).pack()
 Button(frame, text = "RTL", command = lambda : setMode("RTL")).pack()
 
 root.mainloop()
-
-# Shut down simulator if it was started.
-if sitl is not None:
-    sitl.stop()
