@@ -1,0 +1,12 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Usage question / "how do I...?"
+    url: http://discuss.dronekit.io
+    about: >
+      For general usage questions (not a bug or a feature request), please ask on the DroneKit
+      Forums rather than opening an issue here.
+  - name: Security vulnerability
+    url: https://github.com/Onikore/dronekit2/security
+    about: >
+      Please do not report security vulnerabilities through public issues - see SECURITY.md for
+      the reporting process.

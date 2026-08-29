@@ -1,0 +1,18 @@
+# See https://pre-commit.com for usage and config.
+#
+# Ruff's rule selection and target Python version are NOT duplicated here - both hooks below
+# read `[tool.ruff]` / `[tool.ruff.lint]` in pyproject.toml automatically.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.5
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format

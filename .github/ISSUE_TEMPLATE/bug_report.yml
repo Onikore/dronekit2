@@ -1,0 +1,86 @@
+name: Bug report
+description: Report something that isn't working as expected in dronekit2.
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please search
+        [existing issues](https://github.com/Onikore/dronekit2/issues) first to avoid duplicates.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug and what you expected to happen instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Minimal reproduction
+      description: >
+        A minimal script that reproduces the issue, if possible. Include the connection target
+        you used (e.g. SITL, a specific autopilot/firmware over serial or UDP).
+      render: python
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant output / traceback
+      description: Full traceback or relevant log output. This is automatically formatted as code.
+      render: shell
+    validations:
+      required: false
+
+  - type: input
+    id: dronekit2-version
+    attributes:
+      label: dronekit2 version
+      description: Output of `python -c "import dronekit; print(dronekit.__version__)"`
+      placeholder: "3.0.0"
+    validations:
+      required: true
+
+  - type: input
+    id: python-version
+    attributes:
+      label: Python version
+      description: Output of `python --version`
+      placeholder: "3.11.6"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Linux
+        - macOS
+        - Windows
+        - Other (specify below)
+    validations:
+      required: true
+
+  - type: input
+    id: autopilot
+    attributes:
+      label: Autopilot / connection type
+      description: e.g. ArduCopter 4.6 over SITL UDP, PX4 over serial, etc.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues and this hasn't already been reported.
+          required: true
+        - label: I'm using a currently supported version (see SECURITY.md) - this isn't upstream `dronekit` 2.x.
+          required: true
