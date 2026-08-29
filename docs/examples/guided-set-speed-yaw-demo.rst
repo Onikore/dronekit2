@@ -41,23 +41,22 @@ In summary, after cloning the repository:
 
    .. code-block:: bash
 
-       cd dronekit-python/examples/guided_set_speed_yaw/
+       cd dronekit2/examples/guided_set_speed_yaw/
 
 
-#. You can run the example against a simulator (DroneKit-SITL) by specifying the Python script without any arguments.
-   The example will download SITL binaries if needed, start the simulator, and then connect to it:
+#. Start an ArduPilot SITL instance yourself first (see :ref:`sitl_setup` - the old auto-launching
+   ``dronekit-sitl`` package this example used to rely on is dead), then run the example passing
+   its connection string:
 
    .. code-block:: bash
 
-       python guided_set_speed_yaw.py
+       python guided_set_speed_yaw.py --connect udp:127.0.0.1:14550
 
    On the command prompt you should see (something like):
-   
+
    .. code:: bash
 
-       Starting copter simulator (SITL)
-       SITL already Downloaded.
-       Connecting to vehicle on: tcp:127.0.0.1:5760
+       Connecting to vehicle on: udp:127.0.0.1:14550
        >>> APM:Copter V3.3 (d6053245)
        >>> Frame: QUAD
        >>> Calibrating barometer
@@ -235,9 +234,9 @@ This takes a function argument of either :ref:`Vehicle.simple_goto() <guided_mod
 
         while vehicle.mode.name=="GUIDED": #Stop action if we are no longer in guided mode.
             remainingDistance=get_distance_metres(vehicle.location.global_frame, targetLocation)
-            print "Distance to target: ", remainingDistance
+            print("Distance to target: ", remainingDistance)
             if remainingDistance<=targetDistance*0.01: #Just below target, in case of undershoot.
-                print "Reached target"
+                print("Reached target")
                 break;
             time.sleep(2)
 
@@ -404,7 +403,7 @@ Source code
 ===========
 
 The full source code at documentation build-time is listed below 
-(`current version on Github <https://github.com/dronekit/dronekit-python/blob/master/examples/guided_set_speed_yaw/guided_set_speed_yaw.py>`_):
+(`current version on Github <https://github.com/Onikore/dronekit2/blob/main/examples/guided_set_speed_yaw/guided_set_speed_yaw.py>`_):
 
 .. literalinclude:: ../../examples/guided_set_speed_yaw/guided_set_speed_yaw.py
     :language: python

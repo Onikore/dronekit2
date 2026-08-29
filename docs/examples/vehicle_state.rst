@@ -23,21 +23,22 @@ In summary, after cloning the repository:
 
    .. code-block:: bash
 
-       cd dronekit-python/examples/vehicle_state/
+       cd dronekit2/examples/vehicle_state/
 
 
-#. You can run the example against a simulator (DroneKit-SITL) by specifying the Python script without any arguments.
-   The example will download SITL binaries (if needed), start the simulator, and then connect to it:
+#. Start an ArduPilot SITL instance yourself first (see :ref:`sitl_setup` - the old auto-launching
+   ``dronekit-sitl`` package this example used to rely on is dead), then run the example passing
+   its connection string:
 
    .. code-block:: bash
 
-       python vehicle_state.py
+       python vehicle_state.py --connect udp:127.0.0.1:14550
 
    On the command prompt you should see (something like):
 
    .. code:: bash
 
-       Connecting to vehicle on: tcp:127.0.0.1:5760
+       Connecting to vehicle on: udp:127.0.0.1:14550
        >>> APM:Copter V3.3 (d6053245)
        >>> Frame: QUAD
        >>> Calibrating barometer
@@ -191,8 +192,9 @@ In summary, after cloning the repository:
        
 .. note::
 
-    DroneKit-SITL does not automatically add a virtual gimbal and rangefinder, 
-    so these attributes will always report ``None``.
+    A default SITL instance does not automatically add a virtual gimbal and rangefinder,
+    so these attributes will always report ``None`` unless you configure the corresponding
+    ``SIM_*`` parameters.
 
 
 
@@ -219,7 +221,7 @@ Source code
 ===========
 
 The full source code at documentation build-time is listed below 
-(`current version on github <https://github.com/dronekit/dronekit-python/blob/master/examples/vehicle_state/vehicle_state.py>`_):
+(`current version on github <https://github.com/Onikore/dronekit2/blob/main/examples/vehicle_state/vehicle_state.py>`_):
 
 .. literalinclude:: ../../examples/vehicle_state/vehicle_state.py
    :language: python

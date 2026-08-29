@@ -30,7 +30,7 @@ add ``set-trace()`` at the point where you want to break execution:
     vehicle = connect('127.0.0.1:14550', wait_ready=True)
 
     import pdb; pdb.set_trace()
-    print "Global Location: %s" % vehicle.location.global_frame
+    print("Global Location: %s" % vehicle.location.global_frame)
 
 
 The available `debugger commands are listed here <https://docs.python.org/2/library/pdb.html#debugger-commands>`_. 
@@ -40,8 +40,7 @@ pudb - A full-screen, console-based Python debugger
 
 If you prefer a IDE like debug you can use `pudb - A full-screen, console-based Python debugger <https://pypi.python.org/pypi/pudb>`_. 
 
-.. code-block:: python
-    :emphasize-lines: 4
+.. code-block:: bash
 
     pip install pudb
 
@@ -49,14 +48,12 @@ If you prefer a IDE like debug you can use `pudb - A full-screen, console-based 
 To start debugging, simply insert:
 
 .. code-block:: python
-    :emphasize-lines: 4
 
     from pudb import set_trace; set_trace()
 
 Insert either of these snippets into the piece of code you want to debug, or run the entire script with:
 
-.. code-block:: python
-    :emphasize-lines: 4
+.. code-block:: bash
 
     pudb my-script.py
 
@@ -73,7 +70,7 @@ The simplest and most common method of debugging is to manually add debug/print 
     vehicle = connect('127.0.0.1:14550', wait_ready=True)
 
     # print out debug information
-    print "Global Location: %s" % vehicle.location.global_frame
+    print("Global Location: %s" % vehicle.location.global_frame)
 
 In addition to printing DroneKit variables, Python provides numerous inbuilt and add-on modules/methods 
 for inspecting code (e.g. `dir() <https://docs.python.org/2/library/functions.html#dir>`_, `traceback <https://docs.python.org/2/library/traceback.html>`_, etc.)

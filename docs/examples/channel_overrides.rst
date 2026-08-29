@@ -16,7 +16,7 @@ This example shows how to get channel information and to get/set channel-overrid
     the desired position or direction/speed.
 
     If you have no choice but to use a channel-override please explain why in a 
-    `Github issue <https://github.com/dronekit/dronekit-python/issues>`_ and we will attempt to find a 
+    `Github issue <https://github.com/Onikore/dronekit2/issues>`_ and we will attempt to find a 
     better alternative.
     
 
@@ -32,23 +32,22 @@ In summary, after cloning the repository:
 
    .. code-block:: bash
 
-       cd dronekit-python/examples/channel_overrides/
+       cd dronekit2/examples/channel_overrides/
 
 
-#. You can run the example against a simulator (DroneKit-SITL) by specifying the Python script without any arguments.
-   The example will download SITL binaries (if needed), start the simulator, and then connect to it:
+#. Start an ArduPilot SITL instance yourself first (see :ref:`sitl_setup` - the old auto-launching
+   ``dronekit-sitl`` package this example used to rely on is dead), then run the example passing
+   its connection string:
 
    .. code-block:: bash
 
-       python channel_overrides.py
+       python channel_overrides.py --connect udp:127.0.0.1:14550
 
    On the command prompt you should see (something like):
-   
+
    .. code:: bash
 
-       Starting copter simulator (SITL)
-       SITL already Downloaded.
-       Connecting to vehicle on: tcp:127.0.0.1:5760
+       Connecting to vehicle on: udp:127.0.0.1:14550
        >>> APM:Copter V3.3 (d6053245)
        >>> Frame: QUAD
        >>> Calibrating barometer
@@ -116,12 +115,12 @@ from the UAV, based on the RC inputs from the transmitter. These can be read eit
 .. code:: python
 
     # Get all channel values from RC transmitter
-    print "Channel values from RC Tx:", vehicle.channels
+    print("Channel values from RC Tx:", vehicle.channels)
 
     # Access channels individually
-    print "Read channels individually:"
-    print " Ch1: %s" % vehicle.channels['1']
-    print " Ch2: %s" % vehicle.channels['2']
+    print("Read channels individually:")
+    print(" Ch1: %s" % vehicle.channels['1'])
+    print(" Ch2: %s" % vehicle.channels['2'])
 
 You can override the values sent to the vehicle by the autopilot using :py:attr:`Vehicle.channels.overrides <dronekit.Channels.overrides>`.  
 The overrides can be written individually using an indexing syntax or as a set using a dictionary syntax.
@@ -156,9 +155,9 @@ Read the channel overrides either as a dictionary or by index.
 .. code:: python
 
     # Get all channel overrides
-    print " Channel overrides: %s" % vehicle.channels.overrides
+    print(" Channel overrides: %s" % vehicle.channels.overrides)
     # Print just one channel override
-    print " Ch2 override: %s" % vehicle.channels.overrides['2']
+    print(" Ch2 override: %s" % vehicle.channels.overrides['2'])
 
 .. note::
 
@@ -169,7 +168,7 @@ Read the channel overrides either as a dictionary or by index.
 Source code
 ===========
 
-The full source code at documentation build-time is listed below (`current version on github <https://github.com/dronekit/dronekit-python/blob/master/examples/channel_overrides/channel_overrides.py>`_):
+The full source code at documentation build-time is listed below (`current version on github <https://github.com/Onikore/dronekit2/blob/main/examples/channel_overrides/channel_overrides.py>`_):
 
 .. literalinclude:: ../../examples/channel_overrides/channel_overrides.py
    :language: python

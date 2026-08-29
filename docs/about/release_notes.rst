@@ -18,19 +18,21 @@ Latest release
 All releases
 ============
 
-For information about all past releases, please see `this link on Github <https://github.com/dronekit/dronekit-python/releases>`_.
+This fork's own releases are listed `on Github here <https://github.com/Onikore/dronekit2/releases>`_.
+For releases prior to the fork, see `dronekit-python's release history <https://github.com/dronekit/dronekit-python/releases>`_.
 
 Working with releases
 =======================
 
-The following PyPI commands are useful for working with different version of DroneKit Python: 
+The following PyPI commands are useful for working with different versions of the ``dronekit2`` package
+(the import name is unchanged - it's still ``import dronekit``):
 
 .. code-block:: bash
 
-    pip install dronekit    # Install the latest version
-    pip install dronekit --upgrade    # Update to the latest version
-    pip show dronekit    # Find out what release you have installed
-    pip install dronekit==2.0.0rc1    # Get a sepcific old release (in this case 2.0.0rc1)
+    pip install dronekit2    # Install the latest version
+    pip install dronekit2 --upgrade    # Update to the latest version
+    pip show dronekit2    # Find out what release you have installed
+    pip install dronekit2==3.0.0    # Get a specific release (in this case 3.0.0)
 
-See `Release History on the package ranking page <http://pypi-ranking.info/module/dronekit#release_history>`_  for a list of all releases available on PyPI.
+See the `dronekit2 project page on PyPI <https://pypi.org/project/dronekit2/#history>`_ for a list of all releases available.
 

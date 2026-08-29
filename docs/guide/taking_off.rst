@@ -42,32 +42,32 @@ The code below shows a function to arm a Copter, take off, and fly to a specifie
         Arms vehicle and fly to aTargetAltitude.
         """
 
-        print "Basic pre-arm checks"
+        print("Basic pre-arm checks")
         # Don't try to arm until autopilot is ready
         while not vehicle.is_armable:
-            print " Waiting for vehicle to initialise..."
+            print(" Waiting for vehicle to initialise...")
             time.sleep(1)
 
-        print "Arming motors"
+        print("Arming motors")
         # Copter should arm in GUIDED mode
         vehicle.mode    = VehicleMode("GUIDED")
         vehicle.armed   = True
 
         # Confirm vehicle armed before attempting to take off
         while not vehicle.armed:
-            print " Waiting for arming..."
+            print(" Waiting for arming...")
             time.sleep(1)
 
-        print "Taking off!"
+        print("Taking off!")
         vehicle.simple_takeoff(aTargetAltitude) # Take off to target altitude
 
         # Wait until the vehicle reaches a safe height before processing the goto (otherwise the command 
         #  after Vehicle.simple_takeoff will execute immediately).
         while True:
-            print " Altitude: ", vehicle.location.global_relative_frame.alt
+            print(" Altitude: ", vehicle.location.global_relative_frame.alt)
             #Break and return from function just below target altitude. 
             if vehicle.location.global_relative_frame.alt>=aTargetAltitude*0.95:
-                print "Reached target altitude"
+                print("Reached target altitude")
                 break
             time.sleep(1)
 
@@ -86,10 +86,10 @@ attribute, which is ``true`` when the vehicle has booted, EKF is ready, and the 
 
 .. code-block:: python
 
-        print "Basic pre-arm checks"
+        print("Basic pre-arm checks")
         # Don't let the user try to arm until autopilot is ready
         while not vehicle.is_armable:
-            print " Waiting for vehicle to initialise..."
+            print(" Waiting for vehicle to initialise...")
             time.sleep(1)
             
 .. note::
@@ -99,10 +99,10 @@ attribute, which is ``true`` when the vehicle has booted, EKF is ready, and the 
     .. code-block:: python
 
         if v.mode.name == "INITIALISING":
-            print "Waiting for vehicle to initialise"
+            print("Waiting for vehicle to initialise")
             time.sleep(1)
         while vehicle.gps_0.fix_type < 2:
-            print "Waiting for GPS...:", vehicle.gps_0.fix_type
+            print("Waiting for GPS...:", vehicle.gps_0.fix_type)
             time.sleep(1)
             
     You should always do a final check on :py:func:`Vehicle.is_armable <dronekit.Vehicle.is_armable>`!
@@ -113,16 +113,16 @@ before sending the :py:func:`takeoff <dronekit.Vehicle.simple_takeoff>` command.
 
 .. code-block:: python
 
-    print "Arming motors"
+    print("Arming motors")
     # Copter should arm in GUIDED mode
     vehicle.mode    = VehicleMode("GUIDED")
     vehicle.armed   = True
 
     while not vehicle.armed:
-        print " Waiting for arming..."
+        print(" Waiting for arming...")
         time.sleep(1)
 
-    print "Taking off!"
+    print("Taking off!")
     vehicle.simple_takeoff(aTargetAltitude) # Take off to target altitude
 
 The ``takeoff`` command is asynchronous and can be interrupted if another command arrives before it reaches 
@@ -136,10 +136,10 @@ concerned about reaching a particular height, a simpler implementation might jus
 .. code-block:: python
 
         while True:
-            print " Altitude: ", vehicle.location.global_relative_frame.alt
+            print(" Altitude: ", vehicle.location.global_relative_frame.alt)
             #Break and return from function just below target altitude. 
             if vehicle.location.global_relative_frame.alt>=aTargetAltitude*0.95:
-                print "Reached target altitude"
+                print("Reached target altitude")
                 break
             time.sleep(1)
 

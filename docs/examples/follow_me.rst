@@ -32,39 +32,38 @@ Once you've done that:
    
    .. note::
    
-       If you do not have a USB GPS you can use simulated data by running *dronekit-python/examples/follow_me/run-fake-gps.sh* 
+       If you do not have a USB GPS you can use simulated data by running *dronekit2/examples/follow_me/run-fake-gps.sh*
        (in a separate terminal from where you're running DroneKit-Python). This approach simulates a single location, and so 
        is really only useful for verifying that the script is working correctly.
    
 
-#. Get the DroneKit-Python example source code onto your local machine. The easiest way to do this 
-   is to clone the **dronekit-python** repository from Github. On the command prompt enter:
+#. Get the DroneKit-Python example source code onto your local machine. The easiest way to do this
+   is to clone the **dronekit2** repository from Github. On the command prompt enter:
 
    .. code-block:: bash
 
-       git clone http://github.com/dronekit/dronekit-python.git
+       git clone https://github.com/Onikore/dronekit2.git
 
 #. Navigate to the example folder as shown:
 
    .. code-block:: bash
 
-       cd dronekit-python/examples/follow_me/
+       cd dronekit2/examples/follow_me/
 
 
-#. You can run the example against a simulator (DroneKit-SITL) by specifying the Python script without any arguments.
-   The example will download SITL binaries (if needed), start the simulator, and then connect to it:
+#. Start an ArduPilot SITL instance yourself first (see :ref:`sitl_setup` - the old auto-launching
+   ``dronekit-sitl`` package this example used to rely on is dead), then run the example passing
+   its connection string:
 
    .. code-block:: bash
 
-       python follow_me.py
+       python follow_me.py --connect udp:127.0.0.1:14550
 
    On the command prompt you should see (something like):
-   
+
    .. code:: bash
 
-       Starting copter simulator (SITL)
-       SITL already Downloaded.
-       Connecting to vehicle on: tcp:127.0.0.1:5760
+       Connecting to vehicle on: udp:127.0.0.1:14550
        >>> APM:Copter V3.4-dev (e0810c2e)
        >>> Frame: QUAD
        Link timeout, no heartbeat in last 5 seconds
@@ -132,7 +131,7 @@ the mode is changed.
         while True:
         
             if vehicle.mode.name != "GUIDED":
-                print "User has changed flight modes - aborting follow-me"
+                print("User has changed flight modes - aborting follow-me")
                 break    
                 
             # Read the GPS state from the laptop
@@ -142,7 +141,7 @@ the mode is changed.
             if (gpsd.valid & gps.LATLON_SET) != 0:
                 altitude = 30  # in meters
                 dest = LocationGlobalRelative(gpsd.fix.latitude, gpsd.fix.longitude, altitude)
-                print "Going to: %s" % dest
+                print("Going to: %s" % dest)
 
                 # A better implementation would only send new waypoints if the position had changed significantly
                 vehicle.simple_goto(dest)
@@ -152,7 +151,7 @@ the mode is changed.
                 time.sleep(2)
                 
     except socket.error:
-        print "Error: gpsd service does not seem to be running, plug in USB GPS or run run-fake-gps.sh"
+        print("Error: gpsd service does not seem to be running, plug in USB GPS or run run-fake-gps.sh")
         sys.exit(1)
 
 
@@ -160,7 +159,7 @@ the mode is changed.
 Source code
 ===========
 
-The full source code at documentation build-time is listed below (`current version on github <https://github.com/dronekit/dronekit-python/blob/master/examples/follow_me/follow_me.py>`_):
+The full source code at documentation build-time is listed below (`current version on github <https://github.com/Onikore/dronekit2/blob/main/examples/follow_me/follow_me.py>`_):
 
 .. include:: ../../examples/follow_me/follow_me.py
     :literal:

@@ -33,7 +33,7 @@ For example, the code snippet below shows how to set a listener for the ``RANGEF
     #Create a message listener using the decorator.   
     @vehicle.on_message('RANGEFINDER')
     def listener(self, name, message):
-        print message
+        print(message)
 
 .. tip::
 
@@ -59,8 +59,8 @@ function might look like this:
     #Create a message listener using the decorator.   
     @vehicle.on_message('RANGEFINDER')
     def listener(self, name, message):
-        print 'distance: %s' % message.distance
-        print 'voltage: %s' % message.voltage
+        print('distance: %s' % message.distance)
+        print('voltage: %s' % message.voltage)
 
 
 Watching all messages
@@ -73,7 +73,7 @@ You can register a callback for *all messages* by setting the message name as th
     #Create a message listener for all messages.   
     @vehicle.on_message('*')
     def listener(self, name, message):
-        print 'message: %s' % message
+        print('message: %s' % message)
         
         
 Removing an observer

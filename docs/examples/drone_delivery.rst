@@ -25,7 +25,7 @@ In summary, after cloning the repository:
 
    .. code-block:: bash
 
-       cd dronekit-python\examples\drone_delivery\
+       cd dronekit2\examples\drone_delivery\
 
 
 #. Install *CherryPy* and any other dependencies from **requirements.pip** in that directory:
@@ -34,24 +34,23 @@ In summary, after cloning the repository:
 
        pip install -r requirements.pip
        
-#. You can run the example against the simulator by specifying the Python script without any arguments.
-   The example will download and start DroneKit-SITL, and then connect to it:
+#. Start an ArduPilot SITL instance yourself first (see :ref:`sitl_setup` - the old auto-launching
+   ``dronekit-sitl`` package this example used to rely on is dead), then run the example passing
+   its connection string:
 
    .. code-block:: bash
 
-       python drone_delivery.py
+       python drone_delivery.py --connect udp:127.0.0.1:14550
 
    On the command prompt you should see (something like):
 
    .. code:: bash
 
-       >python drone_delivery.py
-       
-       D:\Github\dronekit-python\examples\drone_delivery>drone_delivery.py
-       Starting copter simulator (SITL)
-       SITL already Downloaded.
-       local path: D:\Github\dronekit-python\examples\drone_delivery
-       Connecting to vehicle on: tcp:127.0.0.1:5760
+       >python drone_delivery.py --connect udp:127.0.0.1:14550
+
+       D:\Github\dronekit2\examples\drone_delivery>drone_delivery.py
+       local path: D:\Github\dronekit2\examples\drone_delivery
+       Connecting to vehicle on: udp:127.0.0.1:14550
        >>> APM:Copter V3.3 (d6053245)
        >>> Frame: QUAD
        >>> Calibrating barometer
@@ -113,7 +112,7 @@ Using attribute observers
 -------------------------
 
 All attributes in DroneKit can have observers - this is the primary mechanism you should use to be notified of changes in vehicle state.  
-For instance, `drone_delivery.py <https://github.com/dronekit/dronekit-python/blob/master/examples/drone_delivery/drone_delivery.py>`_ calls:
+For instance, `drone_delivery.py <https://github.com/Onikore/dronekit2/blob/main/examples/drone_delivery/drone_delivery.py>`_ calls:
 
 .. code-block:: python
 
@@ -157,7 +156,7 @@ This example has the following issues:
 Source code
 ===========
 
-The full source code at documentation build-time is listed below (`current version on github <https://github.com/dronekit/dronekit-python/blob/master/examples/drone_delivery/drone_delivery.py>`_):
+The full source code at documentation build-time is listed below (`current version on github <https://github.com/Onikore/dronekit2/blob/main/examples/drone_delivery/drone_delivery.py>`_):
 
 .. include:: ../../examples/drone_delivery/drone_delivery.py
     :literal:

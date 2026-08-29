@@ -31,22 +31,21 @@ In summary, after cloning the repository:
 
    .. code-block:: bash
 
-       cd dronekit-python/examples/mission_import_export/
+       cd dronekit2/examples/mission_import_export/
 
-#. You can run the example against a simulator (DroneKit-SITL) by specifying the Python script without any arguments.
-   The example will download SITL binaries (if needed), start the simulator, and then connect to it:
+#. Start an ArduPilot SITL instance yourself first (see :ref:`sitl_setup` - the old auto-launching
+   ``dronekit-sitl`` package this example used to rely on is dead), then run the example passing
+   its connection string:
 
    .. code-block:: bash
 
-       python mission_import_export.py
+       python mission_import_export.py --connect udp:127.0.0.1:14550
 
    On the command prompt you should see (something like):
-   
+
    .. code:: bash
 
-       Starting copter simulator (SITL)
-       SITL already Downloaded.
-       Connecting to vehicle on: tcp:127.0.0.1:5760
+       Connecting to vehicle on: udp:127.0.0.1:14550
        >>> APM:Copter V3.3 (d6053245)
        >>> Frame: QUAD
        >>> Calibrating barometer
@@ -128,7 +127,7 @@ There are no known issues with this example.
 Source code
 ===========
 
-The full source code at documentation build-time is listed below (`current version on github <https://github.com/dronekit/dronekit-python/blob/master/examples/mission_import_export/mission_import_export.py>`_):
+The full source code at documentation build-time is listed below (`current version on github <https://github.com/Onikore/dronekit2/blob/main/examples/mission_import_export/mission_import_export.py>`_):
 
 .. literalinclude:: ../../examples/mission_import_export/mission_import_export.py
    :language: python

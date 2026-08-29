@@ -13,7 +13,7 @@ Open source community
 
 DroneKit-Python is an open source and community-driven project. 
 
-You can find all the source code on `Github here <https://github.com/dronekit/dronekit-python>`_ and check out our permissive :doc:`Apache v2 Licence <license>`. 
+You can find all the source code on `Github here <https://github.com/Onikore/dronekit2>`_ and check out our permissive :doc:`Apache v2 Licence <license>`.
 If you want to join the community, then see our :doc:`contributing section <../contributing/index>` for lots of ideas on how you can help.
 
 
@@ -25,7 +25,7 @@ DroneKit-Python is compatible with vehicles that communicate using the `MAVLink 
 
     DroneKit-Python is validated against, and hence *most compatible* with, the `ArduPilot UAV Platform <http://ardupilot.com/>`_. 
     Vehicles running other autopilots may be be less compatible due to differences in adhererence/interpretation of the MAVLink specification. 
-    Please report any autopilot-specific issues `on Github here <https://github.com/dronekit/dronekit-python/issues>`_.
+    Please report any autopilot-specific issues `on Github here <https://github.com/Onikore/dronekit2/issues>`_.
 
 
 
@@ -52,7 +52,7 @@ Technical support
 This documentation is a great place to get started with developing DroneKit Python APIs. 
 
 If you run into problems, the best place to ask questions is the `DroneKit-Python Forum <https://discuss.dronekit.io/c/python>`_. 
-If your problem turns out to be a bug, then it should be `posted on Github <https://github.com/dronekit/dronekit-python/issues>`_.
+If your problem turns out to be a bug, then it should be `posted on Github <https://github.com/Onikore/dronekit2/issues>`_.
 
 
 

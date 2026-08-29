@@ -8,7 +8,7 @@ This example demonstrates how to arm and launch a Copter in GUIDED mode, travel 
 to the home location. It uses :py:func:`Vehicle.simple_takeoff() <dronekit.Vehicle.simple_takeoff>`, 
 :py:func:`Vehicle.simple_goto() <dronekit.Vehicle.simple_goto>` and :py:attr:`Vehicle.mode <dronekit.Vehicle.mode>`.
 
-The target locations are centered around the home location when the :ref:`Simulated Vehicle <vagrant-sitl-from-full-image>` is booted; 
+The target locations are centered around the home location when the :ref:`Simulated Vehicle <sitl_setup>` is booted;
 you can edit the latitude and longitude to use more appropriate positions for your own vehicle. 
 
 .. note:: 
@@ -39,22 +39,21 @@ In summary, after cloning the repository:
 
    .. code-block:: bash
 
-       cd dronekit-python/examples/simple_goto/
+       cd dronekit2/examples/simple_goto/
        
-#. You can run the example against a simulator (DroneKit-SITL) by specifying the Python script without any arguments. 
-   The example will download SITL binaries if needed, start the simulator, and then connect to it:
+#. Start an ArduPilot SITL instance yourself first (see :ref:`sitl_setup` - the old auto-launching
+   ``dronekit-sitl`` package this example used to rely on is dead), then run the example passing
+   its connection string:
 
    .. code-block:: bash
 
-       python simple_goto.py
+       python simple_goto.py --connect udp:127.0.0.1:14550
 
    On the command prompt you should see (something like):
-   
+
    .. code:: bash
 
-       Starting copter simulator (SITL)
-       SITL already Downloaded.
-       Connecting to vehicle on: tcp:127.0.0.1:5760
+       Connecting to vehicle on: udp:127.0.0.1:14550
        >>> APM:Copter V3.3 (d6053245)
        >>> Frame: QUAD
        >>> Calibrating barometer
@@ -169,7 +168,7 @@ Source code
 ===========
 
 The full source code at documentation build-time is listed below 
-(`current version on Github <https://github.com/dronekit/dronekit-python/blob/master/examples/simple_goto/simple_goto.py>`_):
+(`current version on Github <https://github.com/Onikore/dronekit2/blob/main/examples/simple_goto/simple_goto.py>`_):
 
 .. literalinclude:: ../../examples/simple_goto/simple_goto.py
     :language: python

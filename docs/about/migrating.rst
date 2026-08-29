@@ -109,7 +109,7 @@ Remove code that checks the ``api.exit`` status (note that the ``api.exit`` call
 .. code:: python
 
     while not vehicle.armed   # and not api.exit:
-        print " Waiting for arming..."
+        print(" Waiting for arming...")
         time.sleep(1)
 
 .. note::
@@ -185,9 +185,9 @@ global, global-relative and local (NED) frames:
 
 .. code-block:: python
 
-    print "Global Location: %s" % vehicle.location.global_frame
-    print "Global Location (relative altitude): %s" % vehicle.location.global_relative_frame
-    print "Local Location: %s" % vehicle.location.local_frame
+    print("Global Location: %s" % vehicle.location.global_frame)
+    print("Global Location (relative altitude): %s" % vehicle.location.global_relative_frame)
+    print("Local Location: %s" % vehicle.location.local_frame)
 
 For more information see: :py:attr:`Vehicle.location <dronekit.Vehicle.location>`, 
 :py:attr:`Vehicle.location.global_frame <dronekit.Locations.global_frame>`, 

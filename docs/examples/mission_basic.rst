@@ -31,22 +31,21 @@ In summary, after cloning the repository:
 
    .. code-block:: bash
 
-       cd dronekit-python/examples/mission_basic/
+       cd dronekit2/examples/mission_basic/
 
-#. You can run the example against a simulator (DroneKit-SITL) by specifying the Python script without any arguments.
-   The example will download SITL binaries (if needed), start the simulator, and then connect to it:
+#. Start an ArduPilot SITL instance yourself first (see :ref:`sitl_setup` - the old auto-launching
+   ``dronekit-sitl`` package this example used to rely on is dead), then run the example passing
+   its connection string:
 
    .. code-block:: bash
 
-       python mission_basic.py
+       python mission_basic.py --connect udp:127.0.0.1:14550
 
    On the command prompt you should see (something like):
-   
+
    .. code:: bash
 
-       Starting copter simulator (SITL)
-       SITL already Downloaded.
-       Connecting to vehicle on: tcp:127.0.0.1:5760
+       Connecting to vehicle on: udp:127.0.0.1:14550
        >>> APM:Copter V3.3 (d6053245)
        >>> Frame: QUAD
        >>> Calibrating barometer
@@ -132,7 +131,7 @@ After taking off (in guided mode using the ``takeoff()`` function) the example s
 
 .. code:: python
 
-    print "Starting mission"
+    print("Starting mission")
     # Set mode to AUTO to start mission
     vehicle.mode = VehicleMode("AUTO")
 
@@ -149,14 +148,14 @@ We also show how to jump to a specified command using
 
     while True:
         nextwaypoint=vehicle.commands.next
-        print 'Distance to waypoint (%s): %s' % (nextwaypoint, distance_to_current_waypoint())
+        print('Distance to waypoint (%s): %s' % (nextwaypoint, distance_to_current_waypoint()))
       
         if nextwaypoint==3: #Skip to next waypoint
-            print 'Skipping to Waypoint 5 when reach waypoint 3'
+            print('Skipping to Waypoint 5 when reach waypoint 3')
             vehicle.commands.next=5
             vehicle.commands.upload()
         if nextwaypoint==5: #Dummy waypoint - as soon as we reach waypoint 4 this is true and we exit.
-            print "Exit 'standard' mission when start heading to final waypoint (5)"
+            print("Exit 'standard' mission when start heading to final waypoint (5)")
             break;
         time.sleep(1)
 
@@ -177,7 +176,7 @@ Source code
 ===========
 
 The full source code at documentation build-time is listed below 
-(`current version on Github <https://github.com/dronekit/dronekit-python/blob/master/examples/mission_basic/mission_basic.py>`_):
+(`current version on Github <https://github.com/Onikore/dronekit2/blob/main/examples/mission_basic/mission_basic.py>`_):
 
 .. literalinclude:: ../../examples/mission_basic/mission_basic.py
    :language: python

@@ -71,28 +71,28 @@ regularly updated from MAVLink messages sent by the vehicle).
 .. code:: python
     
     # vehicle is an instance of the Vehicle class
-    print "Autopilot Firmware version: %s" % vehicle.version
-    print "Autopilot capabilities (supports ftp): %s" % vehicle.capabilities.ftp
-    print "Global Location: %s" % vehicle.location.global_frame
-    print "Global Location (relative altitude): %s" % vehicle.location.global_relative_frame
-    print "Local Location: %s" % vehicle.location.local_frame    #NED
-    print "Attitude: %s" % vehicle.attitude
-    print "Velocity: %s" % vehicle.velocity
-    print "GPS: %s" % vehicle.gps_0
-    print "Groundspeed: %s" % vehicle.groundspeed
-    print "Airspeed: %s" % vehicle.airspeed
-    print "Gimbal status: %s" % vehicle.gimbal
-    print "Battery: %s" % vehicle.battery
-    print "EKF OK?: %s" % vehicle.ekf_ok
-    print "Last Heartbeat: %s" % vehicle.last_heartbeat
-    print "Rangefinder: %s" % vehicle.rangefinder
-    print "Rangefinder distance: %s" % vehicle.rangefinder.distance
-    print "Rangefinder voltage: %s" % vehicle.rangefinder.voltage
-    print "Heading: %s" % vehicle.heading
-    print "Is Armable?: %s" % vehicle.is_armable
-    print "System status: %s" % vehicle.system_status.state
-    print "Mode: %s" % vehicle.mode.name    # settable
-    print "Armed: %s" % vehicle.armed    # settable
+    print("Autopilot Firmware version: %s" % vehicle.version)
+    print("Autopilot capabilities (supports ftp): %s" % vehicle.capabilities.ftp)
+    print("Global Location: %s" % vehicle.location.global_frame)
+    print("Global Location (relative altitude): %s" % vehicle.location.global_relative_frame)
+    print("Local Location: %s" % vehicle.location.local_frame)    #NED
+    print("Attitude: %s" % vehicle.attitude)
+    print("Velocity: %s" % vehicle.velocity)
+    print("GPS: %s" % vehicle.gps_0)
+    print("Groundspeed: %s" % vehicle.groundspeed)
+    print("Airspeed: %s" % vehicle.airspeed)
+    print("Gimbal status: %s" % vehicle.gimbal)
+    print("Battery: %s" % vehicle.battery)
+    print("EKF OK?: %s" % vehicle.ekf_ok)
+    print("Last Heartbeat: %s" % vehicle.last_heartbeat)
+    print("Rangefinder: %s" % vehicle.rangefinder)
+    print("Rangefinder distance: %s" % vehicle.rangefinder.distance)
+    print("Rangefinder voltage: %s" % vehicle.rangefinder.voltage)
+    print("Heading: %s" % vehicle.heading)
+    print("Is Armable?: %s" % vehicle.is_armable)
+    print("System status: %s" % vehicle.system_status.state)
+    print("Mode: %s" % vehicle.mode.name)    # settable
+    print("Armed: %s" % vehicle.armed)    # settable
 
 
 .. note::
@@ -143,7 +143,7 @@ For example, the code snippet below polls the attribute values to confirm they h
     vehicle.mode = VehicleMode("GUIDED")
     vehicle.armed = True
     while not vehicle.mode.name=='GUIDED' and not vehicle.armed and not api.exit:
-        print " Getting ready to take off ..."
+        print(" Getting ready to take off ...")
         time.sleep(1)
 
 .. note::
@@ -205,7 +205,7 @@ callback is first run.
      
     #Callback to print the location in global frames. 'value' is the updated value
     def location_callback(self, attr_name, value):
-        print "Location (Global): ", value 
+        print("Location (Global): ", value)
 
         
     # Add a callback `location_callback` for the `global_frame` attribute.
@@ -245,7 +245,7 @@ The example below shows how you can declare an attribute callback using the
         if last_rangefinder_distance == round(self.rangefinder.distance, 1):
             return
         last_rangefinder_distance = round(self.rangefinder.distance, 1)
-        print " Rangefinder (metres): %s" % last_rangefinder_distance
+        print(" Rangefinder (metres): %s" % last_rangefinder_distance)
 
 .. note::
 
@@ -260,16 +260,16 @@ callback that will be called for any/all attribute changes:
 
     # Demonstrate getting callback on any attribute change
     def wildcard_callback(self, attr_name, value):
-        print " CALLBACK: (%s): %s" % (attr_name,value)
+        print(" CALLBACK: (%s): %s" % (attr_name,value))
 
-    print "\nAdd attribute callback detecting any attribute change"     
+    print("\nAdd attribute callback detecting any attribute change")
     vehicle.add_attribute_listener('*', wildcard_callback)
 
 
-    print " Wait 1s so callback invoked before observer removed"
+    print(" Wait 1s so callback invoked before observer removed")
     time.sleep(1)
 
-    print " Remove Vehicle attribute observer"    
+    print(" Remove Vehicle attribute observer")
     # Remove observer added with `add_attribute_listener()`
     vehicle.remove_attribute_listener('*', wildcard_callback) 
 
@@ -294,7 +294,7 @@ waypoints is set relative to this position.
       cmds = vehicle.commands
       cmds.download()
       cmds.wait_ready()
-      print " Home Location: %s" % vehicle.home_location
+      print(" Home Location: %s" % vehicle.home_location)
 
   The returned value is ``None`` before you download the commands or if the ``home_location`` has not yet been set by the autopilot.
   For this reason our example code checks that the value exists (in a loop) before writing it.
@@ -307,10 +307,10 @@ waypoints is set relative to this position.
           cmds.download()
           cmds.wait_ready()
           if not vehicle.home_location:
-              print " Waiting for home location ..."
+              print(" Waiting for home location ...")
               
       # We have a home location.     
-      print "\n Home location: %s" % vehicle.home_location
+      print("\n Home location: %s" % vehicle.home_location)
 
 * The attribute can be *set* to a :py:class:`LocationGlobal <dronekit.LocationGlobal>` object 
   (the code fragment below sets it to the current location):
@@ -375,7 +375,7 @@ throttle at which the motors will keep spinning.
 .. code:: python
 
     # Print the value of the THR_MIN parameter.
-    print "Param: %s" % vehicle.parameters['THR_MIN']
+    print("Param: %s" % vehicle.parameters['THR_MIN'])
 
 
 
@@ -400,9 +400,9 @@ Listing all parameters
 .. code:: python
 
     
-    print "\nPrint all parameters (iterate `vehicle.parameters`):"
+    print("\nPrint all parameters (iterate `vehicle.parameters`):")
     for key, value in vehicle.parameters.iteritems():
-        print " Key:%s Value:%s" % (key,value)
+        print(" Key:%s Value:%s" % (key,value))
 
 
 
@@ -427,7 +427,7 @@ added using a decorator cannot be removed.
      
     @vehicle.parameters.on_attribute('THR_MIN')  
     def decorated_thr_min_callback(self, attr_name, value):
-        print " PARAMETER CALLBACK: %s changed to: %s" % (attr_name, value)
+        print(" PARAMETER CALLBACK: %s changed to: %s" % (attr_name, value))
 
 The ``observer`` callback function is invoked with the following arguments:
         
@@ -445,7 +445,7 @@ for "any parameter") using the
 
     #Callback function for "any" parameter
     def any_parameter_callback(self, attr_name, value):
-        print " ANY PARAMETER CALLBACK: %s changed to: %s" % (attr_name, value)
+        print(" ANY PARAMETER CALLBACK: %s changed to: %s" % (attr_name, value))
 
     #Add observer for the vehicle's any/all parameters parameter (note wildcard string ``'*'``)
     vehicle.parameters.add_attribute_listener('*', any_parameter_callback)    
@@ -459,4 +459,4 @@ for "any parameter") using the
 Known issues
 ============
 
-Known issues and improvement suggestions can viewed on `Github here <https://github.com/dronekit/dronekit-python/issues>`_. 
+Known issues and improvement suggestions can viewed on `Github here <https://github.com/Onikore/dronekit2/issues>`_.

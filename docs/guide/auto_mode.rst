@@ -225,9 +225,9 @@ to get the current command number. You can also change the current command by se
 .. code:: python
 
     vehicle.commands.next=2
-    print "Current Waypoint: %s" % vehicle.commands.next
+    print("Current Waypoint: %s" % vehicle.commands.next)
     vehicle.commands.next=4
-    print "Current Waypoint: %s" % vehicle.commands.next
+    print("Current Waypoint: %s" % vehicle.commands.next)
 
 There is no need to ``upload()`` changes to send an update to the  ``next`` attribute to the vehicle 
 (and as with other attributes, if you fetch a value, it is updated from the vehicle).
@@ -280,15 +280,15 @@ Adding mission commands is discussed :ref:`here in the guide <auto_mode_adding_c
             #Read mission from file
             missionlist = readmission(aFileName)
             
-            print "\nUpload mission from a file: %s" % import_mission_filename
+            print("\nUpload mission from a file: %s" % import_mission_filename)
             #Clear existing mission from vehicle
-            print ' Clear mission'
+            print(' Clear mission')
             cmds = vehicle.commands
             cmds.clear()
             #Add new mission to vehicle
             for command in missionlist:
                 cmds.add(command)
-            print ' Upload mission'
+            print(' Upload mission')
             vehicle.commands.upload()
 
 
@@ -307,7 +307,7 @@ The commands are added to a list which is returned by the function.
 
         This function is used by upload_mission().
         """
-        print "Reading mission from file: %s\n" % aFileName
+        print("Reading mission from file: %s\n" % aFileName)
         cmds = vehicle.commands
         missionlist=[]
         with open(aFileName) as f:
