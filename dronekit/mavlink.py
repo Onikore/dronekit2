@@ -119,11 +119,17 @@ class mavudpin_multi(mavutil.mavfile):
 class MAVConnection(object):
 
     def stop_threads(self):
+        # Thread.join() raises RuntimeError if called on a thread that was
+        # never started (e.g. close()/atexit fires before start() was ever
+        # called). Thread.ident is None until start() has run, so use it as
+        # the "was this thread actually started" guard.
         if self.mavlink_thread_in is not None:
-            self.mavlink_thread_in.join()
+            if self.mavlink_thread_in.ident is not None:
+                self.mavlink_thread_in.join()
             self.mavlink_thread_in = None
         if self.mavlink_thread_out is not None:
-            self.mavlink_thread_out.join()
+            if self.mavlink_thread_out.ident is not None:
+                self.mavlink_thread_out.join()
             self.mavlink_thread_out = None
 
     def __init__(self, ip, baud=115200, target_system=0, source_system=255, source_component=0, use_native=False):

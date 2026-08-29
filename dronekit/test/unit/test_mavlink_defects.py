@@ -12,7 +12,7 @@ import errno
 import socket
 import sys
 
-from dronekit.mavlink import mavudpin_multi
+from dronekit.mavlink import MAVConnection, mavudpin_multi
 
 
 # ---------------------------------------------------------------------------
@@ -151,3 +151,44 @@ def test_recv_reraises_unexpected_socket_error_instead_of_unboundlocalerror():
         "replaced by a bug in the fallthrough path" % logged_type
     )
     assert issubclass(logged_type, OSError)  # socket.error is an OSError alias
+
+
+# ---------------------------------------------------------------------------
+# D3 - MAVConnection.stop_threads() before start()
+# ---------------------------------------------------------------------------
+
+def test_stop_threads_before_start_does_not_raise():
+    """Pre-fix, Thread.join() on a thread that was never started raises
+    RuntimeError('cannot join thread before it is started'). This is
+    exactly what happens if close() (or the atexit handler) runs before
+    start() was ever called.
+    """
+    handler = MAVConnection('udpin:127.0.0.1:0')
+    try:
+        assert handler.mavlink_thread_in.ident is None
+        assert handler.mavlink_thread_out.ident is None
+
+        handler.stop_threads()  # must not raise RuntimeError
+
+        assert handler.mavlink_thread_in is None
+        assert handler.mavlink_thread_out is None
+    finally:
+        handler.master.close()
+
+
+def test_stop_threads_after_start_still_joins(monkeypatch):
+    """Make sure the D3 fix didn't turn stop_threads() into a no-op for the
+    case it's actually supposed to handle: a thread that really was
+    started."""
+    handler = MAVConnection('udpin:127.0.0.1:0')
+    try:
+        handler._alive = False  # thread functions loop on self._alive
+        handler.start()
+        assert handler.mavlink_thread_in.ident is not None
+
+        handler.stop_threads()
+
+        assert handler.mavlink_thread_in is None
+        assert handler.mavlink_thread_out is None
+    finally:
+        handler.master.close()
