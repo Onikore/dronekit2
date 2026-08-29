@@ -13,11 +13,11 @@ from dronekit import Vehicle
 
 class RawIMU:
     """
-    The RAW IMU readings for the usual 9DOF sensor setup. 
+    The RAW IMU readings for the usual 9DOF sensor setup.
     This contains the true raw values without any scaling to allow data capture and system debugging.
-    
+
     The message definition is here: https://mavlink.io/en/messages/common.html#RAW_IMU
-    
+
     :param time_boot_us: Timestamp (microseconds since system boot). #Note, not milliseconds as per spec
     :param xacc: X acceleration (mg)
     :param yacc: Y acceleration (mg)
@@ -27,7 +27,7 @@ class RawIMU:
     :param zgyro: Angular speed around Z axis (millirad /sec)
     :param xmag: X Magnetic field (milli tesla)
     :param ymag: Y Magnetic field (milli tesla)
-    :param zmag: Z Magnetic field (milli tesla)    
+    :param zmag: Z Magnetic field (milli tesla)
     """
     def __init__(self, time_boot_us=None, xacc=None, yacc=None, zacc=None, xygro=None, ygyro=None, zgyro=None, xmag=None, ymag=None, zmag=None):
         """
@@ -46,7 +46,7 @@ class RawIMU:
 
     def __str__(self):
         """
-        String representation used to print the RawIMU object. 
+        String representation used to print the RawIMU object.
         """
         return f"RAW_IMU: time_boot_us={self.time_boot_us},xacc={self.xacc},yacc={self.yacc},zacc={self.zacc},xgyro={self.xgyro},ygyro={self.ygyro},zgyro={self.zgyro},xmag={self.xmag},ymag={self.ymag},zmag={self.zmag}"
 
@@ -64,8 +64,8 @@ class MyVehicle(Vehicle):
             """
             The listener is called for messages that contain the string specified in the decorator,
             passing the vehicle, message name, and the message.
-            
-            The listener writes the message to the (newly attached) ``vehicle.raw_imu`` object 
+
+            The listener writes the message to the (newly attached) ``vehicle.raw_imu`` object
             and notifies observers.
             """
             self._raw_imu.time_boot_us=message.time_usec

@@ -95,11 +95,11 @@ def condition_yaw(heading, relative=False):
     This method sets an absolute heading by default, but you can set the `relative` parameter
     to `True` to set yaw relative to the current yaw heading.
 
-    By default the yaw of the vehicle will follow the direction of travel. After setting 
-    the yaw using this function there is no way to return to the default yaw "follow direction 
+    By default the yaw of the vehicle will follow the direction of travel. After setting
+    the yaw using this function there is no way to return to the default yaw "follow direction
     of travel" behaviour (https://github.com/diydrones/ardupilot/issues/2427)
 
-    For more information see: 
+    For more information see:
     http://copter.ardupilot.com/wiki/common-mavlink-mission-command-messages-mav_cmd/#mav_cmd_condition_yaw
     """
     if relative:
@@ -122,11 +122,11 @@ def condition_yaw(heading, relative=False):
 
 def set_roi(location):
     """
-    Send MAV_CMD_DO_SET_ROI message to point camera gimbal at a 
+    Send MAV_CMD_DO_SET_ROI message to point camera gimbal at a
     specified region of interest (LocationGlobal).
     The vehicle may also turn to face the ROI.
 
-    For more information see: 
+    For more information see:
     http://copter.ardupilot.com/common-mavlink-mission-command-messages-mav_cmd/#mav_cmd_do_set_roi
     """
     # create the MAV_CMD_DO_SET_ROI command
@@ -146,10 +146,10 @@ def set_roi(location):
 
 """
 Functions to make it easy to convert between the different frames-of-reference. In particular these
-make it easy to navigate in terms of "metres from the current position" when using commands that take 
+make it easy to navigate in terms of "metres from the current position" when using commands that take
 absolute positions in decimal degrees.
 
-The methods are approximations only, and may be less accurate over longer distances, and when close 
+The methods are approximations only, and may be less accurate over longer distances, and when close
 to the Earth's poles.
 
 Specifically, it provides:
@@ -160,11 +160,11 @@ Specifically, it provides:
 
 def get_location_metres(original_location, dNorth, dEast):
     """
-    Returns a LocationGlobal object containing the latitude/longitude `dNorth` and `dEast` metres from the 
+    Returns a LocationGlobal object containing the latitude/longitude `dNorth` and `dEast` metres from the
     specified `original_location`. The returned LocationGlobal has the same `alt` value
     as `original_location`.
 
-    The function is useful when you want to move the vehicle around specifying locations relative to 
+    The function is useful when you want to move the vehicle around specifying locations relative to
     the current vehicle position.
 
     The algorithm is relatively accurate over small distances (10m within 1km) except close to the poles.
@@ -194,8 +194,8 @@ def get_distance_metres(aLocation1, aLocation2):
     """
     Returns the ground distance in metres between two LocationGlobal objects.
 
-    This method is an approximation, and will not be accurate over large distances and close to the 
-    earth's poles. It comes from the ArduPilot test code: 
+    This method is an approximation, and will not be accurate over large distances and close to the
+    earth's poles. It comes from the ArduPilot test code:
     https://github.com/diydrones/ardupilot/blob/master/Tools/autotest/common.py
     """
     dlat = aLocation2.lat - aLocation1.lat
@@ -207,8 +207,8 @@ def get_bearing(aLocation1, aLocation2):
     """
     Returns the bearing between the two LocationGlobal objects passed as parameters.
 
-    This method is an approximation, and may not be accurate over large distances and close to the 
-    earth's poles. It comes from the ArduPilot test code: 
+    This method is an approximation, and may not be accurate over large distances and close to the
+    earth's poles. It comes from the ArduPilot test code:
     https://github.com/diydrones/ardupilot/blob/master/Tools/autotest/common.py
     """
     off_x = aLocation2.lon - aLocation1.lon
@@ -224,13 +224,13 @@ def get_bearing(aLocation1, aLocation2):
 Functions to move the vehicle to a specified position (as opposed to controlling movement by setting velocity components).
 
 The methods include:
-* goto_position_target_global_int - Sets position using SET_POSITION_TARGET_GLOBAL_INT command in 
+* goto_position_target_global_int - Sets position using SET_POSITION_TARGET_GLOBAL_INT command in
     MAV_FRAME_GLOBAL_RELATIVE_ALT_INT frame
-* goto_position_target_local_ned - Sets position using SET_POSITION_TARGET_LOCAL_NED command in 
+* goto_position_target_local_ned - Sets position using SET_POSITION_TARGET_LOCAL_NED command in
     MAV_FRAME_BODY_NED frame
-* goto - A convenience function that can use Vehicle.simple_goto (default) or 
-    goto_position_target_global_int to travel to a specific position in metres 
-    North and East from the current location. 
+* goto - A convenience function that can use Vehicle.simple_goto (default) or
+    goto_position_target_global_int to travel to a specific position in metres
+    North and East from the current location.
     This method reports distance to the destination.
 """
 
@@ -240,7 +240,7 @@ def goto_position_target_global_int(aLocation):
 
     For more information see: https://pixhawk.ethz.ch/mavlink/#SET_POSITION_TARGET_GLOBAL_INT
 
-    See the above link for information on the type_mask (0=enable, 1=ignore). 
+    See the above link for information on the type_mask (0=enable, 1=ignore).
     At time of writing, acceleration and yaw bits are ignored.
     """
     msg = vehicle.message_factory.set_position_target_global_int_encode(
@@ -262,18 +262,18 @@ def goto_position_target_global_int(aLocation):
 
 
 def goto_position_target_local_ned(north, east, down):
-    """	
-    Send SET_POSITION_TARGET_LOCAL_NED command to request the vehicle fly to a specified 
+    """
+    Send SET_POSITION_TARGET_LOCAL_NED command to request the vehicle fly to a specified
     location in the North, East, Down frame.
 
-    It is important to remember that in this frame, positive altitudes are entered as negative 
+    It is important to remember that in this frame, positive altitudes are entered as negative
     "Down" values. So if down is "10", this will be 10 metres below the home altitude.
 
     Starting from AC3.3 the method respects the frame setting. Prior to that the frame was
-    ignored. For more information see: 
+    ignored. For more information see:
     http://dev.ardupilot.com/wiki/copter-commands-in-guided-mode/#set_position_target_local_ned
 
-    See the above link for information on the type_mask (0=enable, 1=ignore). 
+    See the above link for information on the type_mask (0=enable, 1=ignore).
     At time of writing, acceleration and yaw bits are ignored.
 
     """
@@ -337,16 +337,16 @@ def send_ned_velocity(velocity_x, velocity_y, velocity_z, duration):
     Move vehicle in direction based on specified velocity vectors and
     for the specified duration.
 
-    This uses the SET_POSITION_TARGET_LOCAL_NED command with a type mask enabling only 
-    velocity components 
+    This uses the SET_POSITION_TARGET_LOCAL_NED command with a type mask enabling only
+    velocity components
     (http://dev.ardupilot.com/wiki/copter-commands-in-guided-mode/#set_position_target_local_ned).
-    
+
     Note that from AC3.3 the message should be re-sent every second (after about 3 seconds
     with no message the velocity will drop back to zero). In AC3.2.1 and earlier the specified
-    velocity persists until it is canceled. The code below should work on either version 
+    velocity persists until it is canceled. The code below should work on either version
     (sending the message multiple times does not cause problems).
-    
-    See the above link for information on the type_mask (0=enable, 1=ignore). 
+
+    See the above link for information on the type_mask (0=enable, 1=ignore).
     At time of writing, acceleration and yaw bits are ignored.
     """
     msg = vehicle.message_factory.set_position_target_local_ned_encode(
@@ -371,16 +371,16 @@ def send_global_velocity(velocity_x, velocity_y, velocity_z, duration):
     """
     Move vehicle in direction based on specified velocity vectors.
 
-    This uses the SET_POSITION_TARGET_GLOBAL_INT command with type mask enabling only 
-    velocity components 
+    This uses the SET_POSITION_TARGET_GLOBAL_INT command with type mask enabling only
+    velocity components
     (http://dev.ardupilot.com/wiki/copter-commands-in-guided-mode/#set_position_target_global_int).
-    
+
     Note that from AC3.3 the message should be re-sent every second (after about 3 seconds
     with no message the velocity will drop back to zero). In AC3.2.1 and earlier the specified
-    velocity persists until it is canceled. The code below should work on either version 
+    velocity persists until it is canceled. The code below should work on either version
     (sending the message multiple times does not cause problems).
-    
-    See the above link for information on the type_mask (0=enable, 1=ignore). 
+
+    See the above link for information on the type_mask (0=enable, 1=ignore).
     At time of writing, acceleration and yaw bits are ignored.
     """
     msg = vehicle.message_factory.set_position_target_global_int_encode(
@@ -433,12 +433,12 @@ Fly a triangular path using the SET_POSITION_TARGET_GLOBAL_INT command and speci
 a target position (rather than controlling movement using velocity vectors). The command is
 called from goto_position_target_global_int() (via `goto`).
 
-The goto_position_target_global_int method is called indirectly from a custom "goto" that allows 
-the target position to be specified as a distance in metres (North/East) from the current position, 
+The goto_position_target_global_int method is called indirectly from a custom "goto" that allows
+the target position to be specified as a distance in metres (North/East) from the current position,
 and which reports the distance-to-target.
 
-The code also sets the speed (MAV_CMD_DO_CHANGE_SPEED). In AC3.2.1 Copter will accelerate to this speed 
-near the centre of its journey and then decelerate as it reaches the target. 
+The code also sets the speed (MAV_CMD_DO_CHANGE_SPEED). In AC3.2.1 Copter will accelerate to this speed
+near the centre of its journey and then decelerate as it reaches the target.
 In AC3.3 the speed changes immediately.
 """
 print("TRIANGLE path using standard SET_POSITION_TARGET_GLOBAL_INT message and with varying speed.")
@@ -462,18 +462,18 @@ goto(100, -130, goto_position_target_global_int)
 
 
 """
-Fly the vehicle in a 50m square path, using the SET_POSITION_TARGET_LOCAL_NED command 
-and specifying a target position (rather than controlling movement using velocity vectors). 
+Fly the vehicle in a 50m square path, using the SET_POSITION_TARGET_LOCAL_NED command
+and specifying a target position (rather than controlling movement using velocity vectors).
 The command is called from goto_position_target_local_ned() (via `goto`).
 
 The position is specified in terms of the NED (North East Down) relative to the Home location.
 
 WARNING: The "D" in NED means "Down". Using a positive D value will drive the vehicle into the ground!
 
-The code sleeps for a time (DURATION) to give the vehicle time to reach each position (rather than 
+The code sleeps for a time (DURATION) to give the vehicle time to reach each position (rather than
 sending commands based on proximity).
 
-The code also sets the region of interest (MAV_CMD_DO_SET_ROI) via the `set_roi()` method. This points the 
+The code also sets the region of interest (MAV_CMD_DO_SET_ROI) via the `set_roi()` method. This points the
 camera gimbal at the the selected location (in this case it aligns the whole vehicle to point at the ROI).
 """
 
@@ -506,7 +506,7 @@ time.sleep(DURATION)
 
 
 """
-Fly the vehicle in a SQUARE path using velocity vectors (the underlying code calls the 
+Fly the vehicle in a SQUARE path using velocity vectors (the underlying code calls the
 SET_POSITION_TARGET_LOCAL_NED command with the velocity parameters enabled).
 
 The thread sleeps for a time (DURATION) which defines the distance that will be travelled.
@@ -571,7 +571,7 @@ send_ned_velocity(0,0,0,1)
 
 
 """
-Fly the vehicle in a DIAMOND path using velocity vectors (the underlying code calls the 
+Fly the vehicle in a DIAMOND path using velocity vectors (the underlying code calls the
 SET_POSITION_TARGET_GLOBAL_INT command with the velocity parameters enabled).
 
 The thread sleeps for a time (DURATION) which defines the distance that will be travelled.

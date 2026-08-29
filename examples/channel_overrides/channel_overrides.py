@@ -3,12 +3,12 @@
 """
 © Copyright 2015-2016, 3D Robotics.
 
-channel_overrides.py: 
+channel_overrides.py:
 
 Demonstrates how set and clear channel-override information.
 
-# NOTE: 
-Channel overrides (a.k.a "RC overrides") are highly discommended (they are primarily implemented 
+# NOTE:
+Channel overrides (a.k.a "RC overrides") are highly discommended (they are primarily implemented
 for simulating user input and when implementing certain types of joystick control).
 
 They are provided for development purposes. Please raise an issue explaining why you need them

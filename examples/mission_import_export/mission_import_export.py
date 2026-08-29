@@ -2,9 +2,9 @@
 
 """
 © Copyright 2015-2016, 3D Robotics.
-mission_import_export.py: 
+mission_import_export.py:
 
-This example demonstrates how to import and export files in the Waypoint file format 
+This example demonstrates how to import and export files in the Waypoint file format
 (http://qgroundcontrol.org/mavlink/waypoint_protocol#waypoint_file_format). The commands are imported
 into a list, and can be modified before saving and/or uploading.
 
@@ -84,7 +84,7 @@ def readmission(aFileName):
 
 def upload_mission(aFileName):
     """
-    Upload a mission from a file. 
+    Upload a mission from a file.
     """
     #Read mission from file
     missionlist = readmission(aFileName)
@@ -117,7 +117,7 @@ def download_mission():
 
 def save_mission(aFileName):
     """
-    Save a mission in the Waypoint file format 
+    Save a mission in the Waypoint file format
     (http://qgroundcontrol.org/mavlink/waypoint_protocol#waypoint_file_format).
     """
     print("\nSave mission from Vehicle to file: %s" % aFileName)

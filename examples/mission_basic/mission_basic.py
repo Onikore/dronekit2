@@ -36,11 +36,11 @@ vehicle = connect(connection_string, wait_ready=True)
 
 def get_location_metres(original_location, dNorth, dEast):
     """
-    Returns a LocationGlobal object containing the latitude/longitude `dNorth` and `dEast` metres from the 
+    Returns a LocationGlobal object containing the latitude/longitude `dNorth` and `dEast` metres from the
     specified `original_location`. The returned Location has the same `alt` value
     as `original_location`.
 
-    The function is useful when you want to move the vehicle around specifying locations relative to 
+    The function is useful when you want to move the vehicle around specifying locations relative to
     the current vehicle position.
     The algorithm is relatively accurate over small distances (10m within 1km) except close to the poles.
     For more information see:
@@ -61,8 +61,8 @@ def get_distance_metres(aLocation1, aLocation2):
     """
     Returns the ground distance in metres between two LocationGlobal objects.
 
-    This method is an approximation, and will not be accurate over large distances and close to the 
-    earth's poles. It comes from the ArduPilot test code: 
+    This method is an approximation, and will not be accurate over large distances and close to the
+    earth's poles. It comes from the ArduPilot test code:
     https://github.com/diydrones/ardupilot/blob/master/Tools/autotest/common.py
     """
     dlat = aLocation2.lat - aLocation1.lat
@@ -73,7 +73,7 @@ def get_distance_metres(aLocation1, aLocation2):
 
 def distance_to_current_waypoint():
     """
-    Gets distance in metres to the current waypoint. 
+    Gets distance in metres to the current waypoint.
     It returns None for the first waypoint (Home location).
     """
     nextwaypoint = vehicle.commands.next
@@ -100,10 +100,10 @@ def download_mission():
 
 def adds_square_mission(aLocation, aSize):
     """
-    Adds a takeoff command and four waypoint commands to the current mission. 
+    Adds a takeoff command and four waypoint commands to the current mission.
     The waypoints are positioned to form a square of side length 2*aSize around the specified LocationGlobal (aLocation).
 
-    The function assumes vehicle.commands matches the vehicle mission state 
+    The function assumes vehicle.commands matches the vehicle mission state
     (you must have called download at least once in the session and after clearing the mission)
     """
 
