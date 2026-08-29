@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 """
 © Copyright 2015-2016, 3D Robotics.
@@ -11,18 +10,21 @@ the flight by sending waypoints to a vehicle.
 Full documentation is provided at http://python.dronekit.io/examples/flight_replay.html
 """
 
-from dronekit import connect, Command, VehicleMode, LocationGlobalRelative
-from pymavlink import mavutil
+import math
 import os
 import sys
-import math
 import time
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from _common import add_connection_argument, get_connection_string
+from pymavlink import mavutil
 
+from dronekit import Command, LocationGlobalRelative, VehicleMode, connect
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 #Set up option parsing to get connection string
 import argparse
+
+from _common import add_connection_argument, get_connection_string
+
 parser = argparse.ArgumentParser(description='Load a telemetry log and use position data to create mission waypoints for a vehicle.')
 add_connection_argument(parser)
 parser.add_argument('--tlog', default='flight.tlog',
@@ -79,7 +81,7 @@ def position_messages_from_tlog(filename):
             continue
         messages.append(m)
 
-    # Shrink the number of points for readability and to stay within autopilot memory limits. 
+    # Shrink the number of points for readability and to stay within autopilot memory limits.
     # For coding simplicity we:
     #   - only keep points that are with 3 metres of the previous kept point.
     #   - only keep the first 100 points that meet the above criteria.
@@ -103,8 +105,8 @@ def position_messages_from_tlog(filename):
         pt2num=pt2num+1
 
     return kept_messages
-    
-    
+
+
 def arm_and_takeoff(aTargetAltitude):
     """
     Arms vehicle and fly to aTargetAltitude.
@@ -114,7 +116,7 @@ def arm_and_takeoff(aTargetAltitude):
     while not vehicle.is_armable:
         print(" Waiting for vehicle to initialise...")
         time.sleep(1)
-        
+
     # Set mode to GUIDED for arming and takeoff:
     while (vehicle.mode.name != "GUIDED"):
         vehicle.mode = VehicleMode("GUIDED")
@@ -129,12 +131,12 @@ def arm_and_takeoff(aTargetAltitude):
     print(" Taking off!")
     vehicle.simple_takeoff(aTargetAltitude) # Take off to target altitude
 
-    # Wait until the vehicle reaches a safe height 
+    # Wait until the vehicle reaches a safe height
     # before allowing next command to process.
     while True:
         requiredAlt = aTargetAltitude*0.95
-        #Break and return from function just below target altitude.        
-        if vehicle.location.global_relative_frame.alt>=requiredAlt: 
+        #Break and return from function just below target altitude.
+        if vehicle.location.global_relative_frame.alt>=requiredAlt:
             print(" Reached target altitude of ~%f" % (aTargetAltitude))
             break
         print(" Altitude: %f < %f" % (vehicle.location.global_relative_frame.alt,
@@ -214,7 +216,7 @@ while time.time() - time_start < 60:
 
     if nextwaypoint==len(messages):
         print("Exit 'standard' mission when start heading to final waypoint")
-        break;
+        break
     time.sleep(1)
 
 print('Return to launch')

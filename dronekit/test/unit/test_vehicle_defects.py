@@ -22,7 +22,6 @@ from dronekit import APIException, CommandSequence, Vehicle
 from dronekit import TimeoutError as DKTimeoutError
 from dronekit.mavlink import MAVConnection
 
-
 # ---------------------------------------------------------------------------
 # D5 - no bare `except:` clauses left in either module
 # ---------------------------------------------------------------------------

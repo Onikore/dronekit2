@@ -40,30 +40,29 @@ A number of other useful classes and methods are listed below.
 # facade file itself calls `time` directly.
 import time  # noqa: F401 - re-exposed for tests to patch dronekit.time.time
 
+from dronekit.channels import Channels, ChannelsOverride
+from dronekit.connect import connect
 from dronekit.errors import APIException, TimeoutError
+from dronekit.gimbal import Gimbal
+from dronekit.locations import Locations
+from dronekit.mission import Command, CommandInt, CommandSequence
+from dronekit.observers import HasObservers
+from dronekit.parameters import Parameters
 from dronekit.types import (
     Attitude,
+    Battery,
+    Capabilities,
+    GPSInfo,
     LocationGlobal,
     LocationGlobalRelative,
     LocationLocal,
-    GPSInfo,
-    Wind,
-    Battery,
     Rangefinder,
-    Version,
-    Capabilities,
-    VehicleMode,
     SystemStatus,
+    VehicleMode,
+    Version,
+    Wind,
 )
-from dronekit.observers import HasObservers
-from dronekit.channels import ChannelsOverride, Channels
-from dronekit.locations import Locations
-from dronekit.vehicle import Vehicle
-from dronekit.gimbal import Gimbal
-from dronekit.parameters import Parameters
-from dronekit.mission import Command, CommandInt, CommandSequence
-from dronekit.vehicle import default_still_waiting_callback
-from dronekit.connect import connect
+from dronekit.vehicle import Vehicle, default_still_waiting_callback
 
 __version__ = "3.0.0"
 

@@ -1,20 +1,22 @@
 from __future__ import annotations
 
 import atexit
-import logging
-import time
-import socket
+import copy
 import errno
-import sys
+import logging
 import os
 import platform
-import copy
+import socket
+import sys
+import time
 import weakref
-from dronekit import APIException
-from pymavlink import mavutil
-from queue import Queue, Empty
+from queue import Empty, Queue
 from threading import Thread
 from typing import Any, Callable
+
+from pymavlink import mavutil
+
+from dronekit import APIException
 
 if platform.system() == 'Windows':
     from errno import WSAECONNRESET as ECONNABORTED
@@ -22,7 +24,7 @@ else:
     from errno import ECONNABORTED
 
 
-class MAVWriter(object):
+class MAVWriter:
     """
     Indirection layer to take messages written to MAVlink and send them all
     on the same thread.
@@ -73,7 +75,7 @@ class mavudpin_multi(mavutil.mavfile):
         try:
             try:
                 data, new_addr = self.port.recvfrom(65535)
-            except socket.error as e:
+            except OSError as e:
                 if e.errno in [errno.EAGAIN, errno.EWOULDBLOCK, errno.ECONNREFUSED]:
                     return b""
                 # Any other socket error is unexpected - re-raise it so it is
@@ -104,7 +106,7 @@ class mavudpin_multi(mavutil.mavfile):
                         self.broadcast = False
                         self.port.connect(self.destination_addr)
                     self.port.sendto(buf, self.destination_addr)
-            except socket.error:
+            except OSError:
                 pass
         except Exception:
             self._logger.exception("Exception while writing data", exc_info=True)
@@ -124,7 +126,7 @@ class mavudpin_multi(mavutil.mavfile):
         return m
 
 
-class MAVConnection(object):
+class MAVConnection:
     # Declared at class level (rather than solely via the inline
     # `self.mavlink_thread_in: Thread | None = t` in __init__) because
     # stop_threads() below - which reassigns these to None - appears
@@ -216,7 +218,7 @@ class MAVConnection(object):
                         self.master.write(msg)
                     except Empty:
                         continue
-                    except socket.error as error:
+                    except OSError as error:
                         # If connection reset (closed), stop polling.
                         if error.errno == ECONNABORTED:
                             raise APIException('Connection aborting during read')
@@ -256,7 +258,7 @@ class MAVConnection(object):
                     while self._accept_input:
                         try:
                             msg = self.master.recv_msg()
-                        except socket.error as error:
+                        except OSError as error:
                             # If connection reset (closed), stop polling.
                             if error.errno == ECONNABORTED:
                                 raise APIException('Connection aborting during send')

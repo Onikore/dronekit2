@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 """
 © Copyright 2017, Peter Barker
@@ -12,15 +11,15 @@ Full documentation is provided at http://python.dronekit.io/examples/play_tune.h
 
 import os
 import sys
-import time
+
 from dronekit import connect
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from _common import add_connection_argument, get_connection_string
-
-
 # Set up option parsing to get connection string
 import argparse
+
+from _common import add_connection_argument, get_connection_string
+
 parser = argparse.ArgumentParser(description='Play tune on vehicle buzzer.')
 add_connection_argument(parser)
 parser.add_argument('--tune', type=str, help="tune to play", default="AAAA")

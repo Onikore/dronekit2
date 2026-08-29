@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 """
 © Copyright 2015-2016, 3D Robotics.
@@ -8,11 +7,11 @@
 # This is a small example of the python drone API - an ultra minimal GCS
 #
 
-from dronekit import connect, VehicleMode
-from pymavlink import mavutil
-from tkinter import *
 import os
 import sys
+from tkinter import *
+
+from dronekit import VehicleMode, connect
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from _common import add_connection_argument, get_connection_string
@@ -22,6 +21,7 @@ global root
 
 #Set up option parsing to get connection string
 import argparse
+
 parser = argparse.ArgumentParser(description='Tracks GPS position of your computer (Linux only).')
 add_connection_argument(parser)
 args = parser.parse_args()

@@ -99,7 +99,7 @@ class Vehicle(HasObservers):
     """
 
     def __init__(self, handler: MAVConnection) -> None:
-        super(Vehicle, self).__init__()
+        super().__init__()
 
         self._logger = logging.getLogger(__name__)  # Logger for DroneKit
         self._autopilot_logger = logging.getLogger('autopilot')  # Logger for the autopilot messages
@@ -248,7 +248,7 @@ class Vehicle(HasObservers):
                 self._channels._update_channel(str(port * 8 + chnum), v)
 
             for i in range(1, (18 if name == "RC_CHANNELS" else 8)+1):
-                set_rc(i, getattr(m, "chan{}_raw".format(i)))
+                set_rc(i, getattr(m, f"chan{i}_raw"))
 
             self.notify_attribute_listeners('channels', self.channels)
 

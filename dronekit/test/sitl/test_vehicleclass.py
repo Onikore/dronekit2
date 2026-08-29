@@ -1,10 +1,11 @@
 import time
-from dronekit import connect, Vehicle
+
+from dronekit import Vehicle, connect
 
 
 class DummyVehicle(Vehicle):
     def __init__(self, *args):
-        super(DummyVehicle, self).__init__(*args)
+        super().__init__(*args)
 
         self.success = False
 

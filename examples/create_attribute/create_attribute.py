@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 """
 © Copyright 2015-2016, 3D Robotics.
@@ -15,18 +14,20 @@ intercepted using the message_listener decorator.
 Full documentation is provided at http://python.dronekit.io/examples/create_attribute.html
 """
 
-from dronekit import connect, Vehicle
-from my_vehicle import MyVehicle #Our custom vehicle class
 import os
 import sys
 import time
 
+from my_vehicle import MyVehicle  #Our custom vehicle class
+
+from dronekit import connect
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from _common import add_connection_argument, get_connection_string
-
-
 #Set up option parsing to get connection string
 import argparse
+
+from _common import add_connection_argument, get_connection_string
+
 parser = argparse.ArgumentParser(description='Demonstrates how to create attributes from MAVLink messages. ')
 add_connection_argument(parser)
 args = parser.parse_args()

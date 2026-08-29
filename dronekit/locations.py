@@ -22,7 +22,7 @@ class Locations(HasObservers):
     """
 
     def __init__(self, vehicle: VehicleLike) -> None:
-        super(Locations, self).__init__()
+        super().__init__()
 
         # D10: global_frame/global_relative_frame are cached here as whole,
         # immutable Location* objects and replaced with a single attribute

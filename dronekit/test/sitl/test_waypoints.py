@@ -1,6 +1,8 @@
 import time
-from dronekit import LocationGlobal, Command
+
 from pymavlink import mavutil
+
+from dronekit import Command, LocationGlobal
 
 
 def test_empty_clear(vehicle):

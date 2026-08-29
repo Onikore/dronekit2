@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 """
 © Copyright 2015-2016, 3D Robotics.
@@ -10,19 +9,21 @@ This example shows how to move/direct Copter and send commands in GUIDED mode us
 Example documentation: http://python.dronekit.io/examples/guided-set-speed-yaw-demo.html
 """
 
-from dronekit import connect, VehicleMode, LocationGlobal, LocationGlobalRelative
-from pymavlink import mavutil # Needed for command message definitions
+import math
 import os
 import sys
 import time
-import math
+
+from pymavlink import mavutil  # Needed for command message definitions
+
+from dronekit import LocationGlobal, LocationGlobalRelative, VehicleMode, connect
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from _common import add_connection_argument, get_connection_string
-
-
 #Set up option parsing to get connection string
 import argparse
+
+from _common import add_connection_argument, get_connection_string
+
 parser = argparse.ArgumentParser(description='Control Copter and send commands in GUIDED mode ')
 add_connection_argument(parser)
 args = parser.parse_args()
@@ -46,23 +47,23 @@ def arm_and_takeoff(aTargetAltitude):
         print(" Waiting for vehicle to initialise...")
         time.sleep(1)
 
-        
+
     print("Arming motors")
     # Copter should arm in GUIDED mode
     vehicle.mode = VehicleMode("GUIDED")
     vehicle.armed = True
 
-    while not vehicle.armed:      
+    while not vehicle.armed:
         print(" Waiting for arming...")
         time.sleep(1)
 
     print("Taking off!")
     vehicle.simple_takeoff(aTargetAltitude) # Take off to target altitude
 
-    # Wait until the vehicle reaches a safe height before processing the goto (otherwise the command 
+    # Wait until the vehicle reaches a safe height before processing the goto (otherwise the command
     #  after Vehicle.simple_takeoff will execute immediately).
     while True:
-        print(" Altitude: ", vehicle.location.global_relative_frame.alt)      
+        print(" Altitude: ", vehicle.location.global_relative_frame.alt)
         if vehicle.location.global_relative_frame.alt>=aTargetAltitude*0.95: #Trigger just below target alt.
             print("Reached target altitude")
             break
@@ -185,8 +186,8 @@ def get_location_metres(original_location, dNorth, dEast):
         targetlocation=LocationGlobalRelative(newlat, newlon,original_location.alt)
     else:
         raise Exception("Invalid Location object passed")
-        
-    return targetlocation;
+
+    return targetlocation
 
 
 def get_distance_metres(aLocation1, aLocation2):
@@ -209,13 +210,13 @@ def get_bearing(aLocation1, aLocation2):
     This method is an approximation, and may not be accurate over large distances and close to the 
     earth's poles. It comes from the ArduPilot test code: 
     https://github.com/diydrones/ardupilot/blob/master/Tools/autotest/common.py
-    """	
+    """
     off_x = aLocation2.lon - aLocation1.lon
     off_y = aLocation2.lat - aLocation1.lat
     bearing = 90.00 + math.atan2(-off_y, off_x) * 57.2957795
     if bearing < 0:
         bearing += 360.00
-    return bearing;
+    return bearing
 
 
 
@@ -254,7 +255,7 @@ def goto_position_target_global_int(aLocation):
         0, # Y velocity in NED frame in m/s
         0, # Z velocity in NED frame in m/s
         0, 0, 0, # afx, afy, afz acceleration (not supported yet, ignored in GCS_Mavlink)
-        0, 0)    # yaw, yaw_rate (not supported yet, ignored in GCS_Mavlink) 
+        0, 0)    # yaw, yaw_rate (not supported yet, ignored in GCS_Mavlink)
     # send command to vehicle
     vehicle.send_mavlink(msg)
 
@@ -284,7 +285,7 @@ def goto_position_target_local_ned(north, east, down):
         north, east, down, # x, y, z positions (or North, East, Down in the MAV_FRAME_BODY_NED frame
         0, 0, 0, # x, y, z velocity in m/s  (not used)
         0, 0, 0, # x, y, z acceleration (not supported yet, ignored in GCS_Mavlink)
-        0, 0)    # yaw, yaw_rate (not supported yet, ignored in GCS_Mavlink) 
+        0, 0)    # yaw, yaw_rate (not supported yet, ignored in GCS_Mavlink)
     # send command to vehicle
     vehicle.send_mavlink(msg)
 
@@ -300,12 +301,12 @@ def goto(dNorth, dEast, gotoFunction=vehicle.simple_goto):
 
     The method reports the distance to target every two seconds.
     """
-    
+
     currentLocation = vehicle.location.global_relative_frame
     targetLocation = get_location_metres(currentLocation, dNorth, dEast)
     targetDistance = get_distance_metres(currentLocation, targetLocation)
     gotoFunction(targetLocation)
-    
+
     #print "DEBUG: targetLocation: %s" % targetLocation
     #print "DEBUG: targetLocation: %s" % targetDistance
 
@@ -315,7 +316,7 @@ def goto(dNorth, dEast, gotoFunction=vehicle.simple_goto):
         print("Distance to target: ", remainingDistance)
         if remainingDistance<=targetDistance*0.01: #Just below target, in case of undershoot.
             print("Reached target")
-            break;
+            break
         time.sleep(2)
 
 
@@ -356,14 +357,14 @@ def send_ned_velocity(velocity_x, velocity_y, velocity_z, duration):
         0, 0, 0, # x, y, z positions (not used)
         velocity_x, velocity_y, velocity_z, # x, y, z velocity in m/s
         0, 0, 0, # x, y, z acceleration (not supported yet, ignored in GCS_Mavlink)
-        0, 0)    # yaw, yaw_rate (not supported yet, ignored in GCS_Mavlink) 
+        0, 0)    # yaw, yaw_rate (not supported yet, ignored in GCS_Mavlink)
 
     # send command to vehicle on 1 Hz cycle
     for x in range(0,duration):
         vehicle.send_mavlink(msg)
         time.sleep(1)
-    
-    
+
+
 
 
 def send_global_velocity(velocity_x, velocity_y, velocity_z, duration):
@@ -395,12 +396,12 @@ def send_global_velocity(velocity_x, velocity_y, velocity_z, duration):
         velocity_y, # Y velocity in NED frame in m/s
         velocity_z, # Z velocity in NED frame in m/s
         0, 0, 0, # afx, afy, afz acceleration (not supported yet, ignored in GCS_Mavlink)
-        0, 0)    # yaw, yaw_rate (not supported yet, ignored in GCS_Mavlink) 
+        0, 0)    # yaw, yaw_rate (not supported yet, ignored in GCS_Mavlink)
 
     # send command to vehicle on 1 Hz cycle
     for x in range(0,duration):
         vehicle.send_mavlink(msg)
-        time.sleep(1)    
+        time.sleep(1)
 
 
 """
@@ -409,7 +410,7 @@ Fly a triangular path using the standard Vehicle.simple_goto() method.
 The method is called indirectly via a custom "goto" that allows the target position to be
 specified as a distance in metres (North/East) from the current position, and which reports
 the distance-to-target.
-"""	
+"""
 print("TRIANGLE path using standard Vehicle.simple_goto()")
 
 print("Set groundspeed to 5m/s.")
@@ -439,7 +440,7 @@ and which reports the distance-to-target.
 The code also sets the speed (MAV_CMD_DO_CHANGE_SPEED). In AC3.2.1 Copter will accelerate to this speed 
 near the centre of its journey and then decelerate as it reaches the target. 
 In AC3.3 the speed changes immediately.
-"""	
+"""
 print("TRIANGLE path using standard SET_POSITION_TARGET_GLOBAL_INT message and with varying speed.")
 print("Position South 100 West 130")
 
@@ -474,14 +475,14 @@ sending commands based on proximity).
 
 The code also sets the region of interest (MAV_CMD_DO_SET_ROI) via the `set_roi()` method. This points the 
 camera gimbal at the the selected location (in this case it aligns the whole vehicle to point at the ROI).
-"""	
+"""
 
 print("SQUARE path using SET_POSITION_TARGET_LOCAL_NED and position parameters")
 DURATION = 20 #Set duration for each segment.
 
 print("North 50m, East 0m, 10m altitude for %s seconds" % DURATION)
 goto_position_target_local_ned(50,0,-10)
-print("Point ROI at current location (home position)") 
+print("Point ROI at current location (home position)")
 # NOTE that this has to be called after the goto command as first "move" command of a particular type
 # "resets" ROI/YAW commands
 set_roi(vehicle.location.global_relative_frame)
@@ -527,7 +528,7 @@ SOUTH = -2
 EAST = 2
 WEST = -2
 
-# Note for vz: 
+# Note for vz:
 # vz < 0 => ascend
 # vz > 0 => descend
 UP = -0.5

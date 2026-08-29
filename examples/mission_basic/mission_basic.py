@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 """
 © Copyright 2015-2016, 3D Robotics.
@@ -8,19 +7,21 @@ mission_basic.py: Example demonstrating basic mission operations including creat
 Full documentation is provided at https://dronekit-python.readthedocs.io/en/latest/examples/mission_basic.html
 """
 
-from dronekit import connect, VehicleMode, LocationGlobalRelative, LocationGlobal, Command
+import math
 import os
 import sys
 import time
-import math
+
 from pymavlink import mavutil
 
+from dronekit import Command, LocationGlobal, LocationGlobalRelative, VehicleMode, connect
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from _common import add_connection_argument, get_connection_string
-
-
 #Set up option parsing to get connection string
 import argparse
+
+from _common import add_connection_argument, get_connection_string
+
 parser = argparse.ArgumentParser(description='Demonstrates basic mission operations.')
 add_connection_argument(parser)
 args = parser.parse_args()
@@ -104,13 +105,13 @@ def adds_square_mission(aLocation, aSize):
 
     The function assumes vehicle.commands matches the vehicle mission state 
     (you must have called download at least once in the session and after clearing the mission)
-    """	
+    """
 
     cmds = vehicle.commands
 
     print(" Clear any existing commands")
-    cmds.clear() 
-    
+    cmds.clear()
+
     print(" Define/add new commands.")
     # Add new commands. The meaning/order of the parameters is documented in the Command class.
     # NOTE: Command sends waypoint lat/lon as floats (MISSION_ITEM). If you need the extra
@@ -131,7 +132,7 @@ def adds_square_mission(aLocation, aSize):
     cmds.add(Command( 0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, point3.lat, point3.lon, 13))
     cmds.add(Command( 0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, point4.lat, point4.lon, 14))
     #add dummy waypoint "5" at point 4 (lets us know when have reached destination)
-    cmds.add(Command( 0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, point4.lat, point4.lon, 14))    
+    cmds.add(Command( 0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, point4.lat, point4.lon, 14))
 
     print(" Upload new commands to vehicle")
     cmds.upload()
@@ -148,29 +149,29 @@ def arm_and_takeoff(aTargetAltitude):
         print(" Waiting for vehicle to initialise...")
         time.sleep(1)
 
-        
+
     print("Arming motors")
     # Copter should arm in GUIDED mode
     vehicle.mode = VehicleMode("GUIDED")
     vehicle.armed = True
 
-    while not vehicle.armed:      
+    while not vehicle.armed:
         print(" Waiting for arming...")
         time.sleep(1)
 
     print("Taking off!")
     vehicle.simple_takeoff(aTargetAltitude) # Take off to target altitude
 
-    # Wait until the vehicle reaches a safe height before processing the goto (otherwise the command 
+    # Wait until the vehicle reaches a safe height before processing the goto (otherwise the command
     #  after Vehicle.simple_takeoff will execute immediately).
     while True:
-        print(" Altitude: ", vehicle.location.global_relative_frame.alt)      
+        print(" Altitude: ", vehicle.location.global_relative_frame.alt)
         if vehicle.location.global_relative_frame.alt>=aTargetAltitude*0.95: #Trigger just below target alt.
             print("Reached target altitude")
             break
         time.sleep(1)
 
-        
+
 print('Create a new mission (for current location)')
 adds_square_mission(vehicle.location.global_frame,50)
 
@@ -186,21 +187,21 @@ vehicle.commands.next=0
 vehicle.mode = VehicleMode("AUTO")
 
 
-# Monitor mission. 
-# Demonstrates getting and setting the command number 
-# Uses distance_to_current_waypoint(), a convenience function for finding the 
+# Monitor mission.
+# Demonstrates getting and setting the command number
+# Uses distance_to_current_waypoint(), a convenience function for finding the
 #   distance to the next waypoint.
 
 while True:
     nextwaypoint=vehicle.commands.next
     print('Distance to waypoint (%s): %s' % (nextwaypoint, distance_to_current_waypoint()))
-  
+
     if nextwaypoint==3: #Skip to next waypoint
         print('Skipping to Waypoint 5 when reach waypoint 3')
         vehicle.commands.next = 5
     if nextwaypoint==5: #Dummy waypoint - as soon as we reach waypoint 4 this is true and we exit.
         print("Exit 'standard' mission when start heading to final waypoint (5)")
-        break;
+        break
     time.sleep(1)
 
 print('Return to launch')

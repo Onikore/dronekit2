@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 """
 © Copyright 2015-2016, 3D Robotics.
@@ -13,14 +12,15 @@ Full documentation is provided at http://python.dronekit.io/examples/simple_goto
 import os
 import sys
 import time
-from dronekit import connect, VehicleMode, LocationGlobalRelative
+
+from dronekit import LocationGlobalRelative, VehicleMode, connect
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from _common import add_connection_argument, get_connection_string
-
-
 # Set up option parsing to get connection string
 import argparse
+
+from _common import add_connection_argument, get_connection_string
+
 parser = argparse.ArgumentParser(description='Commands vehicle using vehicle.simple_goto.')
 add_connection_argument(parser)
 args = parser.parse_args()

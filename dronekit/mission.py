@@ -145,7 +145,7 @@ class CommandInt(mavutil.mavlink.MAVLink_mission_item_int_message):
         )
 
 
-class CommandSequence(object):
+class CommandSequence:
     """
     A sequence of vehicle waypoints (a "mission").
 

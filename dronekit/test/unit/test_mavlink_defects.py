@@ -11,7 +11,6 @@ synchronously and needs no simulator.
 import atexit
 import errno
 import gc
-import socket
 import sys
 import weakref
 
@@ -20,7 +19,6 @@ import pytest
 import dronekit
 import dronekit.mavlink as mavlink_mod
 from dronekit.mavlink import MAVConnection, mavudpin_multi
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -112,7 +110,7 @@ def test_recv_returns_bytes_not_str_on_would_block():
     m = _udpin_client()
 
     def raise_would_block(bufsize):
-        raise socket.error(errno.EWOULDBLOCK, 'would block')
+        raise OSError(errno.EWOULDBLOCK, 'would block')
 
     m.port.recvfrom = raise_would_block
 
@@ -136,7 +134,7 @@ def test_recv_reraises_unexpected_socket_error_instead_of_unboundlocalerror():
     m = _udpin_client()
 
     def raise_econnreset(bufsize):
-        raise socket.error(errno.ECONNRESET, 'connection reset')
+        raise OSError(errno.ECONNRESET, 'connection reset')
 
     m.port.recvfrom = raise_econnreset
 
@@ -353,7 +351,7 @@ def test_connect_closes_handler_when_vehicle_construction_raises(monkeypatch):
 
     monkeypatch.setattr(dronekit.mavlink, 'MAVConnection', fake_mavconnection)
 
-    class ExplodingVehicle(object):
+    class ExplodingVehicle:
         def __init__(self, handler):
             raise RuntimeError('boom during vehicle construction')
 

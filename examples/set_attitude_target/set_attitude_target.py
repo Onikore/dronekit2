@@ -12,18 +12,19 @@ Caution: A lot of unexpected behaviors may occur in GUIDED_NOGPS mode.
         Land the drone as soon as possible when it shows any unexpected behavior.
 """
 
-from dronekit import connect, VehicleMode, LocationGlobal, LocationGlobalRelative
-from pymavlink import mavutil # Needed for command message definitions
+import math
 import os
 import sys
 import time
-import math
+
+from dronekit import VehicleMode, connect
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from _common import add_connection_argument, get_connection_string
-
 # Set up option parsing to get connection string
 import argparse
+
+from _common import add_connection_argument, get_connection_string
+
 parser = argparse.ArgumentParser(description='Control Copter and send commands in GUIDED mode ')
 add_connection_argument(parser)
 args = parser.parse_args()

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 """
 © Copyright 2015-2016, 3D Robotics.
@@ -12,19 +11,21 @@ minimum, and most recent interval for 30 seconds.
 
 Full documentation is provided at http://python.dronekit.io/examples/performance_test.html
 """
-from dronekit import connect
-from pymavlink import mavutil
 import os
-import time
 import sys
+import time
 from datetime import datetime
 
+from pymavlink import mavutil
+
+from dronekit import connect
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from _common import add_connection_argument, get_connection_string
-
-
 #Set up option parsing to get connection string
 import argparse
+
+from _common import add_connection_argument, get_connection_string
+
 parser = argparse.ArgumentParser(description='Generates max, min and current interval between message sent and ack recieved.')
 add_connection_argument(parser)
 args = parser.parse_args()
@@ -46,7 +47,7 @@ def cur_usec():
     t = dt.minute * 60 + dt.second + dt.microsecond / (1e6)
     return t
 
-class MeasureTime(object):
+class MeasureTime:
     def __init__(self):
         self.prevtime = cur_usec()
         self.previnterval = 0
@@ -56,7 +57,7 @@ class MeasureTime(object):
     def reset(self):
         self.maxinterval = 0
         self.mininterval = 10000
-        
+
     def log(self):
         #print "Interval", self.previnterval
         #print "MaxInterval", self.maxinterval

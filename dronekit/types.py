@@ -12,7 +12,7 @@ import math
 from pymavlink import mavutil
 
 
-class Attitude(object):
+class Attitude:
     """
     Attitude information.
 
@@ -42,7 +42,7 @@ class Attitude(object):
         return fmt.format(self.__class__.__name__, **vars(self))
 
 
-class LocationGlobal(object):
+class LocationGlobal:
     """
     A global location object.
 
@@ -78,7 +78,7 @@ class LocationGlobal(object):
         return "LocationGlobal:lat=%s,lon=%s,alt=%s" % (self.lat, self.lon, self.alt)
 
 
-class LocationGlobalRelative(object):
+class LocationGlobalRelative:
     """
     A global location object, with attitude relative to home location altitude.
 
@@ -114,7 +114,7 @@ class LocationGlobalRelative(object):
         return "LocationGlobalRelative:lat=%s,lon=%s,alt=%s" % (self.lat, self.lon, self.alt)
 
 
-class LocationLocal(object):
+class LocationLocal:
     """
     A local location object.
 
@@ -149,7 +149,7 @@ class LocationLocal(object):
         return None
 
 
-class GPSInfo(object):
+class GPSInfo:
     """
     Standard information about GPS.
 
@@ -174,7 +174,7 @@ class GPSInfo(object):
         return "GPSInfo:fix=%s,num_sat=%s" % (self.fix_type, self.satellites_visible)
 
 
-class Wind(object):
+class Wind:
     """
     Wind information
 
@@ -190,10 +190,10 @@ class Wind(object):
         self.wind_speed_z = wind_speed_z
 
     def __str__(self) -> str:
-        return "Wind: wind direction: {}, wind speed: {}, wind speed z: {}".format(self.wind_direction, self.wind_speed, self.wind_speed_z)
+        return f"Wind: wind direction: {self.wind_direction}, wind speed: {self.wind_speed}, wind speed z: {self.wind_speed_z}"
 
 
-class Battery(object):
+class Battery:
     """
     System battery information.
 
@@ -216,11 +216,10 @@ class Battery(object):
             self.level = level
 
     def __str__(self) -> str:
-        return "Battery:voltage={},current={},level={}".format(self.voltage, self.current,
-                                                               self.level)
+        return f"Battery:voltage={self.voltage},current={self.current},level={self.level}"
 
 
-class Rangefinder(object):
+class Rangefinder:
     """
     Rangefinder readings.
 
@@ -235,10 +234,10 @@ class Rangefinder(object):
         self.voltage = voltage
 
     def __str__(self) -> str:
-        return "Rangefinder: distance={}, voltage={}".format(self.distance, self.voltage)
+        return f"Rangefinder: distance={self.distance}, voltage={self.voltage}"
 
 
-class Version(object):
+class Version:
     """
     Autopilot version and type.
 
@@ -426,7 +425,7 @@ class Capabilities:
         self.compass_calibration            = (((capabilities >> 12) & 1) == 1)
 
 
-class VehicleMode(object):
+class VehicleMode:
     """
     This object is used to get and set the current "flight mode".
 
@@ -485,7 +484,7 @@ class VehicleMode(object):
         return self.name != other
 
 
-class SystemStatus(object):
+class SystemStatus:
     """
     This object is used to get and set the current "system status".
 

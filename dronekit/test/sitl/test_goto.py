@@ -8,7 +8,8 @@ Full documentation is provided at http://python.dronekit.io/examples/simple_goto
 """
 
 import time
-from dronekit import VehicleMode, LocationGlobalRelative
+
+from dronekit import LocationGlobalRelative, VehicleMode
 
 
 def test_goto(vehicle):

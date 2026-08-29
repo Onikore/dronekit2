@@ -10,7 +10,7 @@ from dronekit.protocols import VehicleLike
 from dronekit.types import LocationGlobal, LocationGlobalRelative
 
 
-class Gimbal(object):
+class Gimbal:
     """
     Gimbal status and control.
 
@@ -35,7 +35,7 @@ class Gimbal(object):
     """
 
     def __init__(self, vehicle: VehicleLike) -> None:
-        super(Gimbal, self).__init__()
+        super().__init__()
 
         self._pitch: float | None = None
         self._roll: float | None = None
@@ -207,4 +207,4 @@ class Gimbal(object):
         self._vehicle.send_mavlink(msg)
 
     def __str__(self) -> str:
-        return "Gimbal: pitch={0}, roll={1}, yaw={2}".format(self.pitch, self.roll, self.yaw)
+        return f"Gimbal: pitch={self.pitch}, roll={self.roll}, yaw={self.yaw}"

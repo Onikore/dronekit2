@@ -1,5 +1,6 @@
-import time
 import socket
+import time
+
 from dronekit import connect
 
 

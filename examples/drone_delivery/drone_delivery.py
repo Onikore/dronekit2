@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 """
 © Copyright 2015-2016, 3D Robotics.
@@ -13,15 +12,17 @@ import os
 import sys
 import time
 
-from dronekit import connect, VehicleMode, LocationGlobal, LocationGlobalRelative
 from flask import Flask, jsonify, request
 from jinja2 import Environment, FileSystemLoader
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from _common import add_connection_argument, get_connection_string
+from dronekit import LocationGlobal, LocationGlobalRelative, VehicleMode, connect
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # Set up option parsing to get connection string
 import argparse
+
+from _common import add_connection_argument, get_connection_string
+
 parser = argparse.ArgumentParser(description='Creates a Flask based web application that displays a mapbox map to let you view the current vehicle position and send the vehicle commands to fly to a particular latitude and longitude.')
 add_connection_argument(parser)
 parser.add_argument('--mapbox-token',
@@ -41,7 +42,7 @@ local_path = os.path.dirname(os.path.abspath(__file__))
 print("local path: %s" % local_path)
 
 
-class Drone(object):
+class Drone:
     def __init__(self, server_enabled=True):
         self.gps_lock = False
         self.altitude = 30.0
@@ -128,15 +129,15 @@ http://localhost:8080/
         app.run(host='0.0.0.0', port=8080)
 
     def change_mode(self, mode):
-        self._log("Changing to mode: {0}".format(mode))
+        self._log(f"Changing to mode: {mode}")
 
         self.vehicle.mode = VehicleMode(mode)
         while self.vehicle.mode.name != mode:
-            self._log('  ... polled mode: {0}'.format(mode))
+            self._log(f'  ... polled mode: {mode}')
             time.sleep(1)
 
     def goto(self, location, relative=None):
-        self._log("Goto: {0}, {1}".format(location, self.altitude))
+        self._log(f"Goto: {location}, {self.altitude}")
 
         if relative:
             self.vehicle.simple_goto(
@@ -164,7 +165,7 @@ http://localhost:8080/
         self.current_location = location.global_relative_frame
 
     def _log(self, message):
-        print("[DEBUG]: {0}".format(message))
+        print(f"[DEBUG]: {message}")
 
 
 class Templates:

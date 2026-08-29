@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 """
 _common.py: Shared connection-string handling for the DroneKit-Python examples.
@@ -55,8 +54,8 @@ def add_connection_argument(parser, description=None):
     parser.add_argument(
         '--connect',
         help=(
-            "Connection target string for the {0}. If not specified, the "
-            "{1} environment variable is used instead.".format(what, CONNECTION_ENV_VAR)
+            f"Connection target string for the {what}. If not specified, the "
+            f"{CONNECTION_ENV_VAR} environment variable is used instead."
         ),
     )
 
@@ -75,12 +74,11 @@ def get_connection_string(args_connect):
         sys.exit(
             "No vehicle connection specified.\n\n"
             "Pass a connection string with --connect <connection-string>, or set the\n"
-            "{0} environment variable, e.g.:\n\n"
-            "    {0}=tcp:127.0.0.1:5760   (SITL over TCP)\n"
-            "    {0}=udp:127.0.0.1:14550  (SITL/companion link over UDP)\n\n"
+            f"{CONNECTION_ENV_VAR} environment variable, e.g.:\n\n"
+            f"    {CONNECTION_ENV_VAR}=tcp:127.0.0.1:5760   (SITL over TCP)\n"
+            f"    {CONNECTION_ENV_VAR}=udp:127.0.0.1:14550  (SITL/companion link over UDP)\n\n"
             "If you don't already have a simulated vehicle running, see\n"
             "docs/develop/sitl_setup.rst for how to build and start ArduPilot SITL\n"
             "(the old auto-launching dronekit-sitl pip package is dead)."
-            .format(CONNECTION_ENV_VAR)
         )
     return connection_string

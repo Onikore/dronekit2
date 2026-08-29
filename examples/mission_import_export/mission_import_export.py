@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 """
 © Copyright 2015-2016, 3D Robotics.
@@ -13,17 +12,18 @@ Documentation is provided at http://python.dronekit.io/examples/mission_import_e
 """
 
 
-from dronekit import connect, Command
 import os
 import sys
 import time
 
+from dronekit import Command, connect
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from _common import add_connection_argument, get_connection_string
-
-
 #Set up option parsing to get connection string
 import argparse
+
+from _common import add_connection_argument, get_connection_string
+
 parser = argparse.ArgumentParser(description='Demonstrates mission import/export from a file.')
 add_connection_argument(parser)
 args = parser.parse_args()
@@ -35,7 +35,7 @@ connection_string = get_connection_string(args.connect)
 print('Connecting to vehicle on: %s' % connection_string)
 vehicle = connect(connection_string, wait_ready=True)
 
-# Check that vehicle is armable. 
+# Check that vehicle is armable.
 # This ensures home_location is set (needed when saving WP file)
 
 while not vehicle.is_armable:
@@ -88,7 +88,7 @@ def upload_mission(aFileName):
     """
     #Read mission from file
     missionlist = readmission(aFileName)
-    
+
     print("\nUpload mission from a file: %s" % aFileName)
     #Clear existing mission from vehicle
     print(' Clear mission')
@@ -120,7 +120,7 @@ def save_mission(aFileName):
     Save a mission in the Waypoint file format 
     (http://qgroundcontrol.org/mavlink/waypoint_protocol#waypoint_file_format).
     """
-    print("\nSave mission from Vehicle to file: %s" % aFileName)    
+    print("\nSave mission from Vehicle to file: %s" % aFileName)
     #Download mission from vehicle
     missionlist = download_mission()
     #Add file-format information
@@ -135,8 +135,8 @@ def save_mission(aFileName):
     with open(aFileName, 'w') as file_:
         print(" Write mission to file")
         file_.write(output)
-        
-        
+
+
 def printfile(aFileName):
     """
     Print a mission file to demonstrate "round trip"
@@ -144,7 +144,7 @@ def printfile(aFileName):
     print("\nMission file: %s" % aFileName)
     with open(aFileName) as f:
         for line in f:
-            print(' %s' % line.strip())        
+            print(' %s' % line.strip())
 
 
 import_mission_filename = 'mpmission.txt'

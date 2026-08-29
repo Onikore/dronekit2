@@ -6,7 +6,7 @@ import logging
 from typing import Any, Callable
 
 
-class HasObservers(object):
+class HasObservers:
     def __init__(self) -> None:
         logging.basicConfig()
         self._logger = logging.getLogger(__name__)

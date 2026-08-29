@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 """
 © Copyright 2015-2016, 3D Robotics.
@@ -12,7 +11,7 @@ Custom Vehicle subclass to add IMU data.
 from dronekit import Vehicle
 
 
-class RawIMU(object):
+class RawIMU:
     """
     The RAW IMU readings for the usual 9DOF sensor setup. 
     This contains the true raw values without any scaling to allow data capture and system debugging.
@@ -41,25 +40,25 @@ class RawIMU(object):
         self.xgyro = zgyro
         self.ygyro = ygyro
         self.zgyro = zgyro
-        self.xmag = xmag        
+        self.xmag = xmag
         self.ymag = ymag
-        self.zmag = zmag      
-        
+        self.zmag = zmag
+
     def __str__(self):
         """
         String representation used to print the RawIMU object. 
         """
-        return "RAW_IMU: time_boot_us={},xacc={},yacc={},zacc={},xgyro={},ygyro={},zgyro={},xmag={},ymag={},zmag={}".format(self.time_boot_us, self.xacc, self.yacc,self.zacc,self.xgyro,self.ygyro,self.zgyro,self.xmag,self.ymag,self.zmag)
+        return f"RAW_IMU: time_boot_us={self.time_boot_us},xacc={self.xacc},yacc={self.yacc},zacc={self.zacc},xgyro={self.xgyro},ygyro={self.ygyro},zgyro={self.zgyro},xmag={self.xmag},ymag={self.ymag},zmag={self.zmag}"
 
-   
+
 class MyVehicle(Vehicle):
     def __init__(self, *args):
-        super(MyVehicle, self).__init__(*args)
+        super().__init__(*args)
 
         # Create an Vehicle.raw_imu object with initial values set to None.
         self._raw_imu = RawIMU()
 
-        # Create a message listener using the decorator.   
+        # Create a message listener using the decorator.
         @self.on_message('RAW_IMU')
         def listener(self, name, message):
             """
@@ -79,11 +78,11 @@ class MyVehicle(Vehicle):
             self._raw_imu.xmag=message.xmag
             self._raw_imu.ymag=message.ymag
             self._raw_imu.zmag=message.zmag
-            
+
             # Notify all observers of new message (with new value)
             #   Note that argument `cache=False` by default so listeners
             #   are updated with every new message
-            self.notify_attribute_listeners('raw_imu', self._raw_imu) 
+            self.notify_attribute_listeners('raw_imu', self._raw_imu)
 
     @property
     def raw_imu(self):

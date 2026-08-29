@@ -35,7 +35,7 @@ class Parameters(MutableMapping, HasObservers):
     """
 
     def __init__(self, vehicle: VehicleLike) -> None:
-        super(Parameters, self).__init__()
+        super().__init__()
         self._logger = logging.getLogger(__name__)
         self._vehicle = vehicle
 
@@ -137,7 +137,7 @@ class Parameters(MutableMapping, HasObservers):
 
         """
         attr_name = attr_name.upper()
-        return super(Parameters, self).add_attribute_listener(attr_name, *args, **kwargs)
+        return super().add_attribute_listener(attr_name, *args, **kwargs)
 
     def remove_attribute_listener(self, attr_name: str, *args: Any, **kwargs: Any) -> None:
         """
@@ -156,11 +156,11 @@ class Parameters(MutableMapping, HasObservers):
 
         """
         attr_name = attr_name.upper()
-        return super(Parameters, self).remove_attribute_listener(attr_name, *args, **kwargs)
+        return super().remove_attribute_listener(attr_name, *args, **kwargs)
 
     def notify_attribute_listeners(self, attr_name: str, *args: Any, **kwargs: Any) -> None:
         attr_name = attr_name.upper()
-        return super(Parameters, self).notify_attribute_listeners(attr_name, *args, **kwargs)
+        return super().notify_attribute_listeners(attr_name, *args, **kwargs)
 
     def on_attribute(self, attr_name: str, *args: Any, **kwargs: Any) -> Callable[[Callable[..., Any]], None]:  # type: ignore[override]
         """
@@ -196,4 +196,4 @@ class Parameters(MutableMapping, HasObservers):
 
         """
         attr_name = attr_name.upper()
-        return super(Parameters, self).on_attribute(attr_name, *args, **kwargs)
+        return super().on_attribute(attr_name, *args, **kwargs)
