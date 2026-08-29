@@ -1,18 +1,21 @@
 """The attribute-observer mixin shared by Vehicle and its sub-objects."""
 
+from __future__ import annotations
+
 import logging
+from typing import Any, Callable
 
 
 class HasObservers(object):
-    def __init__(self):
+    def __init__(self) -> None:
         logging.basicConfig()
         self._logger = logging.getLogger(__name__)
 
         # A mapping from attr_name to a list of observers
-        self._attribute_listeners = {}
-        self._attribute_cache = {}
+        self._attribute_listeners: dict[str, list[Callable[..., Any]]] = {}
+        self._attribute_cache: dict[str, Any] = {}
 
-    def add_attribute_listener(self, attr_name, observer):
+    def add_attribute_listener(self, attr_name: str, observer: Callable[..., Any]) -> None:
         """
         Add an attribute listener callback.
 
@@ -62,7 +65,7 @@ class HasObservers(object):
         if observer not in listeners_for_attr:
             listeners_for_attr.append(observer)
 
-    def remove_attribute_listener(self, attr_name, observer):
+    def remove_attribute_listener(self, attr_name: str, observer: Callable[..., Any]) -> None:
         """
         Remove an attribute listener (observer) that was previously added using :py:func:`add_attribute_listener`.
 
@@ -85,7 +88,7 @@ class HasObservers(object):
             if len(listeners_for_attr) == 0:
                 del self._attribute_listeners[attr_name]
 
-    def notify_attribute_listeners(self, attr_name, value, cache=False):
+    def notify_attribute_listeners(self, attr_name: str, value: Any, cache: bool = False) -> None:
         """
         This method is used to update attribute observers when the named attribute is updated.
 
@@ -125,7 +128,7 @@ class HasObservers(object):
             except Exception:
                 self._logger.exception('Exception in attribute handler for %s' % attr_name, exc_info=True)
 
-    def on_attribute(self, name):
+    def on_attribute(self, name: str | list[str]) -> Callable[[Callable[..., Any]], None]:
         """
         Decorator for attribute listeners.
 
@@ -163,7 +166,7 @@ class HasObservers(object):
         :param observer: The callback to invoke when a change in the attribute is detected.
         """
 
-        def decorator(fn):
+        def decorator(fn: Callable[..., Any]) -> None:
             if isinstance(name, list):
                 for n in name:
                     self.add_attribute_listener(n, fn)
@@ -171,4 +174,3 @@ class HasObservers(object):
                 self.add_attribute_listener(name, fn)
 
         return decorator
-

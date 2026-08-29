@@ -5,6 +5,8 @@ sub-object; they are plain data containers (locations, attitude, GPS
 info, version/capabilities info, mode/status wrappers, etc).
 """
 
+from __future__ import annotations
+
 import math
 
 from pymavlink import mavutil
@@ -30,12 +32,12 @@ class Attitude(object):
     :param roll: Roll in radians
     """
 
-    def __init__(self, pitch, yaw, roll):
+    def __init__(self, pitch: float | None, yaw: float | None, roll: float | None) -> None:
         self.pitch = pitch
         self.yaw = yaw
         self.roll = roll
 
-    def __str__(self):
+    def __str__(self) -> str:
         fmt = '{}:pitch={pitch},yaw={yaw},roll={roll}'
         return fmt.format(self.__class__.__name__, **vars(self))
 
@@ -63,7 +65,7 @@ class LocationGlobal(object):
     :param alt: Altitude in meters relative to mean sea-level (MSL).
     """
 
-    def __init__(self, lat, lon, alt=None):
+    def __init__(self, lat: float | None, lon: float | None, alt: float | None = None) -> None:
         self.lat = lat
         self.lon = lon
         self.alt = alt
@@ -72,7 +74,7 @@ class LocationGlobal(object):
         self.local_frame = None
         self.global_frame = None
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "LocationGlobal:lat=%s,lon=%s,alt=%s" % (self.lat, self.lon, self.alt)
 
 
@@ -99,7 +101,7 @@ class LocationGlobalRelative(object):
     :param alt: Altitude in meters (relative to the home location).
     """
 
-    def __init__(self, lat, lon, alt=None):
+    def __init__(self, lat: float | None, lon: float | None, alt: float | None = None) -> None:
         self.lat = lat
         self.lon = lon
         self.alt = alt
@@ -108,7 +110,7 @@ class LocationGlobalRelative(object):
         self.local_frame = None
         self.global_frame = None
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "LocationGlobalRelative:lat=%s,lon=%s,alt=%s" % (self.lat, self.lon, self.alt)
 
 
@@ -126,15 +128,15 @@ class LocationLocal(object):
     :param down: Position down from the EKF origin in meters. (i.e. negative altitude in meters)
     """
 
-    def __init__(self, north, east, down):
+    def __init__(self, north: float | None, east: float | None, down: float | None) -> None:
         self.north = north
         self.east = east
         self.down = down
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "LocationLocal:north=%s,east=%s,down=%s" % (self.north, self.east, self.down)
 
-    def distance_home(self):
+    def distance_home(self) -> float | None:
         """
         Distance away from home, in meters. Returns 3D distance if `down` is known, otherwise 2D distance.
         """
@@ -144,6 +146,7 @@ class LocationLocal(object):
                 return math.sqrt(self.north**2 + self.east**2 + self.down**2)
             else:
                 return math.sqrt(self.north**2 + self.east**2)
+        return None
 
 
 class GPSInfo(object):
@@ -160,13 +163,14 @@ class GPSInfo(object):
     .. todo:: FIXME: GPSInfo class - possibly normalize eph/epv?  report fix type as string?
     """
 
-    def __init__(self, eph, epv, fix_type, satellites_visible):
+    def __init__(self, eph: float | None, epv: float | None, fix_type: int | None,
+                 satellites_visible: int | None) -> None:
         self.eph = eph
         self.epv = epv
         self.fix_type = fix_type
         self.satellites_visible = satellites_visible
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "GPSInfo:fix=%s,num_sat=%s" % (self.fix_type, self.satellites_visible)
 
 
@@ -180,12 +184,12 @@ class Wind(object):
     :param wind_speed: Wind speed in m/s
     :param wind_speed_z: vertical wind speed in m/s
     """
-    def __init__(self, wind_direction, wind_speed, wind_speed_z):
+    def __init__(self, wind_direction: float, wind_speed: float, wind_speed_z: float) -> None:
         self.wind_direction = wind_direction
         self.wind_speed = wind_speed
         self.wind_speed_z = wind_speed_z
-    
-    def __str__(self):
+
+    def __str__(self) -> str:
         return "Wind: wind direction: {}, wind speed: {}, wind speed z: {}".format(self.wind_direction, self.wind_speed, self.wind_speed_z)
 
 
@@ -200,7 +204,7 @@ class Battery(object):
     :param level: Remaining battery energy. ``None`` if the autopilot cannot estimate the remaining battery.
     """
 
-    def __init__(self, voltage, current, level):
+    def __init__(self, voltage: float, current: float, level: float) -> None:
         self.voltage = voltage / 1000.0
         if current == -1:
             self.current = None
@@ -211,7 +215,7 @@ class Battery(object):
         else:
             self.level = level
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "Battery:voltage={},current={},level={}".format(self.voltage, self.current,
                                                                self.level)
 
@@ -226,11 +230,11 @@ class Rangefinder(object):
     :param voltage: Voltage (volts). ``None`` if the vehicle doesn't have a rangefinder.
     """
 
-    def __init__(self, distance, voltage):
+    def __init__(self, distance: float | None, voltage: float | None) -> None:
         self.distance = distance
         self.voltage = voltage
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "Rangefinder: distance={}, voltage={}".format(self.distance, self.voltage)
 
 
@@ -264,7 +268,7 @@ class Version(object):
         This is a composite of the product release cycle stage (rc, beta etc) and the version in that cycle - e.g. 23.
 
     """
-    def __init__(self, raw_version, autopilot_type, vehicle_type):
+    def __init__(self, raw_version: int | None, autopilot_type: int | None, vehicle_type: int | None) -> None:
         self.autopilot_type = autopilot_type
         self.vehicle_type = vehicle_type
         self.raw_version = raw_version
@@ -279,14 +283,14 @@ class Version(object):
             self.patch   = raw_version >> 8  & 0xFF
             self.release = raw_version & 0xFF
 
-    def is_stable(self):
+    def is_stable(self) -> bool:
         """
         Returns True if the autopilot reports that the current firmware is a stable
         release (not a pre-release or development version).
         """
         return self.release == 255
 
-    def release_version(self):
+    def release_version(self) -> int | None:
         """
         Returns the version within the release type (an integer).
         This method returns "23" for Copter-3.3rc23.
@@ -297,7 +301,7 @@ class Version(object):
             return 0
         return self.release % 64
 
-    def release_type(self):
+    def release_type(self) -> str | None:
         """
         Returns text describing the release type e.g. "alpha", "stable" etc.
         """
@@ -306,7 +310,7 @@ class Version(object):
         types = ["dev", "alpha", "beta", "rc"]
         return types[self.release >> 6]
 
-    def __str__(self):
+    def __str__(self) -> str:
         prefix = ""
 
         if self.autopilot_type == mavutil.mavlink.MAV_AUTOPILOT_ARDUPILOTMEGA:
@@ -323,7 +327,13 @@ class Version(object):
         elif self.vehicle_type == mavutil.mavlink.MAV_TYPE_GROUND_ROVER:
             prefix += "Rover-"
         else:
-            prefix += "UnknownVehicleType%d-" % self.vehicle_type
+            # Pre-existing gap (not introduced by this typing pass):
+            # vehicle_type is int | None (Vehicle constructs a Version
+            # with self._vehicle_type, which is None until a HEARTBEAT
+            # has been received), and this branch never guarded against
+            # that - %d on None would raise TypeError at runtime. Not
+            # fixed here per the typing-only scope of this change.
+            prefix += "UnknownVehicleType%d-" % self.vehicle_type  # type: ignore[str-format]
 
         if self.release_type() is None:
             release_type = "UnknownReleaseType"
@@ -400,7 +410,7 @@ class Capabilities:
 
         Autopilot supports onboard compass calibration (Boolean).
     """
-    def __init__(self, capabilities):
+    def __init__(self, capabilities: int) -> None:
         self.mission_float                  = (((capabilities >> 0)  & 1) == 1)
         self.param_float                    = (((capabilities >> 1)  & 1) == 1)
         self.mission_int                    = (((capabilities >> 2)  & 1) == 1)
@@ -462,16 +472,16 @@ class VehicleMode(object):
         The mode name, as a ``string``.
     """
 
-    def __init__(self, name):
+    def __init__(self, name: str) -> None:
         self.name = name
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "VehicleMode:%s" % self.name
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         return self.name == other
 
-    def __ne__(self, other):
+    def __ne__(self, other: object) -> bool:
         return self.name != other
 
 
@@ -486,15 +496,14 @@ class SystemStatus(object):
         The system state, as a ``string``.
     """
 
-    def __init__(self, state):
+    def __init__(self, state: str) -> None:
         self.state = state
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "SystemStatus:%s" % self.state
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         return self.state == other
 
-    def __ne__(self, other):
+    def __ne__(self, other: object) -> bool:
         return self.state != other
-
