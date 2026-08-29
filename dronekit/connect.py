@@ -1,23 +1,27 @@
 """The connect() entry point used to obtain a connected Vehicle."""
 
+from __future__ import annotations
+
+from typing import Any, Callable
+
 from dronekit.util import ErrprinterHandler
 from dronekit.vehicle import Vehicle, default_still_waiting_callback
 
 
-def connect(ip,
-            _initialize=True,
-            wait_ready=None,
-            timeout=30,
-            still_waiting_callback=default_still_waiting_callback,
-            still_waiting_interval=1,
-            status_printer=None,
-            vehicle_class=None,
-            rate=4,
-            baud=115200,
-            heartbeat_timeout=30,
-            source_system=255,
-            source_component=0,
-            use_native=False):
+def connect(ip: str,
+            _initialize: bool = True,
+            wait_ready: bool | list[str] | None = None,
+            timeout: float = 30,
+            still_waiting_callback: Callable[[Any], None] = default_still_waiting_callback,
+            still_waiting_interval: float = 1,
+            status_printer: Callable[[str], None] | None = None,
+            vehicle_class: type[Vehicle] | None = None,
+            rate: int = 4,
+            baud: int = 115200,
+            heartbeat_timeout: float = 30,
+            source_system: int = 255,
+            source_component: int = 0,
+            use_native: bool = False) -> Vehicle:
     """
     Returns a :py:class:`Vehicle` object connected to the address specified by string parameter ``ip``.
     Connection string parameters (``ip``) for different targets are listed in the :ref:`getting started guide <get_started_connecting>`.
@@ -106,4 +110,3 @@ def connect(ip,
         raise
 
     return vehicle
-
