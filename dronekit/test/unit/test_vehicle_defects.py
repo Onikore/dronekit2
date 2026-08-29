@@ -135,6 +135,23 @@ class _FakeMissionItemMsg:
         return 'MISSION_ITEM'
 
 
+class _FakeGlobalPositionIntMsg:
+    def __init__(self, lat, lon, alt, relative_alt):
+        self.lat = lat
+        self.lon = lon
+        self.alt = alt
+        self.relative_alt = relative_alt
+        # Also read by Vehicle's velocity listener (a separate GLOBAL_POSITION_INT
+        # handler unrelated to what's under test here) - fill them in so it
+        # doesn't log a spurious AttributeError.
+        self.vx = 0
+        self.vy = 0
+        self.vz = 0
+
+    def get_type(self):
+        return 'GLOBAL_POSITION_INT'
+
+
 def _complete_download(vehicle, n_wp=1):
     """Drive a commands.download() to completion the way the vehicle's
     real MISSION_COUNT/MISSION_ITEM listeners would, given a mission of
@@ -180,3 +197,66 @@ def test_len_and_getitem_work_again_once_download_completes(vehicle):
 
     assert vehicle._wp_download_in_progress is False
     assert len(vehicle.commands) == 0  # 1 wp downloaded (home only) -> count() - 1
+
+
+# ---------------------------------------------------------------------------
+# D10 - torn read across Locations' global_frame / global_relative_frame
+# ---------------------------------------------------------------------------
+
+def test_global_frame_property_never_returns_a_torn_combination(vehicle):
+    """Pre-fix, _lat/_lon/_alt were three separate instance attributes
+    updated by three separate statements inside the GLOBAL_POSITION_INT
+    listener, and global_frame rebuilt a fresh LocationGlobal from them on
+    every read. A reader thread calling vehicle.location.global_frame in
+    between those statements could observe a torn combination (e.g. new
+    lat/lon paired with the previous message's alt). This test can't
+    reliably win that race deterministically in a unit test, so instead it
+    pins down the fix's actual mechanism: global_frame/global_relative_frame
+    are whole cached objects replaced by a single attribute assignment, so
+    the property must return either the fully-previous or fully-current
+    object - it must always be internally consistent with *some* message
+    that was actually received.
+    """
+    vehicle.notify_message_listeners(
+        'GLOBAL_POSITION_INT', _FakeGlobalPositionIntMsg(lat=12345670, lon=76543210, alt=1000, relative_alt=500))
+    first = vehicle.location.global_frame
+    assert (first.lat, first.lon, first.alt) == (1.234567, 7.654321, 1.0)
+
+    vehicle.notify_message_listeners(
+        'GLOBAL_POSITION_INT', _FakeGlobalPositionIntMsg(lat=20000000, lon=80000000, alt=2000, relative_alt=600))
+    second = vehicle.location.global_frame
+    assert (second.lat, second.lon, second.alt) == (2.0, 8.0, 2.0)
+
+    # The object returned by an earlier read must not have been mutated by
+    # a later message - each update must produce a brand new object rather
+    # than mutating shared state in place.
+    assert (first.lat, first.lon, first.alt) == (1.234567, 7.654321, 1.0)
+
+
+def test_global_frame_read_returns_a_copy_not_the_live_cached_object(vehicle):
+    """Mirrors Vehicle.home_location's existing copy.copy() pattern:
+    mutating what a caller reads back must not corrupt the cached value
+    that the next reader sees."""
+    vehicle.notify_message_listeners(
+        'GLOBAL_POSITION_INT', _FakeGlobalPositionIntMsg(lat=1000000, lon=2000000, alt=100, relative_alt=50))
+
+    frame = vehicle.location.global_frame
+    frame.alt = 99999
+
+    assert vehicle.location.global_frame.alt == 0.1
+
+
+def test_global_relative_frame_updates_on_every_message_independent_of_alt_gate():
+    handler = MAVConnection('udpin:127.0.0.1:0')
+    try:
+        v = Vehicle(handler)
+        # alt=0 on the very first message means the global_frame "require
+        # non-zero first alt" gate never fires, but global_relative_frame
+        # must still update - it isn't gated at all.
+        v.notify_message_listeners(
+            'GLOBAL_POSITION_INT', _FakeGlobalPositionIntMsg(lat=1000000, lon=2000000, alt=0, relative_alt=250))
+        rel = v.location.global_relative_frame
+        assert (rel.lat, rel.lon, rel.alt) == (0.1, 0.2, 0.25)
+        assert v.location.global_frame.alt is None  # gate never opened
+    finally:
+        handler.master.close()

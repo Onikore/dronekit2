@@ -882,23 +882,35 @@ class Locations(HasObservers):
     def __init__(self, vehicle):
         super(Locations, self).__init__()
 
-        self._lat = None
-        self._lon = None
-        self._alt = None
-        self._relative_alt = None
+        # D10: global_frame/global_relative_frame are cached here as whole,
+        # immutable Location* objects and replaced with a single attribute
+        # assignment on update (see listener below), instead of being
+        # rebuilt on every property read from separate _lat/_lon/_alt scalar
+        # fields. `self._x = LocationGlobal(...)` is one atomic STORE_ATTR
+        # bytecode that the GIL cannot interleave with another thread's
+        # execution, so a reader on another thread (e.g. polling
+        # vehicle.location.global_frame) always sees either the complete old
+        # object or the complete new one - never a torn combination of new
+        # lat/lon paired with a stale alt (or vice-versa), which was
+        # possible when lat/lon/alt were three separate instance attributes
+        # updated by three separate statements in this same listener.
+        self._global_frame = LocationGlobal(None, None, None)
+        self._global_relative_frame = LocationGlobalRelative(None, None, None)
 
         @vehicle.on_message('GLOBAL_POSITION_INT')
         def listener(vehicle, name, m):
-            (self._lat, self._lon) = (m.lat / 1.0e7, m.lon / 1.0e7)
-            self._relative_alt = m.relative_alt / 1000.0
+            lat = m.lat / 1.0e7
+            lon = m.lon / 1.0e7
+
+            self._global_relative_frame = LocationGlobalRelative(lat, lon, m.relative_alt / 1000.0)
             self.notify_attribute_listeners('global_relative_frame', self.global_relative_frame)
             vehicle.notify_attribute_listeners('location.global_relative_frame',
                                                vehicle.location.global_relative_frame)
 
-            if self._alt is not None or m.alt != 0:
+            if self._global_frame.alt is not None or m.alt != 0:
                 # Require first alt value to be non-0
                 # TODO is this the proper check to do?
-                self._alt = m.alt / 1000.0
+                self._global_frame = LocationGlobal(lat, lon, m.alt / 1000.0)
                 self.notify_attribute_listeners('global_frame', self.global_frame)
                 vehicle.notify_attribute_listeners('location.global_frame',
                                                    vehicle.location.global_frame)
@@ -964,7 +976,11 @@ class Locations(HasObservers):
 
             #Alternatively, use decorator: ``@vehicle.location.on_attribute('global_frame')``.
         """
-        return LocationGlobal(self._lat, self._lon, self._alt)
+        # Single atomic read of the cached object (see D10 note in
+        # __init__ above), then a shallow copy so callers mutating the
+        # returned object can't corrupt the cached value - the same
+        # pattern already used by Vehicle.home_location.
+        return copy.copy(self._global_frame)
 
     @property
     def global_relative_frame(self):
@@ -983,7 +999,7 @@ class Locations(HasObservers):
             print "Global Location (relative altitude): %s" % vehicle.location.global_relative_frame
             print "Altitude relative to home_location: %s" % vehicle.location.global_relative_frame.alt
         """
-        return LocationGlobalRelative(self._lat, self._lon, self._relative_alt)
+        return copy.copy(self._global_relative_frame)
 
 
 class Vehicle(HasObservers):
