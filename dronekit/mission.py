@@ -1,6 +1,9 @@
 """Mission ("command sequence") waypoint objects for a Vehicle."""
 
+from __future__ import annotations
+
 import time
+from typing import Any
 
 from pymavlink import mavutil
 
@@ -89,10 +92,10 @@ class CommandSequence(object):
 
     """
 
-    def __init__(self, vehicle: VehicleLike):
+    def __init__(self, vehicle: VehicleLike) -> None:
         self._vehicle = vehicle
 
-    def download(self):
+    def download(self) -> None:
         '''
         Download all waypoints from the vehicle.
         The download is asynchronous. Use :py:func:`wait_ready()` to block your thread until the download is complete.
@@ -104,7 +107,7 @@ class CommandSequence(object):
         self._vehicle._master.waypoint_request_list_send()
         # BIG FIXME - wait for full wpt download before allowing any of the accessors to work
 
-    def wait_ready(self, **kwargs):
+    def wait_ready(self, **kwargs: Any) -> bool:
         """
         Block the calling thread until waypoints have been downloaded.
 
@@ -112,7 +115,7 @@ class CommandSequence(object):
         """
         return self._vehicle.wait_ready('commands', **kwargs)
 
-    def clear(self):
+    def clear(self) -> None:
         '''
         Clear the command list.
 
@@ -131,7 +134,7 @@ class CommandSequence(object):
             self._vehicle._wploader.add(home, comment='Added by DroneKit')
         self._vehicle._wpts_dirty = True
 
-    def add(self, cmd):
+    def add(self, cmd: Command) -> None:
         '''
         Add a new command (waypoint) at the end of the command list.
 
@@ -146,7 +149,7 @@ class CommandSequence(object):
         self._vehicle._wploader.add(cmd, comment='Added by DroneKit')
         self._vehicle._wpts_dirty = True
 
-    def upload(self, timeout=None):
+    def upload(self, timeout: float | None = None) -> None:
         """
         Call ``upload()`` after :py:func:`adding <CommandSequence.add>` or :py:func:`clearing <CommandSequence.clear>` mission commands.
 
@@ -169,7 +172,7 @@ class CommandSequence(object):
             self._vehicle._wpts_dirty = False
 
     @property
-    def count(self):
+    def count(self) -> int:
         '''
         Return number of waypoints.
 
@@ -178,20 +181,20 @@ class CommandSequence(object):
         return max(self._vehicle._wploader.count() - 1, 0)
 
     @property
-    def next(self):
+    def next(self) -> int:
         """
         Get the currently active waypoint number.
         """
         return self._vehicle._current_waypoint
 
     @next.setter
-    def next(self, index):
+    def next(self, index: int) -> None:
         """
         Set a new ``next`` waypoint for the vehicle.
         """
         self._vehicle._master.waypoint_set_current_send(index)
 
-    def _raise_if_download_in_progress(self):
+    def _raise_if_download_in_progress(self) -> None:
         if self._vehicle._wp_download_in_progress:
             raise APIException(
                 "CommandSequence was read while a commands.download() was still in "
@@ -199,7 +202,7 @@ class CommandSequence(object):
                 "commands, len(), or indexing them."
             )
 
-    def __len__(self):
+    def __len__(self) -> int:
         '''
         Return number of waypoints.
 
@@ -208,7 +211,7 @@ class CommandSequence(object):
         self._raise_if_download_in_progress()
         return max(self._vehicle._wploader.count() - 1, 0)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int | slice) -> Any:
         self._raise_if_download_in_progress()
         if isinstance(index, slice):
             return [self[ii] for ii in range(*index.indices(len(self)))]
@@ -220,7 +223,6 @@ class CommandSequence(object):
         else:
             raise TypeError('Invalid argument type.')
 
-    def __setitem__(self, index, value):
+    def __setitem__(self, index: int, value: Any) -> None:
         self._vehicle._wploader.set(value, index + 1)
         self._vehicle._wpts_dirty = True
-

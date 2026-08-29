@@ -1,5 +1,10 @@
 """RC channel and channel-override dictionaries associated with a Vehicle."""
 
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any
+
 from dronekit.protocols import VehicleLike
 
 
@@ -15,15 +20,15 @@ class ChannelsOverride(dict):
     For more information and examples see :ref:`example_channel_overrides`.
     """
 
-    def __init__(self, vehicle: VehicleLike):
+    def __init__(self, vehicle: VehicleLike) -> None:
         self._vehicle = vehicle
         self._count = 8  # Fixed by MAVLink
         self._active = True
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: Any) -> Any:
         return dict.__getitem__(self, str(key))
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: Any, value: Any) -> None:
         if not (0 < int(key) <= self._count):
             raise KeyError('Invalid channel index %s' % key)
         if not value:
@@ -35,14 +40,14 @@ class ChannelsOverride(dict):
             dict.__setitem__(self, str(key), value)
         self._send()
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: Any) -> None:
         dict.__delitem__(self, str(key))
         self._send()
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self._count
 
-    def _send(self):
+    def _send(self) -> None:
         if self._active:
             overrides = [0] * 8
             for k, v in self.items():
@@ -60,7 +65,7 @@ class Channels(dict):
     For more information and examples see :ref:`example_channel_overrides`.
     """
 
-    def __init__(self, vehicle: VehicleLike, count):
+    def __init__(self, vehicle: VehicleLike, count: int) -> None:
         self._vehicle = vehicle
         self._count = count
         self._overrides = ChannelsOverride(vehicle)
@@ -72,24 +77,24 @@ class Channels(dict):
         self._readonly = True
 
     @property
-    def count(self):
+    def count(self) -> int:
         """
         The number of channels defined in the dictionary (currently 8).
         """
         return self._count
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: Any) -> Any:
         return dict.__getitem__(self, str(key))
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: Any, value: Any) -> None:
         if self._readonly:
             raise TypeError('__setitem__ is not supported on Channels object')
         return dict.__setitem__(self, str(key), value)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self._count
 
-    def _update_channel(self, channel, value):
+    def _update_channel(self, channel: Any, value: Any) -> None:
         # If we have channels on different ports, we expand the Channels
         # object to support them.
         channel = int(channel)
@@ -99,7 +104,7 @@ class Channels(dict):
         self._count = max(self._count, channel)
 
     @property
-    def overrides(self):
+    def overrides(self) -> ChannelsOverride:
         """
         Attribute to read, set and clear channel overrides (also known as "rc overrides")
         associated with a :py:class:`Vehicle` (via :py:class:`Vehicle.channels`). This is an
@@ -137,7 +142,7 @@ class Channels(dict):
         return self._overrides
 
     @overrides.setter
-    def overrides(self, newch):
+    def overrides(self, newch: Mapping[Any, Any]) -> None:
         self._overrides._active = False
         self._overrides.clear()
         for k, v in newch.items():
@@ -150,4 +155,3 @@ class Channels(dict):
                     pass
         self._overrides._active = True
         self._overrides._send()
-

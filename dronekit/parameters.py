@@ -1,9 +1,12 @@
 """Editable named-parameter mapping for a Vehicle."""
 
+from __future__ import annotations
+
 import logging
 import struct
 import time
-from collections.abc import MutableMapping
+from collections.abc import Iterator, MutableMapping
+from typing import Any, Callable
 
 from dronekit.errors import APIException
 from dronekit.observers import HasObservers
@@ -31,37 +34,37 @@ class Parameters(MutableMapping, HasObservers):
     For more information see :ref:`the guide <vehicle_state_parameters>`.
     """
 
-    def __init__(self, vehicle: VehicleLike):
+    def __init__(self, vehicle: VehicleLike) -> None:
         super(Parameters, self).__init__()
         self._logger = logging.getLogger(__name__)
         self._vehicle = vehicle
 
-    def __getitem__(self, name):
+    def __getitem__(self, name: str) -> float:
         name = name.upper()
         self.wait_ready()
         return self._vehicle._params_map[name]
 
-    def __setitem__(self, name, value):
+    def __setitem__(self, name: str, value: float) -> None:
         name = name.upper()
         self.wait_ready()
         self.set(name, value)
 
-    def __delitem__(self, name):
+    def __delitem__(self, name: str) -> None:
         raise APIException('Cannot delete value from parameters list.')
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._vehicle._params_map)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return self._vehicle._params_map.__iter__()
 
-    def get(self, name, wait_ready=True):
+    def get(self, name: str, wait_ready: bool = True) -> float | None:  # type: ignore[override]
         name = name.upper()
         if wait_ready:
             self.wait_ready()
         return self._vehicle._params_map.get(name, None)
 
-    def set(self, name, value, retries=3, wait_ready=False):
+    def set(self, name: str, value: float, retries: int = 3, wait_ready: bool = False) -> bool:
         if wait_ready:
             self.wait_ready()
 
@@ -89,13 +92,13 @@ class Parameters(MutableMapping, HasObservers):
             self._logger.error("timeout setting parameter %s to %f" % (name, value))
         return False
 
-    def wait_ready(self, **kwargs):
+    def wait_ready(self, **kwargs: Any) -> None:
         """
         Block the calling thread until parameters have been downloaded
         """
         self._vehicle.wait_ready('parameters', **kwargs)
 
-    def add_attribute_listener(self, attr_name, *args, **kwargs):
+    def add_attribute_listener(self, attr_name: str, *args: Any, **kwargs: Any) -> None:
         """
         Add a listener callback on a particular parameter.
 
@@ -136,7 +139,7 @@ class Parameters(MutableMapping, HasObservers):
         attr_name = attr_name.upper()
         return super(Parameters, self).add_attribute_listener(attr_name, *args, **kwargs)
 
-    def remove_attribute_listener(self, attr_name, *args, **kwargs):
+    def remove_attribute_listener(self, attr_name: str, *args: Any, **kwargs: Any) -> None:
         """
         Remove a paremeter listener that was previously added using :py:func:`add_attribute_listener`.
 
@@ -155,11 +158,11 @@ class Parameters(MutableMapping, HasObservers):
         attr_name = attr_name.upper()
         return super(Parameters, self).remove_attribute_listener(attr_name, *args, **kwargs)
 
-    def notify_attribute_listeners(self, attr_name, *args, **kwargs):
+    def notify_attribute_listeners(self, attr_name: str, *args: Any, **kwargs: Any) -> None:
         attr_name = attr_name.upper()
         return super(Parameters, self).notify_attribute_listeners(attr_name, *args, **kwargs)
 
-    def on_attribute(self, attr_name, *args, **kwargs):
+    def on_attribute(self, attr_name: str, *args: Any, **kwargs: Any) -> Callable[[Callable[..., Any]], None]:  # type: ignore[override]
         """
         Decorator for parameter listeners.
 
@@ -188,10 +191,9 @@ class Parameters(MutableMapping, HasObservers):
 
         See :ref:`vehicle_state_observing_parameters` for more information.
 
-        :param String attr_name: The name of the parameter to watch (or '*' to watch all parameters).
-        :param args: The callback to invoke when a change in the parameter is detected.
+        :param String attr_name: The name of the attribute to watch (or '*' to watch all attributes).
+        :param args: The callback to invoke when a change in the attribute is detected.
 
         """
         attr_name = attr_name.upper()
         return super(Parameters, self).on_attribute(attr_name, *args, **kwargs)
-

@@ -18,7 +18,11 @@ concrete class, so they have no import-time dependency on vehicle.py at
 all - only vehicle.py imports them, one direction, no cycle.
 """
 
-from typing import Any, Callable, Optional, Protocol
+from __future__ import annotations
+
+from typing import Any, Callable, Protocol
+
+from dronekit.types import LocationGlobal
 
 
 class VehicleLike(Protocol):
@@ -32,7 +36,7 @@ class VehicleLike(Protocol):
     _wploader: Any
     _wp_loaded: bool
     _wp_download_in_progress: bool
-    _wp_uploaded: Optional[list]
+    _wp_uploaded: list | None
     _wpts_dirty: bool
     _current_waypoint: int
 
@@ -41,11 +45,43 @@ class VehicleLike(Protocol):
     # instance. Typed loosely to avoid importing locations.py/gimbal.py
     # here (which would reintroduce the very cycle this module exists to
     # avoid).
-    location: Any
-    gimbal: Any
+    #
+    # These (and home_location/commands/message_factory below) are all
+    # declared as read-only `@property` stubs rather than plain mutable
+    # attributes (`location: Any`), because that is what they actually
+    # are on the concrete Vehicle class: read-only `@property` getters
+    # with no setter. A plain attribute annotation in a Protocol means
+    # "readable and writable", which Vehicle's read-only properties do
+    # not satisfy structurally - mypy only caught this once Vehicle.py
+    # got real annotations (see the E6 typing-pass note in vehicle.py's
+    # __init__), at which point passing `self` (a Vehicle) to
+    # Locations()/Gimbal()/Channels()/CommandSequence()/Parameters()
+    # (each typed to take a VehicleLike) started failing with "expected
+    # settable variable, got read-only attribute". `@property` stubs
+    # here match Vehicle's actual read-only shape.
+    @property
+    def location(self) -> Any: ...
+
+    @property
+    def gimbal(self) -> Any: ...
+
+    # `vehicle.home_location` (a LocationGlobal, or None until read from
+    # the vehicle) and `vehicle.commands` (the owning CommandSequence).
+    # home_location is typed concretely - types.py has no dependency on
+    # vehicle.py/protocols.py so importing LocationGlobal here does not
+    # reintroduce the cycle. commands stays Any: its real type
+    # (CommandSequence, from mission.py) itself imports VehicleLike, so
+    # typing it concretely here would be the exact cycle this module
+    # exists to avoid.
+    @property
+    def home_location(self) -> LocationGlobal | None: ...
+
+    @property
+    def commands(self) -> Any: ...
 
     # The pymavlink message-factory object (`vehicle._master.mav`).
-    message_factory: Any
+    @property
+    def message_factory(self) -> Any: ...
 
     # -- methods -------------------------------------------------------
     def wait_ready(self, *types: Any, **kwargs: Any) -> bool: ...

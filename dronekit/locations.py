@@ -1,6 +1,9 @@
 """Global/global-relative/local location tracking for a Vehicle."""
 
+from __future__ import annotations
+
 import copy
+from typing import Any
 
 from dronekit.observers import HasObservers
 from dronekit.protocols import VehicleLike
@@ -18,7 +21,7 @@ class Locations(HasObservers):
     They can be read, and are observable.
     """
 
-    def __init__(self, vehicle: VehicleLike):
+    def __init__(self, vehicle: VehicleLike) -> None:
         super(Locations, self).__init__()
 
         # D10: global_frame/global_relative_frame are cached here as whole,
@@ -37,7 +40,7 @@ class Locations(HasObservers):
         self._global_relative_frame = LocationGlobalRelative(None, None, None)
 
         @vehicle.on_message('GLOBAL_POSITION_INT')
-        def listener(vehicle, name, m):
+        def listener(vehicle: VehicleLike, name: str, m: Any) -> None:
             lat = m.lat / 1.0e7
             lon = m.lon / 1.0e7
 
@@ -56,12 +59,12 @@ class Locations(HasObservers):
 
             vehicle.notify_attribute_listeners('location', vehicle.location)
 
-        self._north = None
-        self._east = None
-        self._down = None
+        self._north: float | None = None
+        self._east: float | None = None
+        self._down: float | None = None
 
         @vehicle.on_message('LOCAL_POSITION_NED')
-        def listener(vehicle, name, m):
+        def listener(vehicle: VehicleLike, name: str, m: Any) -> None:
             self._north = m.x
             self._east = m.y
             self._down = m.z
@@ -70,7 +73,7 @@ class Locations(HasObservers):
             vehicle.notify_attribute_listeners('location', vehicle.location)
 
     @property
-    def local_frame(self):
+    def local_frame(self) -> LocationLocal:
         """
         Location in local NED frame (a :py:class:`LocationGlobalRelative`).
 
@@ -85,7 +88,7 @@ class Locations(HasObservers):
         return LocationLocal(self._north, self._east, self._down)
 
     @property
-    def global_frame(self):
+    def global_frame(self) -> LocationGlobal:
         """
         Location in global frame (a :py:class:`LocationGlobal`).
 
@@ -122,7 +125,7 @@ class Locations(HasObservers):
         return copy.copy(self._global_frame)
 
     @property
-    def global_relative_frame(self):
+    def global_relative_frame(self) -> LocationGlobalRelative:
         """
         Location in global frame, with altitude relative to the home location
         (a :py:class:`LocationGlobalRelative`).
@@ -139,4 +142,3 @@ class Locations(HasObservers):
             print "Altitude relative to home_location: %s" % vehicle.location.global_relative_frame.alt
         """
         return copy.copy(self._global_relative_frame)
-
