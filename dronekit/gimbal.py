@@ -50,7 +50,7 @@ class Gimbal:
             vehicle.notify_attribute_listeners('gimbal', vehicle.gimbal)
 
         @vehicle.on_message('MOUNT_ORIENTATION')
-        def listener(vehicle: VehicleLike, name: str, m: Any) -> None:
+        def listener(vehicle: VehicleLike, name: str, m: Any) -> None:  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
             self._pitch = m.pitch
             self._roll = m.roll
             self._yaw = m.yaw

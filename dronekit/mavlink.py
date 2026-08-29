@@ -377,7 +377,7 @@ class MAVConnection:
 
         # target -> self -> vehicle
         @target.forward_message
-        def callback(_: Any, msg: Any) -> None:
+        def callback(_: Any, msg: Any) -> None:  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
             msg = copy.copy(msg)
             target.fix_targets(msg)
             try:
