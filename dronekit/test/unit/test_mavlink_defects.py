@@ -8,9 +8,12 @@ via start(), which these tests never call), so all of this runs
 synchronously and needs no simulator.
 """
 
+import atexit
 import errno
+import gc
 import socket
 import sys
+import weakref
 
 import dronekit.mavlink as mavlink_mod
 from dronekit.mavlink import MAVConnection, mavudpin_multi
@@ -174,6 +177,7 @@ def test_stop_threads_before_start_does_not_raise():
         assert handler.mavlink_thread_in is None
         assert handler.mavlink_thread_out is None
     finally:
+        atexit.unregister(handler._onexit)
         handler.master.close()
 
 
@@ -192,6 +196,7 @@ def test_stop_threads_after_start_still_joins(monkeypatch):
         assert handler.mavlink_thread_in is None
         assert handler.mavlink_thread_out is None
     finally:
+        atexit.unregister(handler._onexit)
         handler.master.close()
 
 
@@ -242,4 +247,77 @@ def test_reset_fallback_does_not_raise_attributeerror_for_udpin(monkeypatch):
         assert calls == ['127.0.0.1:0']
         assert isinstance(handler.master, _StubMaster)
     finally:
+        atexit.unregister(handler._onexit)
         handler.master.close()
+
+
+# ---------------------------------------------------------------------------
+# D7 - atexit should hold only a weak reference to MAVConnection
+# ---------------------------------------------------------------------------
+
+def _clear_pymavlink_input_global():
+    """pymavlink's mavutil.mavfile.__init__ stashes `self` into the
+    module-level mavutil.mavfile_global whenever an *input* mavfile is
+    constructed (mavudpin_multi('udpin:...') is one - see mavlink.py's
+    MAVConnection.__init__) - an external strong reference that lives
+    outside dronekit's own object graph entirely, independent of anything
+    dronekit's close()/atexit does. It's real (a single dronekit connection
+    genuinely cannot be collected until a second one is opened, in the same
+    process, superseding it in that global - see the D7 write-up in the E4
+    report) but it is pymavlink's behaviour, not dronekit's, and it would
+    confound a test that's specifically about dronekit's own atexit
+    reference discipline. Neutralize it so these tests isolate the thing
+    D7 actually changed.
+    """
+    mavlink_mod.mavutil.mavfile_global = None
+
+
+def test_mavconnection_is_garbage_collectable_after_close():
+    """Pre-fix, atexit.register(onexit) captured `self` strongly and never
+    released it, so a MAVConnection (and everything it holds - threads,
+    sockets, the whole Vehicle graph via back-references) could never be
+    collected before interpreter exit, even after close(). With the
+    weakref + atexit.unregister(), a closed connection should be
+    collectable immediately.
+    """
+    handler = MAVConnection('udpin:127.0.0.1:0')
+    ref = weakref.ref(handler)
+
+    handler.close()
+    _clear_pymavlink_input_global()
+    del handler
+    gc.collect()
+
+    assert ref() is None
+
+
+def test_atexit_callback_closure_captures_a_weakref_not_the_connection_itself():
+    """The specific mechanism D7 fixes: onexit's closure must capture
+    weakref.ref(self), never `self` directly - a direct capture is exactly
+    what let atexit.register() pin a MAVConnection (and everything it
+    holds) alive for the life of the interpreter regardless of close().
+    This is checked independent of the connection's *other*, unrelated
+    reference cycles (e.g. the fix_targets monkey-patch closure on
+    master.mav.send) so it isolates only what D7 actually changed.
+    """
+    handler = MAVConnection('udpin:127.0.0.1:0')
+    try:
+        closure_cells = handler._onexit.__closure__ or ()
+        captured = [c.cell_contents for c in closure_cells]
+
+        assert not any(v is handler for v in captured), (
+            "onexit()'s closure captures the MAVConnection directly - "
+            "atexit.register() will keep it alive for the life of the process"
+        )
+        assert any(isinstance(v, weakref.ReferenceType) for v in captured), (
+            "onexit()'s closure should capture a weakref.ref to the connection"
+        )
+
+        # And the callback itself must be a safe no-op once the referent is
+        # actually gone (proven end-to-end, with the connection actually
+        # collected, in test_mavconnection_is_garbage_collectable_after_close).
+        onexit = handler._onexit
+    finally:
+        handler.close()
+
+    onexit()  # must not raise now that the connection is closed/gone

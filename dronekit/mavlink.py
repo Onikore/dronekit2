@@ -1,3 +1,4 @@
+import atexit
 import logging
 import time
 import socket
@@ -6,6 +7,7 @@ import sys
 import os
 import platform
 import copy
+import weakref
 from dronekit import APIException
 from pymavlink import mavutil
 from queue import Queue, Empty
@@ -170,12 +172,21 @@ class MAVConnection(object):
         self._alive = True
         self._death_error = None
 
-        import atexit
+        # Use a weak reference in the atexit callback so that a MAVConnection
+        # (and everything it holds: threads, sockets, the whole Vehicle
+        # graph via back-references) remains collectable once the caller
+        # drops their references and/or calls close() - atexit.register()
+        # would otherwise keep this object alive for the life of the
+        # interpreter even after close().
+        self_ref = weakref.ref(self)
 
         def onexit():
-            self._alive = False
-            self.stop_threads()
+            conn = self_ref()
+            if conn is not None:
+                conn._alive = False
+                conn.stop_threads()
 
+        self._onexit = onexit
         atexit.register(onexit)
 
         def mavlink_thread_out():
@@ -320,6 +331,9 @@ class MAVConnection(object):
             time.sleep(0.1)
         self.stop_threads()
         self.master.close()
+        # A properly closed connection should not leave a dangling atexit
+        # entry around (see the weakref note in __init__).
+        atexit.unregister(self._onexit)
 
     def pipe(self, target):
         target.target_system = self.target_system
