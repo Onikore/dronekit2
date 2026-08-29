@@ -19,7 +19,7 @@ def test_115(vehicle):
     if v.capabilities.mission_float:
         if slept:
             assert v.version.major <= 3
-            assert v.version_minor <= 3
+            assert v.version.minor <= 3
     else:
         # fail it
         assert v.capabilities.mission_float

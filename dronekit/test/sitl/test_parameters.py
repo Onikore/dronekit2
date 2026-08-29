@@ -3,13 +3,13 @@ import time
 
 def test_parameters(vehicle):
     # When called on startup, parameter (may!) be none.
-    # assert vehicle.parameters.get('THR_MIN', wait_ready=False) is None
+    # assert vehicle.parameters.get('MOT_SPIN_MIN', wait_ready=False) is None
 
     # With wait_ready, it should not be none.
-    assert vehicle.parameters.get('THR_MIN', wait_ready=True) is not None
+    assert vehicle.parameters.get('MOT_SPIN_MIN', wait_ready=True) is not None
 
     try:
-        assert vehicle.parameters['THR_MIN'] is not None
+        assert vehicle.parameters['MOT_SPIN_MIN'] is not None
     except AssertionError:
         raise
     except Exception:
@@ -28,15 +28,19 @@ def test_iterating(vehicle):
 
 
 def test_setting(vehicle):
-    assert vehicle.parameters['THR_MIN'] is not None
+    assert vehicle.parameters['MOT_SPIN_MIN'] is not None
 
+    # 0.20 must stay within MOT_SPIN_MIN's valid 0.0-1.0 range (unlike the
+    # THR_MIN parameter this test originally used, which no longer exists
+    # on current ArduCopter firmware and had a much wider valid range).
+    target = 0.20
     result = {'success': False}
 
-    @vehicle.parameters.on_attribute('THR_MIN')
+    @vehicle.parameters.on_attribute('MOT_SPIN_MIN')
     def listener(self, name, value):
-        result['success'] = (name == 'THR_MIN' and value == 3.000)
+        result['success'] = (name == 'MOT_SPIN_MIN' and abs(value - target) < 1e-6)
 
-    vehicle.parameters['THR_MIN'] = 3.000
+    vehicle.parameters['MOT_SPIN_MIN'] = target
 
     # Wait a bit.
     i = 5
