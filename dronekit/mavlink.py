@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import atexit
 import logging
 import time
@@ -12,6 +14,7 @@ from dronekit import APIException
 from pymavlink import mavutil
 from queue import Queue, Empty
 from threading import Thread
+from typing import Any, Callable
 
 if platform.system() == 'Windows':
     from errno import WSAECONNRESET as ECONNABORTED
@@ -25,21 +28,23 @@ class MAVWriter(object):
     on the same thread.
     """
 
-    def __init__(self, queue):
+    def __init__(self, queue: Queue) -> None:
         self._logger = logging.getLogger(__name__)
         self.queue = queue
 
-    def write(self, pkt):
+    def write(self, pkt: Any) -> None:
         self.queue.put(pkt)
 
-    def read(self):
+    def read(self) -> None:
         self._logger.critical('writer should not have had a read request')
         os._exit(43)
 
 
 class mavudpin_multi(mavutil.mavfile):
     '''a UDP mavlink socket'''
-    def __init__(self, device, baud=None, input=True, broadcast=False, source_system=255, source_component=0, use_native=mavutil.default_native):
+    def __init__(self, device: str, baud: int | None = None, input: bool = True, broadcast: bool = False,
+                 source_system: int = 255, source_component: int = 0,
+                 use_native: bool = mavutil.default_native) -> None:
         self._logger = logging.getLogger(__name__)
         a = device.split(':')
         if len(a) != 2:
@@ -48,7 +53,7 @@ class mavudpin_multi(mavutil.mavfile):
         self.port = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.udp_server = input
         self.broadcast = False
-        self.addresses = set()
+        self.addresses: set[Any] = set()
         if input:
             self.port.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.port.bind((a[0], int(a[1])))
@@ -61,10 +66,10 @@ class mavudpin_multi(mavutil.mavfile):
         self.port.setblocking(False)
         mavutil.mavfile.__init__(self, self.port.fileno(), device, source_system=source_system, source_component=source_component, input=input, use_native=use_native)
 
-    def close(self):
+    def close(self) -> None:
         self.port.close()
 
-    def recv(self, n=None):
+    def recv(self, n: int | None = None) -> bytes | None:
         try:
             try:
                 data, new_addr = self.port.recvfrom(65535)
@@ -83,8 +88,9 @@ class mavudpin_multi(mavutil.mavfile):
             return data
         except Exception:
             self._logger.exception("Exception while reading data", exc_info=True)
+            return None
 
-    def write(self, buf):
+    def write(self, buf: bytes) -> None:
         try:
             try:
                 if self.udp_server:
@@ -103,11 +109,11 @@ class mavudpin_multi(mavutil.mavfile):
         except Exception:
             self._logger.exception("Exception while writing data", exc_info=True)
 
-    def recv_msg(self):
+    def recv_msg(self) -> Any:
         '''message receive routine for UDP link'''
         self.pre_message()
         s = self.recv()
-        if len(s) > 0:
+        if s and len(s) > 0:
             if self.first_byte:
                 self.auto_mavlink_version(s)
 
@@ -119,8 +125,18 @@ class mavudpin_multi(mavutil.mavfile):
 
 
 class MAVConnection(object):
+    # Declared at class level (rather than solely via the inline
+    # `self.mavlink_thread_in: Thread | None = t` in __init__) because
+    # stop_threads() below - which reassigns these to None - appears
+    # earlier in the class body than __init__. Without an authoritative
+    # class-level type, mypy infers the attribute's type from whichever
+    # assignment it sees first while walking the class, lands on
+    # `self.mavlink_thread_in = None` in stop_threads, and then reports
+    # the real __init__ assignment as an incompatible redefinition.
+    mavlink_thread_in: Thread | None
+    mavlink_thread_out: Thread | None
 
-    def stop_threads(self):
+    def stop_threads(self) -> None:
         # Thread.join() raises RuntimeError if called on a thread that was
         # never started (e.g. close()/atexit fires before start() was ever
         # called). Thread.ident is None until start() has run, so use it as
@@ -134,17 +150,19 @@ class MAVConnection(object):
                 self.mavlink_thread_out.join()
             self.mavlink_thread_out = None
 
-    def __init__(self, ip, baud=115200, target_system=0, source_system=255, source_component=0, use_native=False):
+    def __init__(self, ip: str, baud: int = 115200, target_system: int = 0, source_system: int = 255,
+                 source_component: int = 0, use_native: bool = False) -> None:
         self._logger = logging.getLogger(__name__)
 
         if ip.startswith("udpin:"):
-            self.master = mavudpin_multi(ip[6:], input=True, baud=baud, source_system=source_system, source_component=source_component)
+            self.master: Any = mavudpin_multi(ip[6:], input=True, baud=baud, source_system=source_system,
+                                               source_component=source_component)
         else:
             self.master = mavutil.mavlink_connection(ip, baud=baud, source_system=source_system, source_component=source_component)
 
         # TODO get rid of "master" object as exposed,
         # keep it private, expose something smaller for dronekit
-        self.out_queue = Queue()
+        self.out_queue: Queue = Queue()
         self.master.mav = mavutil.mavlink.MAVLink(
             MAVWriter(self.out_queue),
             srcSystem=self.master.source_system,
@@ -154,7 +172,7 @@ class MAVConnection(object):
         # Monkey-patch MAVLink object for fix_targets.
         sendfn = self.master.mav.send
 
-        def newsendfn(mavmsg, *args, **kwargs):
+        def newsendfn(mavmsg: Any, *args: Any, **kwargs: Any) -> Any:
             self.fix_targets(mavmsg)
             return sendfn(mavmsg, *args, **kwargs)
 
@@ -164,13 +182,13 @@ class MAVConnection(object):
         self.target_system = target_system
 
         # Listeners.
-        self.loop_listeners = []
-        self.message_listeners = []
+        self.loop_listeners: list[Callable[..., Any]] = []
+        self.message_listeners: list[Callable[..., Any]] = []
 
         # Debug flag.
         self._accept_input = True
         self._alive = True
-        self._death_error = None
+        self._death_error: Exception | None = None
 
         # Use a weak reference in the atexit callback so that a MAVConnection
         # (and everything it holds: threads, sockets, the whole Vehicle
@@ -180,7 +198,7 @@ class MAVConnection(object):
         # interpreter even after close().
         self_ref = weakref.ref(self)
 
-        def onexit():
+        def onexit() -> None:
             conn = self_ref()
             if conn is not None:
                 conn._alive = False
@@ -189,7 +207,7 @@ class MAVConnection(object):
         self._onexit = onexit
         atexit.register(onexit)
 
-        def mavlink_thread_out():
+        def mavlink_thread_out() -> None:
             # Huge try catch in case we see http://bugs.python.org/issue1856
             try:
                 while self._alive:
@@ -224,7 +242,7 @@ class MAVConnection(object):
             # Explicitly clear out buffer so .close closes.
             self.out_queue = Queue()
 
-        def mavlink_thread_in():
+        def mavlink_thread_in() -> None:
             # Huge try catch in case we see http://bugs.python.org/issue1856
             try:
                 while self._alive:
@@ -290,7 +308,7 @@ class MAVConnection(object):
         t.daemon = True
         self.mavlink_thread_out = t
 
-    def reset(self):
+    def reset(self) -> None:
         self.out_queue = Queue()
         if hasattr(self.master, 'reset'):
             self.master.reset()
@@ -301,30 +319,35 @@ class MAVConnection(object):
                 pass
             self.master = mavutil.mavlink_connection(self.master.address)
 
-    def fix_targets(self, message):
+    def fix_targets(self, message: Any) -> None:
         """Set correct target IDs for our vehicle"""
         if hasattr(message, 'target_system'):
             message.target_system = self.target_system
 
-    def forward_loop(self, fn):
+    def forward_loop(self, fn: Callable[..., Any]) -> None:
         """
         Decorator for event loop.
         """
         self.loop_listeners.append(fn)
 
-    def forward_message(self, fn):
+    def forward_message(self, fn: Callable[..., Any]) -> None:
         """
         Decorator for message inputs.
         """
         self.message_listeners.append(fn)
 
-    def start(self):
-        if not self.mavlink_thread_in.is_alive():
-            self.mavlink_thread_in.start()
-        if not self.mavlink_thread_out.is_alive():
-            self.mavlink_thread_out.start()
+    def start(self) -> None:
+        # mavlink_thread_in/out are always real Thread objects here in
+        # practice (set at the end of __init__, only ever reset to None
+        # by stop_threads()/close() - and nothing in this codebase calls
+        # start() again after close()). Pre-existing dynamic invariant,
+        # not re-verified here to avoid changing behavior for a typing pass.
+        if not self.mavlink_thread_in.is_alive():  # type: ignore[union-attr]
+            self.mavlink_thread_in.start()  # type: ignore[union-attr]
+        if not self.mavlink_thread_out.is_alive():  # type: ignore[union-attr]
+            self.mavlink_thread_out.start()  # type: ignore[union-attr]
 
-    def close(self):
+    def close(self) -> None:
         # TODO this can block forever if parameters continue to be added
         self._alive = False
         while not self.out_queue.empty():
@@ -335,12 +358,12 @@ class MAVConnection(object):
         # entry around (see the weakref note in __init__).
         atexit.unregister(self._onexit)
 
-    def pipe(self, target):
+    def pipe(self, target: MAVConnection) -> MAVConnection:
         target.target_system = self.target_system
 
         # vehicle -> self -> target
         @self.forward_message
-        def callback(_, msg):
+        def callback(_: Any, msg: Any) -> None:
             try:
                 target.out_queue.put(msg.pack(target.master.mav))
             except Exception:
@@ -352,7 +375,7 @@ class MAVConnection(object):
 
         # target -> self -> vehicle
         @target.forward_message
-        def callback(_, msg):
+        def callback(_: Any, msg: Any) -> None:
             msg = copy.copy(msg)
             target.fix_targets(msg)
             try:
