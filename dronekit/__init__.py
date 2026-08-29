@@ -32,60 +32,65 @@ A number of other useful classes and methods are listed below.
 ----
 """
 
-from collections.abc import MutableMapping
-
-import copy
-import logging
-import math
-import struct
-import time
-
-from pymavlink import mavutil, mavwp
-from pymavlink.dialects.v10 import ardupilotmega
-
-from dronekit.util import ErrprinterHandler
-
-__version__ = "3.0.0.dev0"
-
+# dronekit/test/unit/test_vehicle_defects.py monkeypatches `dronekit.time.time`
+# to assert that the moved-out modules (vehicle.py, mission.py) measure
+# durations with time.monotonic() and never call time.time(). That only
+# reaches the shared `time` module object through this package's own
+# namespace, so this import needs to stay here even though nothing in this
+# facade file itself calls `time` directly.
+import time  # noqa: F401 - re-exposed for tests to patch dronekit.time.time
 
 from dronekit.errors import APIException, TimeoutError
-
-
 from dronekit.types import (
     Attitude,
-    Battery,
-    Capabilities,
-    GPSInfo,
     LocationGlobal,
     LocationGlobalRelative,
     LocationLocal,
-    Rangefinder,
-    SystemStatus,
-    VehicleMode,
-    Version,
+    GPSInfo,
     Wind,
+    Battery,
+    Rangefinder,
+    Version,
+    Capabilities,
+    VehicleMode,
+    SystemStatus,
 )
-
-
 from dronekit.observers import HasObservers
-
-
-from dronekit.channels import Channels, ChannelsOverride
-
-
+from dronekit.channels import ChannelsOverride, Channels
 from dronekit.locations import Locations
-
-
-from dronekit.vehicle import Vehicle, default_still_waiting_callback
-
-
+from dronekit.vehicle import Vehicle
 from dronekit.gimbal import Gimbal
-
-
 from dronekit.parameters import Parameters
-
-
 from dronekit.mission import Command, CommandSequence
-
-
+from dronekit.vehicle import default_still_waiting_callback
 from dronekit.connect import connect
+
+__version__ = "3.0.0.dev0"
+
+__all__ = [
+    "APIException",
+    "TimeoutError",
+    "Attitude",
+    "LocationGlobal",
+    "LocationGlobalRelative",
+    "LocationLocal",
+    "GPSInfo",
+    "Wind",
+    "Battery",
+    "Rangefinder",
+    "Version",
+    "Capabilities",
+    "VehicleMode",
+    "SystemStatus",
+    "HasObservers",
+    "ChannelsOverride",
+    "Channels",
+    "Locations",
+    "Vehicle",
+    "Gimbal",
+    "Parameters",
+    "Command",
+    "CommandSequence",
+    "default_still_waiting_callback",
+    "connect",
+]
