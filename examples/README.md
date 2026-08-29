@@ -1,5 +1,12 @@
-# DroneKit Tutorials
+# DroneKit examples
 
-DroneKit-Python provides a number of examples/tutorials showing how to use the API. To find out what these examples do (and how they are run) see the [Examples](http://python.dronekit.io/examples/index.html) section in the official DroneKit-Python guide.
+Each subfolder is a runnable, standalone example script. All of them connect via
+`examples/_common.py`'s shared helper: pass `--connect <connection-string>`, or set the
+`DRONEKIT_TEST_CONNECTION` environment variable, pointing at either an ArduPilot SITL instance or
+a real flight controller. See [`docs/develop/sitl_setup.rst`](../docs/develop/sitl_setup.rst) for
+how to start SITL.
 
-Developers are welcome to [contribute](http://python.dronekit.io/about/contributing.html) new examples or improve our existing documentation. The source code for the example documentation on Github at [/dronekit-python/docs/examples](https://github.com/dronekit/dronekit-python/blob/master/docs/examples/).
+For what each example does, see [`docs/examples/index.rst`](../docs/examples/index.rst) - or just
+read the script, they're short and commented.
+
+Want to contribute a new example or improve an existing one? See [`../CONTRIBUTING.md`](../CONTRIBUTING.md).

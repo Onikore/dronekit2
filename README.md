@@ -1,72 +1,91 @@
-# DroneKit Python
+# dronekit2
 
 ![dronekit_python_logo](https://cloud.githubusercontent.com/assets/5368500/10805537/90dd4b14-7e22-11e5-9592-5925348a7df9.png)
 
-[![PyPi published version](https://img.shields.io/pypi/v/dronekit.svg)](https://pypi.org/project/dronekit/)
-[![CI](https://github.com/Onikore/dronekit2/actions/workflows/ci.yml/badge.svg)](https://github.com/Onikore/dronekit2/actions/workflows/ci.yml) <a href="https://gitter.im/dronekit/dronekit-python?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"><img align="right" src="https://badges.gitter.im/Join%20Chat.svg"></img></a>
+[![CI](https://github.com/Onikore/dronekit2/actions/workflows/ci.yml/badge.svg)](https://github.com/Onikore/dronekit2/actions/workflows/ci.yml)
 
-DroneKit-Python helps you create powerful apps for UAVs.
+**dronekit2** is a maintained fork of [DroneKit-Python](https://github.com/dronekit/dronekit-python),
+which has had no release since 2019 and does not import on modern Python. This fork keeps the
+`dronekit` import path and the attribute/observer API developers already know, modernizes the
+packaging and internals, and fixes real defects found along the way. See
+[`CHANGELOG.md`](CHANGELOG.md) and [`docs/about/migrating_v3.rst`](docs/about/migrating_v3.rst)
+for exactly what changed from the 2.9.x line.
 
-# ⚠️ ATTENTION: MAINTAINERS NEEDED ⚠️
+DroneKit-Python helps you create apps for UAVs. It provides programmatic access to a connected
+vehicle's telemetry, state and parameter information over MAVLink, and supports both mission
+management and direct control over vehicle movement.
 
-Hey it's true this project is not very active, but it could be with your help. We are looking for maintainers interested in keeping the project alive by keep up with CI and PRs. If you are interested in helping please apply by [creating an issue]([url](https://github.com/dronekit/dronekit-python/issues/new)) and listing the reasons why you would like to help, in return we will be granting committer access to folks who are truly interested in helping.
+## Installing
 
+Requires Python 3.9+.
 
-## Overview
+```bash
+pip install dronekit2
+```
 
-DroneKit-Python (formerly DroneAPI-Python) contains the python language implementation of DroneKit.
+Import name is unchanged:
 
-The API allows developers to create Python apps that communicate with vehicles over MAVLink. It provides programmatic access to a connected vehicle's telemetry, state and parameter information, and enables both mission management and direct control over vehicle movement and operations.
+```python
+import dronekit
+```
 
-The API is primarily intended for use in onboard companion computers (to support advanced use cases including computer vision, path planning, 3D modelling etc). It can also be used for ground station apps, communicating with vehicles over a higher latency RF-link. 
+Not yet on PyPI? Install straight from this repo:
 
-## Getting Started
+```bash
+pip install git+https://github.com/Onikore/dronekit2.git
+```
 
-The [Quick Start](https://dronekit-python.readthedocs.io/en/latest/guide/quick_start.html) guide explains how to set up DroneKit on each of the supported platforms (Linux, Mac OSX, Windows) and how to write a script to connect to a vehicle (real or simulated).
-
-A basic script looks like this:
+## Getting started
 
 ```python
 from dronekit import connect
 
-# Connect to UDP endpoint.
+# Connect to a vehicle (real or simulated) speaking MAVLink on this UDP endpoint.
 vehicle = connect('127.0.0.1:14550', wait_ready=True)
-# Use returned Vehicle object to query device state - e.g. to get the mode:
-print("Mode: %s" % vehicle.mode.name)
+
+# Use the returned Vehicle object to query device state - e.g. to get the mode:
+print(f"Mode: {vehicle.mode.name}")
+
+vehicle.close()
 ```
 
-Once you've got DroneKit set up, the [guide](https://dronekit-python.readthedocs.io/en/latest/guide/index.html) explains how to perform operations like taking off and flying the vehicle. You can also try out most of the tasks by running the [examples](https://dronekit-python.readthedocs.io/en/latest/examples/index.html).
+See [`docs/guide/quick_start.rst`](docs/guide/quick_start.rst) for a full walkthrough (including
+how to run this against ArduPilot SITL), [`docs/guide/`](docs/guide/) for the rest of the guide,
+and [`examples/`](examples/) for runnable end-to-end scripts.
 
-## Resources
+## Documentation
 
-The project documentation is available at [https://readthedocs.org/projects/dronekit-python/](https://readthedocs.org/projects/dronekit-python/). This includes [guide](https://dronekit-python.readthedocs.io/en/latest/guide/index.html), [example](https://dronekit-python.readthedocs.io/en/latest/examples/index.html) and [API Reference](https://dronekit-python.readthedocs.io/en/latest/automodule.html) material.
+Docs live under [`docs/`](docs/) as reStructuredText and are not yet hosted anywhere - browse the
+source on GitHub, or build them locally:
 
-The example source code is hosted here on Github as sub-folders of [/dronekit-python/examples](https://github.com/dronekit/dronekit-python/tree/master/examples).
+```bash
+pip install -e ".[docs]"
+sphinx-build -b html docs docs/_build/html
+```
 
-The [DroneKit Forums](http://discuss.dronekit.io) are the best place to ask for technical support on how to use the library. You can also check out our [Gitter channel](https://gitter.im/dronekit/dronekit-python?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) though we prefer posts on the forums where possible.
+* [Guide](docs/guide/index.rst)
+* [API reference](docs/automodule.rst)
+* [Examples](docs/examples/index.rst)
+* [Migrating from 2.9.x](docs/about/migrating_v3.rst)
 
-* **Documentation:** [https://dronekit-python.readthedocs.io/en/latest/about/index.html](https://dronekit-python.readthedocs.io/en/latest/about/index.html)
-* **Guides:** [https://dronekit-python.readthedocs.io/en/latest/guide/index.html)
-* **API Reference:** [https://dronekit-python.readthedocs.io/en/latest/automodule.html)
-* **Examples:** [/dronekit-python/examples](https://github.com/dronekit/dronekit-python/tree/master/examples)
-* **Forums:** [http://discuss.dronekit.io/](http://discuss.dronekit.io)
-* **Gitter:** [https://gitter.im/dronekit/dronekit-python](https://gitter.im/dronekit/dronekit-python?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) though we prefer posts on the forums where possible.
+## Testing against a real vehicle
 
+The test suite skips anything that needs a live vehicle unless `DRONEKIT_TEST_CONNECTION` is set
+— it accepts either an ArduPilot SITL connection string or a real flight controller over serial.
+See [`dronekit/test/README.md`](dronekit/test/README.md).
 
-## Users and contributors wanted!
+## Contributing
 
-We'd love your [feedback and suggestions](https://github.com/dronekit/dronekit-python/issues) about this API and are eager to evolve it to meet your needs, please feel free to create an issue to report bugs or feature requests.
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for development setup, and the
+[Code of Conduct](CODE_OF_CONDUCT.md) before participating.
 
-If you've created some awesome software that uses this project, [let us know on the forums here](https://discuss.dronekit.io/t/notable-projects-using-dronekit/230)!
-
-If you want to contribute, see our [Contributing](https://dronekit-python.readthedocs.io/en/latest/contributing/index.html) guidelines, we welcome all types of contributions but mostly contributions that would help us shrink our [issues list](https://github.com/dronekit/dronekit-python/issues).
-
+Questions and bug reports: [open an issue](https://github.com/Onikore/dronekit2/issues). Security
+vulnerabilities: see [`SECURITY.md`](SECURITY.md) rather than filing a public issue.
 
 ## Licence
 
-DroneKit-Python is made available under the permissive open source [Apache 2.0 License](http://python.dronekit.io/about/license.html). 
-
+dronekit2 is made available under the [Apache 2.0 License](LICENSE).
 
 ***
 
-Copyright 2015 3D Robotics, Inc.
+Copyright 2015 3D Robotics, Inc. Portions Copyright 2026 the dronekit2 contributors.
