@@ -3,9 +3,9 @@
 
 """
 © Copyright 2015-2016, 3D Robotics.
-flight_replay.py: 
+flight_replay.py:
 
-This example requests a past flight from Droneshare, and then 'replays' 
+This example loads a past flight from a local telemetry log (tlog), and then 'replays'
 the flight by sending waypoints to a vehicle.
 
 Full documentation is provided at http://python.dronekit.io/examples/flight_replay.html
@@ -13,13 +13,18 @@ Full documentation is provided at http://python.dronekit.io/examples/flight_repl
 
 from dronekit import connect, Command, VehicleMode, LocationGlobalRelative
 from pymavlink import mavutil
-import json, urllib, math
+import os
+import sys
+import math
 import time
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from _common import add_connection_argument, get_connection_string
+
 #Set up option parsing to get connection string
-import argparse  
-parser = argparse.ArgumentParser(description='Load a telemetry log and use position data to create mission waypoints for a vehicle. Connects to SITL on local PC by default.')
-parser.add_argument('--connect', help="vehicle connection target.")
+import argparse
+parser = argparse.ArgumentParser(description='Load a telemetry log and use position data to create mission waypoints for a vehicle.')
+add_connection_argument(parser)
 parser.add_argument('--tlog', default='flight.tlog',
                    help="Telemetry log containing path to replay")
 args = parser.parse_args()
@@ -144,17 +149,12 @@ if len(messages) == 0:
     print("No position messages found in log")
     exit(0)
 
-#Start SITL if no connection string specified
-if args.connect:
-    connection_string = args.connect
-    sitl = None
-else:
-    start_lat = messages[0].lat/1.0e7
-    start_lon = messages[0].lon/1.0e7
-
-    import dronekit_sitl
-    sitl = dronekit_sitl.start_default(lat=start_lat,lon=start_lon)
-    connection_string = sitl.connection_string()
+# Resolve the connection string. Note: earlier versions of this example auto-launched a SITL
+# instance positioned at the tlog's first waypoint (messages[0].lat/lon) when --connect was
+# omitted. The dronekit-sitl package that provided that auto-launch is dead; if you want a
+# simulated vehicle starting near the replayed flight's location, start ArduPilot SITL yourself
+# (see docs/develop/sitl_setup.rst) with a matching --home before passing its connection string.
+connection_string = get_connection_string(args.connect)
 
 # Connect to the Vehicle
 print('Connecting to vehicle on: %s' % connection_string)
@@ -175,6 +175,10 @@ for pt in messages:
     # To prevent accidents we don't trust the altitude in the original flight, instead
     # we just put in a conservative cruising altitude.
     altitude = 30.0
+    # NOTE: lat/lon here start out as the scaled integers GLOBAL_POSITION_INT gives us, and
+    # get divided by 1e7 below because Command (MISSION_ITEM) takes floats. dronekit.CommandInt
+    # (MISSION_ITEM_INT) would let you pass pt.lat/pt.lon directly without that float round-trip,
+    # if you need the extra precision - Command is used here to match the other mission examples.
     cmd = Command( 0,
                    0,
                    0,
@@ -221,9 +225,5 @@ while (vehicle.mode.name != "RTL"):
 #Close vehicle object before exiting script
 print("Close vehicle object")
 vehicle.close()
-
-# Shut down simulator if it was started.
-if sitl is not None:
-    sitl.stop()
 
 print("Completed...")
