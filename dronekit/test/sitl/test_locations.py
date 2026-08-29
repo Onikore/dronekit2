@@ -59,9 +59,9 @@ def test_timeout(vehicle):
     assert vehicle.location.global_frame.lat is not None
     assert vehicle.location.global_frame.lon is not None
     assert vehicle.location.global_frame.alt is not None
-    assert type(vehicle.location.global_frame.lat) == float
-    assert type(vehicle.location.global_frame.lon) == float
-    assert type(vehicle.location.global_frame.alt) == float
+    assert type(vehicle.location.global_frame.lat) is float
+    assert type(vehicle.location.global_frame.lon) is float
+    assert type(vehicle.location.global_frame.alt) is float
 
 
 def test_location_notify(vehicle):

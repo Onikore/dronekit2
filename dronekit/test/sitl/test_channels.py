@@ -21,22 +21,22 @@ def test_timeout(vehicle):
     assert sorted(vehicle.channels.keys()) == [str(x) for x in range(1, 9)]
     assert sorted(vehicle.channels.overrides.keys()) == []
 
-    assert type(vehicle.channels['1']) == int
-    assert type(vehicle.channels['2']) == int
-    assert type(vehicle.channels['3']) == int
-    assert type(vehicle.channels['4']) == int
-    assert type(vehicle.channels['5']) == int
-    assert type(vehicle.channels['6']) == int
-    assert type(vehicle.channels['7']) == int
-    assert type(vehicle.channels['8']) == int
-    assert type(vehicle.channels[1]) == int
-    assert type(vehicle.channels[2]) == int
-    assert type(vehicle.channels[3]) == int
-    assert type(vehicle.channels[4]) == int
-    assert type(vehicle.channels[5]) == int
-    assert type(vehicle.channels[6]) == int
-    assert type(vehicle.channels[7]) == int
-    assert type(vehicle.channels[8]) == int
+    assert type(vehicle.channels['1']) is int
+    assert type(vehicle.channels['2']) is int
+    assert type(vehicle.channels['3']) is int
+    assert type(vehicle.channels['4']) is int
+    assert type(vehicle.channels['5']) is int
+    assert type(vehicle.channels['6']) is int
+    assert type(vehicle.channels['7']) is int
+    assert type(vehicle.channels['8']) is int
+    assert type(vehicle.channels[1]) is int
+    assert type(vehicle.channels[2]) is int
+    assert type(vehicle.channels[3]) is int
+    assert type(vehicle.channels[4]) is int
+    assert type(vehicle.channels[5]) is int
+    assert type(vehicle.channels[6]) is int
+    assert type(vehicle.channels[7]) is int
+    assert type(vehicle.channels[8]) is int
 
     vehicle.channels.overrides = {'1': 1010}
     assert_readback(vehicle, {'1': 1010})
