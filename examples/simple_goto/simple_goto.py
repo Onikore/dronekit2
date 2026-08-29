@@ -10,7 +10,6 @@ Demonstrates how to arm and takeoff in Copter and how to navigate to points usin
 Full documentation is provided at http://python.dronekit.io/examples/simple_goto.html
 """
 
-from __future__ import print_function
 import time
 from dronekit import connect, VehicleMode, LocationGlobalRelative
 

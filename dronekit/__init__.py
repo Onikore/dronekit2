@@ -32,14 +32,7 @@ A number of other useful classes and methods are listed below.
 ----
 """
 
-import sys
-import collections
-
-# Python3.10 removed MutableMapping from collections:
-if sys.version_info.major == 3 and sys.version_info.minor >= 10:
-    from collections.abc import MutableMapping
-else:
-    from collections import MutableMapping
+from collections.abc import MutableMapping
 
 import copy
 import logging
@@ -47,13 +40,12 @@ import math
 import struct
 import time
 
-import monotonic
-from past.builtins import basestring
-
 from pymavlink import mavutil, mavwp
 from pymavlink.dialects.v10 import ardupilotmega
 
 from dronekit.util import ErrprinterHandler
+
+__version__ = "3.0.0.dev0"
 
 
 class APIException(Exception):
@@ -1329,7 +1321,7 @@ class Vehicle(HasObservers):
         self._params_loaded = False
         self._params_start = False
         self._params_map = {}
-        self._params_last = monotonic.monotonic()  # Last new param.
+        self._params_last = time.monotonic()  # Last new param.
         self._params_duration = start_duration
         self._parameters = Parameters(self)
 
@@ -1343,7 +1335,7 @@ class Vehicle(HasObservers):
                 self._params_loaded = True
                 self.notify_attribute_listeners('parameters', self.parameters)
 
-            if not self._params_loaded and monotonic.monotonic() - self._params_last > self._params_duration:
+            if not self._params_loaded and time.monotonic() - self._params_last > self._params_duration:
                 c = 0
                 for i, v in enumerate(self._params_set):
                     if v is None:
@@ -1352,7 +1344,7 @@ class Vehicle(HasObservers):
                         if c > 50:
                             break
                 self._params_duration = repeat_duration
-                self._params_last = monotonic.monotonic()
+                self._params_last = time.monotonic()
 
         @self.on_message(['PARAM_VALUE'])
         def listener(self, name, msg):
@@ -1370,7 +1362,7 @@ class Vehicle(HasObservers):
             try:
                 if msg.param_index < msg.param_count and msg:
                     if self._params_set[msg.param_index] is None:
-                        self._params_last = monotonic.monotonic()
+                        self._params_last = time.monotonic()
                         self._params_duration = start_duration
                     self._params_set[msg.param_index] = msg
 
@@ -1395,17 +1387,17 @@ class Vehicle(HasObservers):
         @handler.forward_loop
         def listener(_):
             # Send 1 heartbeat per second
-            if monotonic.monotonic() - self._heartbeat_lastsent > 1:
+            if time.monotonic() - self._heartbeat_lastsent > 1:
                 self._master.mav.heartbeat_send(mavutil.mavlink.MAV_TYPE_GCS,
                                                 mavutil.mavlink.MAV_AUTOPILOT_INVALID, 0, 0, 0)
-                self._heartbeat_lastsent = monotonic.monotonic()
+                self._heartbeat_lastsent = time.monotonic()
 
             # Timeouts.
             if self._heartbeat_started:
-                if self._heartbeat_error and monotonic.monotonic() - self._heartbeat_lastreceived > self._heartbeat_error > 0:
+                if self._heartbeat_error and time.monotonic() - self._heartbeat_lastreceived > self._heartbeat_error > 0:
                     raise APIException('No heartbeat in %s seconds, aborting.' %
                                        self._heartbeat_error)
-                elif monotonic.monotonic() - self._heartbeat_lastreceived > self._heartbeat_warning:
+                elif time.monotonic() - self._heartbeat_lastreceived > self._heartbeat_warning:
                     if self._heartbeat_timeout is False:
                         self._logger.warning('Link timeout, no heartbeat in last %s seconds' % self._heartbeat_warning)
                         self._heartbeat_timeout = True
@@ -1416,7 +1408,7 @@ class Vehicle(HasObservers):
             if msg.type == mavutil.mavlink.MAV_TYPE_GCS or (not self._handler.master.probably_vehicle_heartbeat(msg)):
                 return
             self._heartbeat_system = msg.get_srcSystem()
-            self._heartbeat_lastreceived = monotonic.monotonic()
+            self._heartbeat_lastreceived = time.monotonic()
             if self._heartbeat_timeout:
                 self._logger.info('...link restored.')
             self._heartbeat_timeout = False
@@ -1426,7 +1418,7 @@ class Vehicle(HasObservers):
         @handler.forward_loop
         def listener(_):
             if self._heartbeat_lastreceived:
-                self._last_heartbeat = monotonic.monotonic() - self._heartbeat_lastreceived
+                self._last_heartbeat = time.monotonic() - self._heartbeat_lastreceived
                 self.notify_attribute_listeners('last_heartbeat', self.last_heartbeat)
 
     @property
@@ -1646,7 +1638,7 @@ class Vehicle(HasObservers):
 
     @mode.setter
     def mode(self, v):
-        if isinstance(v, basestring):
+        if isinstance(v, str):
             v = VehicleMode(v)
 
         if self._autopilot_type == mavutil.mavlink.MAV_AUTOPILOT_PX4:
@@ -2305,7 +2297,7 @@ class Vehicle(HasObservers):
         self._handler.start()
 
         # Start heartbeat polling.
-        start = monotonic.monotonic()
+        start = time.monotonic()
         self._heartbeat_error = heartbeat_timeout or 0
         self._heartbeat_started = True
         self._heartbeat_lastreceived = start
@@ -2401,19 +2393,19 @@ class Vehicle(HasObservers):
         if list(types) == [True] or list(types) == []:
             types = self._default_ready_attrs
 
-        if not all(isinstance(item, basestring) for item in types):
+        if not all(isinstance(item, str) for item in types):
             raise ValueError('wait_ready expects one or more string arguments.')
 
         # Wait for these attributes to have been set.
         await_attributes = set(types)
-        start = monotonic.monotonic()
+        start = time.monotonic()
         still_waiting_last_message_sent = start
         still_waiting_callback = kwargs.get('still_waiting_callback')
         still_waiting_message_interval = kwargs.get('still_waiting_interval', 1)
 
         while not await_attributes.issubset(self._ready_attrs):
             time.sleep(0.1)
-            now = monotonic.monotonic()
+            now = time.monotonic()
             if now - start > timeout:
                 if raise_exception:
                     raise TimeoutError('wait_ready experienced a timeout after %s seconds.' %
@@ -2797,11 +2789,11 @@ class Parameters(MutableMapping, HasObservers):
         remaining = retries
         while True:
             self._vehicle._master.param_set_send(name, value)
-            tstart = monotonic.monotonic()
+            tstart = time.monotonic()
             if remaining == 0:
                 break
             remaining -= 1
-            while monotonic.monotonic() - tstart < 1:
+            while time.monotonic() - tstart < 1:
                 if name in self._vehicle._params_map and self._vehicle._params_map[name] == value:
                     return True
                 time.sleep(0.1)

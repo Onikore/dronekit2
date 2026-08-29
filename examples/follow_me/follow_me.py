@@ -13,7 +13,6 @@ When you want to stop follow-me, either change vehicle modes or type Ctrl+C to e
 
 Example documentation: http://python.dronekit.io/examples/follow_me.html
 """
-from __future__ import print_function
 
 from dronekit import connect, VehicleMode, LocationGlobalRelative
 import gps

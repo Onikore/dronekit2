@@ -14,7 +14,6 @@ intercepted using the message_listener decorator.
 
 Full documentation is provided at http://python.dronekit.io/examples/create_attribute.html
 """
-from __future__ import print_function
 
 from dronekit import connect, Vehicle
 from my_vehicle import MyVehicle #Our custom vehicle class

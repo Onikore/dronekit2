@@ -17,7 +17,6 @@ and we will try to find a better alternative: https://github.com/dronekit/dronek
 
 Full documentation is provided at http://python.dronekit.io/examples/channel_overrides.html
 """
-from __future__ import print_function
 from dronekit import connect
 
 

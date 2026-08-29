@@ -10,7 +10,6 @@ and how to observe vehicle attribute (state) changes.
 
 Full documentation is provided at http://python.dronekit.io/examples/vehicle_state.html
 """
-from __future__ import print_function
 from dronekit import connect, VehicleMode
 import time
 

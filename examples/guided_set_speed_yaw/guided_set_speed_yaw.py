@@ -9,7 +9,6 @@ This example shows how to move/direct Copter and send commands in GUIDED mode us
 
 Example documentation: http://python.dronekit.io/examples/guided-set-speed-yaw-demo.html
 """
-from __future__ import print_function
 
 from dronekit import connect, VehicleMode, LocationGlobal, LocationGlobalRelative
 from pymavlink import mavutil # Needed for command message definitions

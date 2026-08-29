@@ -10,7 +10,6 @@ Demonstrates how to play a custom tune on a vehicle using the vehicle's buzzer
 Full documentation is provided at http://python.dronekit.io/examples/play_tune.html
 """
 
-from __future__ import print_function
 import time
 from dronekit import connect
 

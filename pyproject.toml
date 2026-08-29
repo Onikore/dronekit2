@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dronekit2"
+version = "3.0.0.dev0"
+description = "Developer tools for drones — maintained fork of DroneKit-Python."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.9"
+authors = [
+    { name = "3D Robotics" },
+]
+dependencies = [
+    "pymavlink>=2.4.42",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-timeout",
+    "ruff",
+    "mypy",
+]
+docs = [
+    "sphinx>=7",
+    "furo",
+]
+
+[project.urls]
+Homepage = "https://github.com/Onikore/dronekit2"
+Repository = "https://github.com/Onikore/dronekit2"
+Upstream = "https://github.com/dronekit/dronekit-python"
+
+[tool.setuptools.packages.find]
+include = ["dronekit*"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+markers = [
+    "sitl: requires a running ArduPilot SITL instance",
+]
+testpaths = ["dronekit/test"]

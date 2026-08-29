@@ -11,7 +11,6 @@ into a list, and can be modified before saving and/or uploading.
 
 Documentation is provided at http://python.dronekit.io/examples/mission_import_export.html
 """
-from __future__ import print_function
 
 
 from dronekit import connect, Command

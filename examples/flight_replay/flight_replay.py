@@ -10,7 +10,6 @@ the flight by sending waypoints to a vehicle.
 
 Full documentation is provided at http://python.dronekit.io/examples/flight_replay.html
 """
-from __future__ import print_function
 
 from dronekit import connect, Command, VehicleMode, LocationGlobalRelative
 from pymavlink import mavutil

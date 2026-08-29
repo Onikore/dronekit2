@@ -7,7 +7,6 @@ mission_basic.py: Example demonstrating basic mission operations including creat
 
 Full documentation is provided at https://dronekit-python.readthedocs.io/en/latest/examples/mission_basic.html
 """
-from __future__ import print_function
 
 from dronekit import connect, VehicleMode, LocationGlobalRelative, LocationGlobal, Command
 import time
