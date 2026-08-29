@@ -176,7 +176,7 @@ time.sleep(2)
 print("\n Attempt to remove observer added with `on_attribute` decorator (should fail)")
 try:
     vehicle.remove_attribute_listener('mode', decorated_mode_callback)
-except:
+except Exception:
     print(" Exception: Cannot remove observer added using decorator")
 
 
@@ -225,7 +225,7 @@ def decorated_thr_min_callback(self, attr_name, value):
 
 print("Write vehicle param 'THR_MIN' : 20 (and wait for callback)")
 vehicle.parameters['THR_MIN']=20
-for x in range(1,5):
+for _ in range(1,5):
     #Callbacks may not be updated for a few seconds
     if vehicle.parameters['THR_MIN']==20:
         break

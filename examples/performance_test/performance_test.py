@@ -106,7 +106,7 @@ def send_testpackets():
 send_testpackets()
 
 print("Logging for 30 seconds")
-for x in range(1,30):
+for _ in range(1,30):
     time.sleep(1)
 
 # Close vehicle object before exiting script

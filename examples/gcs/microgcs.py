@@ -9,18 +9,15 @@
 
 import os
 import sys
-from tkinter import *
+from tkinter import Button, Frame, Label, Tk
 
 from dronekit import VehicleMode, connect
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from _common import add_connection_argument, get_connection_string
-
-# The tkinter root object
-global root
-
 #Set up option parsing to get connection string
 import argparse
+
+from _common import add_connection_argument, get_connection_string
 
 parser = argparse.ArgumentParser(description='Tracks GPS position of your computer (Linux only).')
 add_connection_argument(parser)

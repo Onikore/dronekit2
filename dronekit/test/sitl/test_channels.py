@@ -59,7 +59,7 @@ def test_timeout(vehicle):
     # test
     try:
         vehicle.channels['9']
-        assert False, "Can read over end of channels"
+        raise AssertionError("Can read over end of channels")
     except AssertionError:
         raise
     except Exception:
@@ -67,7 +67,7 @@ def test_timeout(vehicle):
 
     try:
         vehicle.channels['0']
-        assert False, "Can read over start of channels"
+        raise AssertionError("Can read over start of channels")
     except AssertionError:
         raise
     except Exception:
@@ -75,7 +75,7 @@ def test_timeout(vehicle):
 
     try:
         vehicle.channels['1'] = 200
-        assert False, "can write a channel value"
+        raise AssertionError("can write a channel value")
     except AssertionError:
         raise
     except Exception:
@@ -108,7 +108,7 @@ def test_timeout(vehicle):
     try:
         # Try to write channel 9 override to a value with brackets
         vehicle.channels.overrides['9'] = 900
-        assert False, "can write channels.overrides 9"
+        raise AssertionError("can write channels.overrides 9")
     except AssertionError:
         raise
     except Exception:
@@ -117,7 +117,7 @@ def test_timeout(vehicle):
     try:
         # Try to write channel 9 override to a value with braces
         vehicle.channels.overrides = {'9': 900}
-        assert False, "can write channels.overrides 9 with braces"
+        raise AssertionError("can write channels.overrides 9 with braces")
     except AssertionError:
         raise
     except Exception:

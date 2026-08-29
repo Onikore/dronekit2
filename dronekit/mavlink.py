@@ -221,7 +221,7 @@ class MAVConnection:
                     except OSError as error:
                         # If connection reset (closed), stop polling.
                         if error.errno == ECONNABORTED:
-                            raise APIException('Connection aborting during read')
+                            raise APIException('Connection aborting during read') from error
                         raise
                     except Exception as e:
                         self._logger.exception(f'mav send error: {str(e)}')
@@ -261,7 +261,7 @@ class MAVConnection:
                         except OSError as error:
                             # If connection reset (closed), stop polling.
                             if error.errno == ECONNABORTED:
-                                raise APIException('Connection aborting during send')
+                                raise APIException('Connection aborting during send') from error
                             raise
                         except mavutil.mavlink.MAVError as e:
                             # Avoid

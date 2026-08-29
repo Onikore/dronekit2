@@ -35,7 +35,7 @@ def test_timeout_empty():
         vehicle.close()
 
         # Should not pass
-        assert False
+        raise AssertionError()
     except AssertionError:
         raise
     except Exception:

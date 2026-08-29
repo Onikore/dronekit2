@@ -12,18 +12,19 @@ def test_parameters(vehicle):
         assert vehicle.parameters['MOT_SPIN_MIN'] is not None
     except AssertionError:
         raise
-    except Exception:
-        assert False
+    except Exception as e:
+        raise AssertionError() from e
 
     # Garbage value after all parameters are downloaded should be None.
     assert vehicle.parameters.get('xXx_extreme_garbage_value_xXx', wait_ready=True) is None
 
 
 def test_iterating(vehicle):
-    # Iterate over parameters.
-    for k, v in vehicle.parameters.items():
+    # Iterate over parameters (testing that iteration works at all - not
+    # consuming the values, so the loop variables are intentionally unused).
+    for _k, _v in vehicle.parameters.items():
         break
-    for key in vehicle.parameters:
+    for _key in vehicle.parameters:
         break
 
 

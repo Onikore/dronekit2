@@ -56,7 +56,6 @@ def readmission(aFileName):
     with the same constructor signature.
     """
     print(f"\nReading mission from file: {aFileName}")
-    cmds = vehicle.commands
     missionlist=[]
     with open(aFileName) as f:
         for i, line in enumerate(f):
@@ -65,7 +64,7 @@ def readmission(aFileName):
                     raise Exception('File is not supported WP version')
             else:
                 linearray=line.split('\t')
-                ln_index=int(linearray[0])
+                _ln_index=int(linearray[0])  # sequence number is reassigned on upload; parsed only to validate the field
                 ln_currentwp=int(linearray[1])
                 ln_frame=int(linearray[2])
                 ln_command=int(linearray[3])
