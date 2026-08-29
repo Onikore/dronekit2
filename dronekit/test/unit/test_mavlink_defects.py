@@ -12,6 +12,7 @@ import errno
 import socket
 import sys
 
+import dronekit.mavlink as mavlink_mod
 from dronekit.mavlink import MAVConnection, mavudpin_multi
 
 
@@ -190,5 +191,55 @@ def test_stop_threads_after_start_still_joins(monkeypatch):
 
         assert handler.mavlink_thread_in is None
         assert handler.mavlink_thread_out is None
+    finally:
+        handler.master.close()
+
+
+# ---------------------------------------------------------------------------
+# D4 - mavudpin_multi.address / MAVConnection.reset() fallback
+# ---------------------------------------------------------------------------
+
+def test_mavudpin_multi_has_address_attribute_for_reset_fallback():
+    """reset()'s fallback path (used when self.master has no .reset())
+    does `mavutil.mavlink_connection(self.master.address)`. mavudpin_multi
+    inherits from mavutil.mavfile, whose __init__ already stores the device
+    string it's given as `self.address` - and mavudpin_multi.__init__
+    passes `device` straight through to that call - so `.address` is
+    already present. This test locks that invariant down so a future change
+    to mavudpin_multi.__init__ (e.g. no longer forwarding `device` to
+    mavfile.__init__) gets caught immediately instead of surfacing as an
+    AttributeError deep inside reset().
+    """
+    m = mavudpin_multi('127.0.0.1:0', input=True)
+    try:
+        assert m.address == '127.0.0.1:0'
+        assert not hasattr(m, 'reset')  # confirms reset() takes the fallback path
+    finally:
+        m.close()
+
+
+def test_reset_fallback_does_not_raise_attributeerror_for_udpin(monkeypatch):
+    handler = MAVConnection('udpin:127.0.0.1:0')
+    try:
+        assert not hasattr(handler.master, 'reset')
+
+        calls = []
+
+        class _StubMaster:
+            address = 'stub-address'
+
+            def close(self):
+                pass
+
+        def fake_mavlink_connection(address, *a, **kw):
+            calls.append(address)
+            return _StubMaster()
+
+        monkeypatch.setattr(mavlink_mod.mavutil, 'mavlink_connection', fake_mavlink_connection)
+
+        handler.reset()  # must not raise AttributeError
+
+        assert calls == ['127.0.0.1:0']
+        assert isinstance(handler.master, _StubMaster)
     finally:
         handler.master.close()
