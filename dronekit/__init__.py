@@ -3212,20 +3212,30 @@ def connect(ip,
         vehicle_class = Vehicle
 
     handler = MAVConnection(ip, baud=baud, source_system=source_system, source_component=source_component, use_native=use_native)
-    vehicle = vehicle_class(handler)
+    # If anything below raises (vehicle_class construction, initialize()'s
+    # heartbeat timeout, wait_ready()'s timeout, ...) the caller never gets
+    # a reference to `handler` or `vehicle`, so nothing else can close the
+    # socket/threads that MAVConnection.__init__ already opened/started.
+    # Close it ourselves before propagating the exception so a failed
+    # connect() does not leak a live connection.
+    try:
+        vehicle = vehicle_class(handler)
 
-    if status_printer:
-        vehicle._autopilot_logger.addHandler(ErrprinterHandler(status_printer))
+        if status_printer:
+            vehicle._autopilot_logger.addHandler(ErrprinterHandler(status_printer))
 
-    if _initialize:
-        vehicle.initialize(rate=rate, heartbeat_timeout=heartbeat_timeout)
+        if _initialize:
+            vehicle.initialize(rate=rate, heartbeat_timeout=heartbeat_timeout)
 
-    if wait_ready:
-        if wait_ready is True:
-            vehicle.wait_ready(still_waiting_interval=still_waiting_interval,
-                               still_waiting_callback=still_waiting_callback,
-                               timeout=timeout)
-        else:
-            vehicle.wait_ready(*wait_ready)
+        if wait_ready:
+            if wait_ready is True:
+                vehicle.wait_ready(still_waiting_interval=still_waiting_interval,
+                                   still_waiting_callback=still_waiting_callback,
+                                   timeout=timeout)
+            else:
+                vehicle.wait_ready(*wait_ready)
+    except Exception:
+        handler.close()
+        raise
 
     return vehicle

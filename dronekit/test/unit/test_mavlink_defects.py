@@ -15,6 +15,9 @@ import socket
 import sys
 import weakref
 
+import pytest
+
+import dronekit
 import dronekit.mavlink as mavlink_mod
 from dronekit.mavlink import MAVConnection, mavudpin_multi
 
@@ -321,3 +324,41 @@ def test_atexit_callback_closure_captures_a_weakref_not_the_connection_itself():
         handler.close()
 
     onexit()  # must not raise now that the connection is closed/gone
+
+
+# ---------------------------------------------------------------------------
+# D9 - resource leak in dronekit.connect() on partial failure
+# ---------------------------------------------------------------------------
+
+def test_connect_closes_handler_when_vehicle_construction_raises(monkeypatch):
+    """If anything between MAVConnection construction and connect()'s
+    `return vehicle` raises, the caller never gets a reference to the
+    handler (or the vehicle) it created - so nothing else can close the
+    socket/threads MAVConnection.__init__ already opened/started. connect()
+    itself must close the handler before propagating the exception.
+    """
+    created_handlers = []
+
+    class _FakeHandler:
+        def __init__(self, *a, **kw):
+            self.closed = False
+
+        def close(self):
+            self.closed = True
+
+    def fake_mavconnection(*a, **kw):
+        h = _FakeHandler()
+        created_handlers.append(h)
+        return h
+
+    monkeypatch.setattr(dronekit.mavlink, 'MAVConnection', fake_mavconnection)
+
+    class ExplodingVehicle(object):
+        def __init__(self, handler):
+            raise RuntimeError('boom during vehicle construction')
+
+    with pytest.raises(RuntimeError, match='boom during vehicle construction'):
+        dronekit.connect('udpin:127.0.0.1:0', vehicle_class=ExplodingVehicle, _initialize=False)
+
+    assert len(created_handlers) == 1
+    assert created_handlers[0].closed is True
