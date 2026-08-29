@@ -1,0 +1,25 @@
+# Normalise line endings: repo stores LF, checkout uses platform default.
+* text=auto eol=lf
+
+*.py    text eol=lf
+*.rst   text eol=lf
+*.md    text eol=lf
+*.txt   text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.toml  text eol=lf
+*.cfg   text eol=lf
+*.sh    text eol=lf
+*.html  text eol=lf
+*.css   text eol=lf
+
+*.bat   text eol=crlf
+*.iss   text eol=crlf
+
+# NMEA fixture replayed by examples/follow_me/run-fake-gps.sh: text, not binary.
+*.log   text eol=lf
+
+*.png   binary
+*.jpg   binary
+*.gif   binary
+*.tlog  binary

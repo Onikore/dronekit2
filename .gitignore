@@ -2,11 +2,30 @@
 .pydevproject
 .python-version
 dronekit.egg-info
+dronekit2.egg-info
+*.egg-info
 dist
 build
 .vagrant
 *~
 .idea
+.vscode
 *.pyc
+__pycache__/
 env
+.venv
+venv
 vs/.vs/dronekit-python/v14/*.suo
+
+# tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+docs/_build/
+
+# local analysis artefacts, not part of the library
+graphify-out/
+.plan/
+.graphify_*
