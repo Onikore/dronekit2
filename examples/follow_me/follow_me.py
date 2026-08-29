@@ -16,26 +16,21 @@ Example documentation: http://python.dronekit.io/examples/follow_me.html
 
 from dronekit import connect, VehicleMode, LocationGlobalRelative
 import gps
+import os
 import socket
 import time
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from _common import add_connection_argument, get_connection_string
+
 #Set up option parsing to get connection string
-import argparse  
+import argparse
 parser = argparse.ArgumentParser(description='Tracks GPS position of your computer (Linux only).')
-parser.add_argument('--connect', 
-                   help="vehicle connection target string. If not specified, SITL automatically started and used.")
+add_connection_argument(parser)
 args = parser.parse_args()
 
-connection_string = args.connect
-sitl = None
-
-
-#Start SITL if no connection string specified
-if not connection_string:
-    import dronekit_sitl
-    sitl = dronekit_sitl.start_default()
-    connection_string = sitl.connection_string()
+connection_string = get_connection_string(args.connect)
 
 # Connect to the Vehicle
 print('Connecting to vehicle on: %s' % connection_string)
@@ -114,9 +109,5 @@ except socket.error:
 #Close vehicle object before exiting script
 print("Close vehicle object")
 vehicle.close()
-
-# Shut down simulator if it was started.
-if sitl is not None:
-    sitl.stop()
 
 print("Completed")

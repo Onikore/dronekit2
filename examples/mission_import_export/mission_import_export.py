@@ -14,25 +14,21 @@ Documentation is provided at http://python.dronekit.io/examples/mission_import_e
 
 
 from dronekit import connect, Command
+import os
+import sys
 import time
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from _common import add_connection_argument, get_connection_string
 
 
 #Set up option parsing to get connection string
-import argparse  
+import argparse
 parser = argparse.ArgumentParser(description='Demonstrates mission import/export from a file.')
-parser.add_argument('--connect', 
-                   help="Vehicle connection target string. If not specified, SITL automatically started and used.")
+add_connection_argument(parser)
 args = parser.parse_args()
 
-connection_string = args.connect
-sitl = None
-
-
-#Start SITL if no connection string specified
-if not connection_string:
-    import dronekit_sitl
-    sitl = dronekit_sitl.start_default()
-    connection_string = sitl.connection_string()
+connection_string = get_connection_string(args.connect)
 
 
 # Connect to the Vehicle
@@ -53,6 +49,11 @@ def readmission(aFileName):
     format (http://qgroundcontrol.org/mavlink/waypoint_protocol#waypoint_file_format).
 
     This function is used by upload_mission().
+
+    NOTE: This builds plain `Command` objects (float MISSION_ITEM), which matches the
+    precision of the WP file format. If you need scaled-integer coordinates instead (e.g.
+    round-tripping MISSION_ITEM_INT missions), `dronekit.CommandInt` is a drop-in alternative
+    with the same constructor signature.
     """
     print("\nReading mission from file: %s" % aFileName)
     cmds = vehicle.commands
@@ -159,10 +160,6 @@ save_mission(export_mission_filename)
 #Close vehicle object before exiting script
 print("Close vehicle object")
 vehicle.close()
-
-# Shut down simulator if it was started.
-if sitl is not None:
-    sitl.stop()
 
 
 print("\nShow original and uploaded/downloaded files:")

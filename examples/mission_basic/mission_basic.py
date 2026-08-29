@@ -9,27 +9,23 @@ Full documentation is provided at https://dronekit-python.readthedocs.io/en/late
 """
 
 from dronekit import connect, VehicleMode, LocationGlobalRelative, LocationGlobal, Command
+import os
+import sys
 import time
 import math
 from pymavlink import mavutil
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from _common import add_connection_argument, get_connection_string
+
 
 #Set up option parsing to get connection string
-import argparse  
+import argparse
 parser = argparse.ArgumentParser(description='Demonstrates basic mission operations.')
-parser.add_argument('--connect', 
-                   help="vehicle connection target string. If not specified, SITL automatically started and used.")
+add_connection_argument(parser)
 args = parser.parse_args()
 
-connection_string = args.connect
-sitl = None
-
-
-#Start SITL if no connection string specified
-if not connection_string:
-    import dronekit_sitl
-    sitl = dronekit_sitl.start_default()
-    connection_string = sitl.connection_string()
+connection_string = get_connection_string(args.connect)
 
 
 # Connect to the Vehicle
@@ -116,8 +112,12 @@ def adds_square_mission(aLocation, aSize):
     cmds.clear() 
     
     print(" Define/add new commands.")
-    # Add new commands. The meaning/order of the parameters is documented in the Command class. 
-     
+    # Add new commands. The meaning/order of the parameters is documented in the Command class.
+    # NOTE: Command sends waypoint lat/lon as floats (MISSION_ITEM). If you need the extra
+    # precision of scaled integer coordinates instead, dronekit.CommandInt is a drop-in
+    # alternative (MISSION_ITEM_INT) - see mission_import_export.py for an example. Command
+    # remains the default here since float precision is more than enough for a square path.
+
     #Add MAV_CMD_NAV_TAKEOFF command. This is ignored if the vehicle is already in the air.
     cmds.add(Command( 0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_TAKEOFF, 0, 0, 0, 0, 0, 0, 0, 0, 10))
 
@@ -210,7 +210,3 @@ vehicle.mode = VehicleMode("RTL")
 #Close vehicle object before exiting script
 print("Close vehicle object")
 vehicle.close()
-
-# Shut down simulator if it was started.
-if sitl is not None:
-    sitl.stop()

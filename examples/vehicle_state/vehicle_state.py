@@ -11,27 +11,23 @@ and how to observe vehicle attribute (state) changes.
 Full documentation is provided at http://python.dronekit.io/examples/vehicle_state.html
 """
 from dronekit import connect, VehicleMode
+import os
+import sys
 import time
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from _common import add_connection_argument, get_connection_string
+
 #Set up option parsing to get connection string
-import argparse  
-parser = argparse.ArgumentParser(description='Print out vehicle state information. Connects to SITL on local PC by default.')
-parser.add_argument('--connect', 
-                   help="vehicle connection target string. If not specified, SITL automatically started and used.")
+import argparse
+parser = argparse.ArgumentParser(description='Print out vehicle state information.')
+add_connection_argument(parser)
 args = parser.parse_args()
 
-connection_string = args.connect
-sitl = None
+connection_string = get_connection_string(args.connect)
 
 
-#Start SITL if no connection string specified
-if not connection_string:
-    import dronekit_sitl
-    sitl = dronekit_sitl.start_default()
-    connection_string = sitl.connection_string()
-
-
-# Connect to the Vehicle. 
+# Connect to the Vehicle.
 #   Set `wait_ready=True` to ensure default attributes are populated before `connect()` returns.
 print("\nConnecting to vehicle on: %s" % connection_string)
 vehicle = connect(connection_string, wait_ready=True)
@@ -212,7 +208,7 @@ print(" Read new value of param 'THR_MIN': %s" % vehicle.parameters['THR_MIN'])
 
 
 print("\nPrint all parameters (iterate `vehicle.parameters`):")
-for key, value in vehicle.parameters.iteritems():
+for key, value in vehicle.parameters.items():
     print(" Key:%s Value:%s" % (key,value))
     
 
@@ -258,10 +254,6 @@ vehicle.parameters['THR_MID']=500
 #Close vehicle object before exiting script
 print("\nClose vehicle object")
 vehicle.close()
-
-# Shut down simulator if it was started.
-if sitl is not None:
-    sitl.stop()
 
 print("Completed")
 

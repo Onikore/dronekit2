@@ -18,24 +18,20 @@ and we will try to find a better alternative: https://github.com/dronekit/dronek
 Full documentation is provided at http://python.dronekit.io/examples/channel_overrides.html
 """
 from dronekit import connect
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from _common import add_connection_argument, get_connection_string
 
 
 #Set up option parsing to get connection string
-import argparse  
+import argparse
 parser = argparse.ArgumentParser(description='Example showing how to set and clear vehicle channel-override information.')
-parser.add_argument('--connect', 
-                   help="vehicle connection target string. If not specified, SITL automatically started and used.")
+add_connection_argument(parser)
 args = parser.parse_args()
 
-connection_string = args.connect
-sitl = None
-
-
-#Start SITL if no connection string specified
-if not connection_string:
-    import dronekit_sitl
-    sitl = dronekit_sitl.start_default()
-    connection_string = sitl.connection_string()
+connection_string = get_connection_string(args.connect)
 
 
 # Connect to the Vehicle
@@ -95,9 +91,5 @@ print(" Channel overrides: %s" % vehicle.channels.overrides)
 #Close vehicle object before exiting script
 print("\nClose vehicle object")
 vehicle.close()
-
-# Shut down simulator if it was started.
-if sitl is not None:
-    sitl.stop()
 
 print("Completed")

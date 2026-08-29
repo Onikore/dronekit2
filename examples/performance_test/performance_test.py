@@ -14,25 +14,22 @@ Full documentation is provided at http://python.dronekit.io/examples/performance
 """
 from dronekit import connect
 from pymavlink import mavutil
+import os
 import time
 import sys
 from datetime import datetime
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from _common import add_connection_argument, get_connection_string
+
 
 #Set up option parsing to get connection string
-import argparse  
-parser = argparse.ArgumentParser(description='Generates max, min and current interval between message sent and ack recieved. Will start and connect to SITL if no connection string specified.')
-parser.add_argument('--connect', 
-                   help="vehicle connection target string. If not specified, SITL automatically started and used.")
+import argparse
+parser = argparse.ArgumentParser(description='Generates max, min and current interval between message sent and ack recieved.')
+add_connection_argument(parser)
 args = parser.parse_args()
 
-connection_string=args.connect
-
-#Start SITL if no connection string specified
-if not connection_string:
-    import dronekit_sitl
-    sitl = dronekit_sitl.start_default()
-    connection_string = sitl.connection_string()
+connection_string = get_connection_string(args.connect)
 
 
 # Connect to the Vehicle
@@ -113,7 +110,3 @@ for x in range(1,30):
 
 # Close vehicle object before exiting script
 vehicle.close()
-
-if not args.connect:
-    # Shut down simulator if it was started.
-    sitl.stop()

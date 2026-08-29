@@ -12,26 +12,22 @@ Example documentation: http://python.dronekit.io/examples/guided-set-speed-yaw-d
 
 from dronekit import connect, VehicleMode, LocationGlobal, LocationGlobalRelative
 from pymavlink import mavutil # Needed for command message definitions
+import os
+import sys
 import time
 import math
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from _common import add_connection_argument, get_connection_string
+
 
 #Set up option parsing to get connection string
-import argparse  
+import argparse
 parser = argparse.ArgumentParser(description='Control Copter and send commands in GUIDED mode ')
-parser.add_argument('--connect', 
-                   help="Vehicle connection target string. If not specified, SITL automatically started and used.")
+add_connection_argument(parser)
 args = parser.parse_args()
 
-connection_string = args.connect
-sitl = None
-
-
-#Start SITL if no connection string specified
-if not connection_string:
-    import dronekit_sitl
-    sitl = dronekit_sitl.start_default()
-    connection_string = sitl.connection_string()
+connection_string = get_connection_string(args.connect)
 
 
 # Connect to the Vehicle
@@ -298,9 +294,9 @@ def goto(dNorth, dEast, gotoFunction=vehicle.simple_goto):
     """
     Moves the vehicle to a position dNorth metres North and dEast metres East of the current position.
 
-    The method takes a function pointer argument with a single `dronekit.lib.LocationGlobal` parameter for 
-    the target position. This allows it to be called with different position-setting commands. 
-    By default it uses the standard method: dronekit.lib.Vehicle.simple_goto().
+    The method takes a function pointer argument with a single `dronekit.LocationGlobal` parameter for
+    the target position. This allows it to be called with different position-setting commands.
+    By default it uses the standard method: dronekit.Vehicle.simple_goto().
 
     The method reports the distance to target every two seconds.
     """
@@ -640,9 +636,5 @@ vehicle.mode = VehicleMode("LAND")
 #Close vehicle object before exiting script
 print("Close vehicle object")
 vehicle.close()
-
-# Shut down simulator if it was started.
-if sitl is not None:
-    sitl.stop()
 
 print("Completed")
