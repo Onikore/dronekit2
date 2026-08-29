@@ -65,13 +65,34 @@ markers = [
 testpaths = ["dronekit/test"]
 
 [tool.mypy]
-# Minimal, permissive baseline: the codebase has no inline type annotations yet,
-# and pymavlink ships no py.typed marker / stubs. This section exists only so
-# CI's typecheck job has something concrete to run; it is intentionally not
-# strict and the job is continue-on-error until the codebase is ready for a
-# hard gate (see .github/workflows/ci.yml).
+# E6: the package now carries real inline annotations across its public
+# API (dronekit/py.typed marks it PEP 561-compliant), so this section has
+# been tightened one notch from the E3 baseline:
+#
+# - ignore_missing_imports stays true - pymavlink still ships no py.typed
+#   marker / stubs, and that is out of this project's control.
+# - check_untyped_defs is now true - previously mypy skipped the *body*
+#   of any function/method with no annotations at all, which hid real
+#   issues in helpers that happened to be untyped. Now those bodies are
+#   checked too (using inferred/Any types for their still-unannotated
+#   parameters), without requiring every last private helper to be
+#   annotated first.
+# - warn_redundant_casts is now true - cheap to enable, catches typing.cast()
+#   calls that have become no-ops (e.g. after a variable's inferred type
+#   already matches), which is exactly the kind of stale-annotation rot a
+#   typing pass like this should guard against going forward.
+#
+# disallow_untyped_defs is deliberately NOT set yet: private `_`-prefixed
+# helpers and nested listener closures across the package are still
+# unannotated by design (this pass prioritised the public API per
+# dronekit/__init__.py's facade), and turning that flag on now would fail
+# on all of them. That is the natural next tightening once a full pass
+# (including private helpers) is complete - not this one.
+#
 # No python_version pin: current mypy (>=2.0) dropped 3.9 support for the
 # --python-version flag itself, even though this project still targets 3.9
 # at runtime (see requires-python). Leaving it unset lets mypy infer the
 # version from whatever interpreter CI runs it under.
 ignore_missing_imports = true
+check_untyped_defs = true
+warn_redundant_casts = true
