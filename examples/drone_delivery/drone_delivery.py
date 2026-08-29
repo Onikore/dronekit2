@@ -10,24 +10,27 @@ A CherryPy based web application that displays a mapbox map to let you view the 
 Full documentation is provided at http://python.dronekit.io/examples/drone_delivery.html
 """
 
+import json
 import os
-import simplejson
+import sys
 import time
 
 from dronekit import connect, VehicleMode, LocationGlobal, LocationGlobalRelative
 import cherrypy
 from jinja2 import Environment, FileSystemLoader
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from _common import add_connection_argument, get_connection_string
+
 # Set up option parsing to get connection string
 import argparse
-parser = argparse.ArgumentParser(description='Creates a CherryPy based web application that displays a mapbox map to let you view the current vehicle position and send the vehicle commands to fly to a particular latitude and longitude. Will start and connect to SITL if no connection string specified.')
-parser.add_argument('--connect',
-                    help="vehicle connection target string. If not specified, SITL is automatically started and used.")
+parser = argparse.ArgumentParser(description='Creates a CherryPy based web application that displays a mapbox map to let you view the current vehicle position and send the vehicle commands to fly to a particular latitude and longitude.')
+add_connection_argument(parser)
 parser.add_argument('--mapbox-token',
                     help="Mapbox access token used to render the map. Overrides the MAPBOX_ACCESS_TOKEN environment variable.")
 args = parser.parse_args()
 
-connection_string = args.connect
+connection_string = get_connection_string(args.connect)
 
 mapbox_token = args.mapbox_token or os.environ.get('MAPBOX_ACCESS_TOKEN')
 if not mapbox_token:
@@ -35,12 +38,6 @@ if not mapbox_token:
         "No Mapbox access token provided. Get a free token from https://www.mapbox.com/ "
         "and either set the MAPBOX_ACCESS_TOKEN environment variable or pass --mapbox-token."
     )
-
-# Start SITL if no connection string specified
-if not connection_string:
-    import dronekit_sitl
-    sitl = dronekit_sitl.start_default()
-    connection_string = sitl.connection_string()
 
 local_path = os.path.dirname(os.path.abspath(__file__))
 print("local path: %s" % local_path)
@@ -191,7 +188,7 @@ class Templates:
         self.options = self.get_options()
         self.options['current_url'] = '/track'
         self.options['current_coords'] = current_coords
-        self.options['json'] = simplejson.dumps(self.options)
+        self.options['json'] = json.dumps(self.options)
         return self.get_template('track')
 
     def command(self, current_coords):
@@ -242,7 +239,3 @@ Drone().launch()
 
 print('Waiting for cherrypy engine...')
 cherrypy.engine.block()
-
-if not args.connect:
-    # Shut down simulator if it was started.
-    sitl.stop()
