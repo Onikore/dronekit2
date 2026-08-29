@@ -1,6 +1,85 @@
 # Changelog
 
 
+## Version 3.0.0
+
+This is the first release of this fork (PyPI package `dronekit2`, source at
+[github.com/Onikore/dronekit2](https://github.com/Onikore/dronekit2)), which picks up
+maintenance of DroneKit-Python after the upstream `dronekit`/`dronekit-python` project went
+dormant after 2.9.2. For the full upgrade guide (with code samples) see
+[`docs/about/migrating_v3.rst`](docs/about/migrating_v3.rst).
+
+### What breaks
+
+* **PyPI package renamed to `dronekit2`.** `pip install dronekit` no longer gets you updates;
+  install `pip install dronekit2` instead. **The import name is unchanged** - existing code
+  still does `import dronekit` / `from dronekit import connect, VehicleMode` with no changes
+  required.
+* **Python 3.9+ is now required.** Support for Python 2.7 and for Python 3 releases older than
+  3.9 has been dropped.
+* **No public API names were removed or renamed.** `dronekit/__init__.py` (previously a single
+  3200+ line file) is now a thin re-export facade over a real package
+  (`errors.py`, `types.py`, `observers.py`, `channels.py`, `locations.py`, `parameters.py`,
+  `mission.py`, `gimbal.py`, `vehicle.py`, `connect.py`, ...), but every name that was
+  importable from top-level `dronekit` before still is. If you only ever did
+  `from dronekit import ...`, this release is a drop-in upgrade.
+* The deprecated `status_printer` argument to `connect()` still works exactly as before (still
+  deprecated in favor of configuring the `logging` module directly). There has never been a
+  separate `errprinter` keyword argument on `connect()` in any released version of this
+  library - `ErrprinterHandler` is an internal, unexported implementation detail in
+  `dronekit/util.py` and was never part of the public API.
+* The external `dronekit-sitl` pip package (auto-downloaded SITL binaries) is dead - its binary
+  host no longer serves files. Scripts/tests using `dronekit_sitl.start_default()` need to
+  start a SITL instance themselves; see `docs/about/migrating_v3.rst` and
+  `dronekit/test/conftest.py` (`DRONEKIT_TEST_CONNECTION`) for the replacement pattern used by
+  this project's own examples and tests.
+
+### What's new
+
+* **`CommandInt`**, alongside the existing `Command`: encodes mission items over the MAVLink
+  `MISSION_ITEM_INT` wire format (`int32` degrees x 1e7) instead of `Command`'s `float32`
+  degrees, giving ~1.11cm resolution at the equator instead of `float32`'s decimetre-scale
+  rounding error - useful for precision-landing/survey-style missions. Purely additive;
+  `CommandInt.from_command()` converts an existing `Command`.
+* **Typed public API.** The package now carries inline type annotations across its public
+  surface and ships a `py.typed` marker (PEP 561), so type checkers pick up real types for
+  `import dronekit`. `mypy` and `ruff` now run in CI.
+* **Test suite migrated from `nose` to `pytest`.** SITL-dependent tests are skipped
+  automatically unless `DRONEKIT_TEST_CONNECTION` is set (works against either a local SITL
+  instance or a real flight controller over serial).
+* **CI migrated to GitHub Actions**, replacing the old Travis/AppVeyor/CircleCI setup; releases
+  are published to PyPI via Trusted Publishing (`.github/workflows/release.yml`).
+* Internal: the `pymavlink.dialects.v10.ardupilotmega` import used for a few EKF status
+  constants was switched to `v20` (the constants are identical between dialects - a no-op for
+  behavior, done to standardize on the current dialect going forward).
+* Docs rebuilt on the `furo` Sphinx theme (replacing the unmaintained `sphinx_3dr_theme`), with
+  stale Python-2-era content rewritten throughout.
+
+### What's fixed
+
+Ten real defects found and fixed with regression tests during this modernization pass
+(D1-D10; full detail in the commit history):
+
+* **D1/D2** - `mavudpin_multi` (multi-endpoint UDP-in) had a `write()`/`recv()` bug mixing up
+  set indexing, a `str`/`bytes` mismatch, and a silent `UnboundLocalError` on certain paths.
+* **D3** - `MAVConnection.stop_threads()` could raise if called before the read/write threads
+  had ever been started; now guarded.
+* **D4** - audited `mavudpin_multi.address` / `MAVConnection.reset()` fallback behavior; no
+  defect found.
+* **D5** - all 10 bare `except:` clauses replaced with `except Exception:`, so
+  `KeyboardInterrupt`/`SystemExit` are no longer accidentally swallowed.
+* **D6** - the two remaining timeout/duration measurements switched to `time.monotonic()`
+  (immune to system clock adjustments), matching the rest of the codebase.
+* **D7** - the `atexit` cleanup callback now holds only a weak reference to `MAVConnection`,
+  so a `Vehicle`/connection that would otherwise be garbage-collected is no longer kept alive
+  for the life of the process.
+* **D8** - `CommandSequence` now raises loudly instead of silently returning wrong data if
+  accessed while a `download()` is still in progress.
+* **D9** - `connect()` now closes the underlying `MAVConnection` (sockets/threads) if it fails
+  partway through (e.g. a `wait_ready()` timeout), instead of leaking it.
+* **D10** - fixed a torn read of `Locations.global_frame`/`global_relative_frame` that could
+  observe a partially-updated location.
+
 ## Version 2.9.2 (2019-03-18)
 
 ### Improvements
