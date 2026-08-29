@@ -2,14 +2,14 @@
 Example: Drone Delivery
 ===========================
 
-This example shows how to create a `CherryPy <http://www.cherrypy.org>`_ based web application that 
-displays a mapbox map to let you view the current vehicle position and send the vehicle commands 
+This example shows how to create a `Flask <https://flask.palletsprojects.com/>`_ based web application that
+displays a mapbox map to let you view the current vehicle position and send the vehicle commands
 to fly to a particular latitude and longitude.
 
 New functionality demonstrated by this example includes:
 
 * Using attribute observers to be notified of vehicle state changes.
-* Starting *CherryPy* from a DroneKit application.
+* Starting *Flask* from a DroneKit application.
 
 
 Running the example
@@ -17,7 +17,7 @@ Running the example
 
 The example can be run much as described in :doc:`running_examples` (which in turn assumes that the vehicle
 and DroneKit have been set up as described in :ref:`installing_dronekit`). The main exception is that you need to 
-install the CherryPy dependencies and view the behaviour in a web browser.
+install the Flask dependencies and view the behaviour in a web browser.
 
 In summary, after cloning the repository:
 
@@ -28,7 +28,7 @@ In summary, after cloning the repository:
        cd dronekit2\examples\drone_delivery\
 
 
-#. Install *CherryPy* and any other dependencies from **requirements.pip** in that directory:
+#. Install *Flask* and any other dependencies from **requirements.pip** in that directory:
 
    .. code-block:: bash
 
@@ -71,7 +71,7 @@ In summary, after cloning the repository:
        >>> Initialising APM...
        [DEBUG]: Taking off
        http://localhost:8080/
-       Waiting for cherrypy engine...
+        * Running on http://0.0.0.0:8080
 
 #. You can run the example against a specific connection (simulated or otherwise) by passing the :ref:`connection string <get_started_connect_string>` for your vehicle in the ``--connect`` parameter. 
    For example, to connect to Solo:
@@ -136,12 +136,13 @@ This results in DroneKit calling our ``location_callback`` method any time the l
 
 
 
-Starting CherryPy from a DroneKit application
----------------------------------------------
+Starting Flask from a DroneKit application
+-------------------------------------------
 
-We start running a web server by calling ``cherrypy.engine.start()``.
+We start running a web server by calling ``app.run(host='0.0.0.0', port=8080)``, which blocks
+for as long as the server is running - same as the CherryPy engine this example used to start.
 
-*CherryPy* is a very small and simple webserver.  It is probably best to refer to their eight line `tutorial <http://www.cherrypy.org/>`_ for more information.
+*Flask* is a small, widely-used web framework. See their `quickstart <https://flask.palletsprojects.com/en/latest/quickstart/>`_ for more information.
 
 
 

@@ -5,9 +5,7 @@
 © Copyright 2015-2016, 3D Robotics.
 drone_delivery.py:
 
-A CherryPy based web application that displays a mapbox map to let you view the current vehicle position and send the vehicle commands to fly to a particular latitude and longitude.
-
-Full documentation is provided at http://python.dronekit.io/examples/drone_delivery.html
+A Flask based web application that displays a mapbox map to let you view the current vehicle position and send the vehicle commands to fly to a particular latitude and longitude.
 """
 
 import json
@@ -16,7 +14,7 @@ import sys
 import time
 
 from dronekit import connect, VehicleMode, LocationGlobal, LocationGlobalRelative
-import cherrypy
+from flask import Flask, jsonify, request
 from jinja2 import Environment, FileSystemLoader
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -24,7 +22,7 @@ from _common import add_connection_argument, get_connection_string
 
 # Set up option parsing to get connection string
 import argparse
-parser = argparse.ArgumentParser(description='Creates a CherryPy based web application that displays a mapbox map to let you view the current vehicle position and send the vehicle commands to fly to a particular latitude and longitude.')
+parser = argparse.ArgumentParser(description='Creates a Flask based web application that displays a mapbox map to let you view the current vehicle position and send the vehicle commands to fly to a particular latitude and longitude.')
 add_connection_argument(parser)
 parser.add_argument('--mapbox-token',
                     help="Mapbox access token used to render the map. Overrides the MAPBOX_ACCESS_TOKEN environment variable.")
@@ -41,18 +39,6 @@ if not mapbox_token:
 
 local_path = os.path.dirname(os.path.abspath(__file__))
 print("local path: %s" % local_path)
-
-
-cherrypy_conf = {
-    '/': {
-        'tools.sessions.on': True,
-        'tools.staticdir.root': local_path
-    },
-    '/static': {
-        'tools.staticdir.on': True,
-        'tools.staticdir.dir': './html/assets'
-    }
-}
 
 
 class Drone(object):
@@ -106,17 +92,40 @@ class Drone(object):
 
     def _run_server(self):
         # Start web server if enabled
-        cherrypy.tree.mount(DroneDelivery(self), '/', config=cherrypy_conf)
+        templates = Templates(self.home_coords)
 
-        cherrypy.config.update({'server.socket_port': 8080,
-                                'server.socket_host': '0.0.0.0',
-                                'log.screen': None})
+        app = Flask(
+            __name__,
+            static_folder=os.path.join(local_path, 'html', 'assets'),
+            static_url_path='/static',
+        )
+
+        @app.route('/')
+        def index():
+            return templates.index()
+
+        @app.route('/command')
+        def command():
+            return templates.command(self.get_location())
+
+        @app.route('/vehicle')
+        def vehicle_position():
+            return jsonify(position=self.get_location())
+
+        @app.route('/track', methods=['GET', 'POST'])
+        def track():
+            if request.method == 'POST':
+                lat = request.form.get('lat')
+                lon = request.form.get('lon')
+                if lat is not None and lon is not None:
+                    self.goto([lat, lon], True)
+            return templates.track(self.get_location())
 
         print('''Server is bound on all addresses, port 8080
 You may connect to it using your web broser using a URL looking like this:
 http://localhost:8080/
 ''')
-        cherrypy.engine.start()
+        app.run(host='0.0.0.0', port=8080)
 
     def change_mode(self, mode):
         self._log("Changing to mode: {0}".format(mode))
@@ -202,40 +211,9 @@ class Templates:
         return template.render(options=self.options)
 
 
-class DroneDelivery(object):
-    def __init__(self, drone):
-        self.drone = drone
-        self.templates = Templates(self.drone.home_coords)
-
-    @cherrypy.expose
-    def index(self):
-        return self.templates.index()
-
-    @cherrypy.expose
-    def command(self):
-        return self.templates.command(self.drone.get_location())
-
-    @cherrypy.expose
-    @cherrypy.tools.json_out()
-    def vehicle(self):
-        return dict(position=self.drone.get_location())
-
-    @cherrypy.expose
-    def track(self, lat=None, lon=None):
-        # Process POST request from Command
-        # Sending MAVLink packet with goto instructions
-        if(lat is not None and lon is not None):
-            self.drone.goto([lat, lon], True)
-
-        return self.templates.track(self.drone.get_location())
-
-
 # Connect to the Vehicle
 print('Connecting to vehicle on: %s' % connection_string)
 vehicle = connect(connection_string, wait_ready=True)
 
 print('Launching Drone...')
 Drone().launch()
-
-print('Waiting for cherrypy engine...')
-cherrypy.engine.block()
