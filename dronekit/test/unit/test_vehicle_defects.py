@@ -4,8 +4,12 @@
 import ast
 import pathlib
 
+import pytest
+
 import dronekit
 import dronekit.mavlink
+from dronekit import CommandSequence, Vehicle
+from dronekit import TimeoutError as DKTimeoutError
 
 
 # ---------------------------------------------------------------------------
@@ -33,3 +37,52 @@ def test_no_bare_except_clauses_in_mavlink_module():
     assert lines == [], (
         "Bare `except:` clauses found at dronekit/mavlink.py line(s): %r" % lines
     )
+
+
+# ---------------------------------------------------------------------------
+# D6 - duration measurements use time.monotonic(), not time.time()
+# ---------------------------------------------------------------------------
+
+def test_wait_for_timeout_uses_monotonic_not_walltime(monkeypatch):
+    def boom():
+        raise AssertionError('wait_for() must not call time.time() to measure a timeout')
+
+    monkeypatch.setattr(dronekit.time, 'time', boom)
+
+    with pytest.raises(DKTimeoutError):
+        Vehicle.wait_for(None, lambda: False, timeout=0.05, interval=0.02)
+
+
+class _StubMaster:
+    def __init__(self):
+        self.calls = []
+
+    def waypoint_clear_all_send(self):
+        self.calls.append('clear_all')
+
+    def waypoint_count_send(self, n):
+        self.calls.append(('count_send', n))
+
+
+class _StubWploader:
+    def count(self):
+        return 1
+
+
+class _StubVehicleForUpload:
+    def __init__(self):
+        self._wpts_dirty = True
+        self._master = _StubMaster()
+        self._wploader = _StubWploader()
+        self._wp_uploaded = [False]  # never flips to all-True -> hits timeout
+
+
+def test_command_sequence_upload_timeout_uses_monotonic_not_walltime(monkeypatch):
+    def boom():
+        raise AssertionError('upload() timeout must not call time.time()')
+
+    monkeypatch.setattr(dronekit.time, 'time', boom)
+
+    cmds = CommandSequence(_StubVehicleForUpload())
+    with pytest.raises(DKTimeoutError):
+        cmds.upload(timeout=0.05)

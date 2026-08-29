@@ -2050,9 +2050,9 @@ class Vehicle(HasObservers):
         interval seconds.
         '''
 
-        t0 = time.time()
+        t0 = time.monotonic()
         while not condition():
-            t1 = time.time()
+            t1 = time.monotonic()
             if timeout and (t1 - t0) >= timeout:
                 raise TimeoutError(errmsg)
 
@@ -3057,12 +3057,12 @@ class CommandSequence(object):
         """
         if self._vehicle._wpts_dirty:
             self._vehicle._master.waypoint_clear_all_send()
-            start_time = time.time()
+            start_time = time.monotonic()
             if self._vehicle._wploader.count() > 0:
                 self._vehicle._wp_uploaded = [False] * self._vehicle._wploader.count()
                 self._vehicle._master.waypoint_count_send(self._vehicle._wploader.count())
                 while False in self._vehicle._wp_uploaded:
-                    if timeout and time.time() - start_time > timeout:
+                    if timeout and time.monotonic() - start_time > timeout:
                         raise TimeoutError
                     time.sleep(0.1)
                 self._vehicle._wp_uploaded = None
