@@ -6,7 +6,7 @@ play_tune.py: GUIDED mode "simple goto" example (Copter Only)
 
 Demonstrates how to play a custom tune on a vehicle using the vehicle's buzzer
 
-Full documentation is provided at http://python.dronekit.io/examples/play_tune.html
+Full documentation is provided at https://github.com/Onikore/dronekit2/blob/main/docs/examples/play_tune.rst
 """
 
 import os

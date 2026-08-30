@@ -10,7 +10,7 @@ vehicle to the current point.
 
 When you want to stop follow-me, either change vehicle modes or type Ctrl+C to exit the script.
 
-Example documentation: http://python.dronekit.io/examples/follow_me.html
+Example documentation: https://github.com/Onikore/dronekit2/blob/main/docs/examples/follow_me.rst
 """
 
 import os

@@ -6,7 +6,7 @@ simple_goto.py: GUIDED mode "simple goto" example (Copter Only)
 
 Demonstrates how to arm and takeoff in Copter and how to navigate to points using Vehicle.simple_goto.
 
-Full documentation is provided at http://python.dronekit.io/examples/simple_goto.html
+Full documentation is provided at https://github.com/Onikore/dronekit2/blob/main/docs/examples/simple_goto.rst
 """
 
 import os

@@ -11,7 +11,7 @@ and use them in the same way as the built-in Vehicle attributes.
 The code adds a new attribute to the Vehicle class, populating it with information from RAW_IMU messages
 intercepted using the message_listener decorator.
 
-Full documentation is provided at http://python.dronekit.io/examples/create_attribute.html
+Full documentation is provided at https://github.com/Onikore/dronekit2/blob/main/docs/examples/create_attribute.rst
 """
 
 import os

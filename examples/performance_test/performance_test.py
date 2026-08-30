@@ -9,7 +9,7 @@ sent by Dronekit-Python and an acknowledgment being received
 from the autopilot. It provides a running report of the maximum,
 minimum, and most recent interval for 30 seconds.
 
-Full documentation is provided at http://python.dronekit.io/examples/performance_test.html
+Full documentation is provided at https://github.com/Onikore/dronekit2/blob/main/docs/examples/performance_test.rst
 """
 
 import os

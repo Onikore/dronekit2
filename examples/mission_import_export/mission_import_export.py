@@ -8,7 +8,7 @@ This example demonstrates how to import and export files in the Waypoint file fo
 (http://qgroundcontrol.org/mavlink/waypoint_protocol#waypoint_file_format). The commands are imported
 into a list, and can be modified before saving and/or uploading.
 
-Documentation is provided at http://python.dronekit.io/examples/mission_import_export.html
+Documentation is provided at https://github.com/Onikore/dronekit2/blob/main/docs/examples/mission_import_export.rst
 """
 
 import os

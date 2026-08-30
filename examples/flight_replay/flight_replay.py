@@ -7,7 +7,7 @@ flight_replay.py:
 This example loads a past flight from a local telemetry log (tlog), and then 'replays'
 the flight by sending waypoints to a vehicle.
 
-Full documentation is provided at http://python.dronekit.io/examples/flight_replay.html
+Full documentation is provided at https://github.com/Onikore/dronekit2/blob/main/docs/examples/flight_replay.rst
 """
 
 import math
