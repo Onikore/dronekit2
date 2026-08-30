@@ -49,6 +49,20 @@ log(f"connecting to arducopter over tcp:{TCP_ADDR[0]}:{TCP_ADDR[1]} ...")
 _connect_start = time.monotonic()
 tcp_conn = mavutil.mavlink_connection(f"tcp:{TCP_ADDR[0]}:{TCP_ADDR[1]}")
 log(f"tcp connect() returned after {time.monotonic() - _connect_start:.3f}s")
+# pymavlink's mavfile/MAVLink objects are not thread-safe: three different
+# threads here each touch tcp_conn (this one reads, tcp_heartbeat() and
+# udp_to_tcp() both write), and a real CI run showed the actual failure
+# mode of that - EOF on TCP socket arriving in bursts of ~20 (matching
+# tcp_to_udp()'s 0.05s poll interval) immediately after each
+# heartbeat_send() call, meaning arducopter was closing the connection on
+# receiving something it couldn't parse as valid MAVLink. Concurrent,
+# unsynchronized read()/write() calls on the same socket/parser-state
+# object interleaving their bytes explains that precisely - confirmed as
+# the working theory only after the earlier heartbeat and buffering fixes
+# were verified NOT to be the (whole) story. A local end-to-end test never
+# caught this because its fake server just discards received bytes without
+# parsing them as MAVLink at all.
+tcp_lock = threading.Lock()
 # No explicit bind: the OS assigns this socket a stable ephemeral local
 # port on first use, which is fine - clients learn our address from the
 # first packet they receive from us and reply there.
@@ -76,7 +90,8 @@ def udp_to_tcp():
             log(f"first UDP packet ever received, from {addr}, {len(data)} bytes - forwarding to TCP")
             _first_udp_from_client = False
         try:
-            tcp_conn.write(data)
+            with tcp_lock:
+                tcp_conn.write(data)
         except OSError as e:
             log(f"tcp_conn.write() OSError: {e!r}")
 
@@ -98,7 +113,8 @@ def tcp_to_udp():
     eof_count = 0
     last_eof_log = 0.0
     while True:
-        msg = tcp_conn.recv_match(type=None, blocking=False)
+        with tcp_lock:
+            msg = tcp_conn.recv_match(type=None, blocking=False)
         if msg is None:
             time.sleep(0.05)
             continue
@@ -139,7 +155,10 @@ def tcp_heartbeat():
     global _heartbeats_sent
     while True:
         try:
-            tcp_conn.mav.heartbeat_send(mavutil.mavlink.MAV_TYPE_GCS, mavutil.mavlink.MAV_AUTOPILOT_INVALID, 0, 0, 0)
+            with tcp_lock:
+                tcp_conn.mav.heartbeat_send(
+                    mavutil.mavlink.MAV_TYPE_GCS, mavutil.mavlink.MAV_AUTOPILOT_INVALID, 0, 0, 0
+                )
             _heartbeats_sent += 1
             if _heartbeats_sent <= 3:
                 log(f"sent GCS heartbeat #{_heartbeats_sent} to arducopter")
