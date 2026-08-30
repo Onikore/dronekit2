@@ -136,74 +136,41 @@ jobs:
             > /tmp/arducopter.log 2>&1 &
           disown
 
-      - name: Wait for SITL to come up (TCP heartbeat on 127.0.0.1:5760)
+      - name: Wait for SITL's log to show it's listening
+        # Three earlier attempts at this step all made a TCP probe connection
+        # of their own before pytest ran, and all three converged on the same
+        # discovery: ArduPilot's SITL, run directly (no sim_vehicle.py/
+        # MAVProxy in front of it), accepts exactly ONE TCP connection for
+        # the life of the process - confirmed directly from real CI logs:
+        # session 1 got ConnectionResetError, and every one of sessions 2-25
+        # after it got ConnectionRefusedError, meaning the server had
+        # stopped accepting entirely, not just dropping that one client.
+        # Any prior probe connection - even a bare connect-and-close that
+        # never sent a byte - burns that one slot, and pytest's own
+        # dronekit.connect() then finds the port refusing connections.
+        #
+        # So this step makes zero network connections. It just polls the
+        # binary's own stdout/stderr log for the "Waiting for connection"
+        # line it prints once bind()+listen() succeed, which needs no
+        # socket at all. The actual (only, real) TCP connection is made by
+        # dronekit.connect() inside the "pytest -m sitl" step below, via
+        # the `vehicle` fixture in dronekit/test/conftest.py, which already
+        # has its own 30s timeout and sends a correct GCS heartbeat via
+        # Vehicle.initialize()'s forward_loop listener - no need to
+        # reimplement that logic here at all.
         run: |
-          python -c "
-          import sys, time
-          from pymavlink import mavutil
-
-          # History of this step, confirmed against three real CI runs (not
-          # guessed each time - reasoned from the actual server+client log
-          # output after every attempt):
-          #  1) Original bug: pymavlink's mavtcp defaults to
-          #     autoreconnect=False, so its internal handle_eof()/reconnect()
-          #     is a no-op on a dead socket, and wait_heartbeat()'s blocking
-          #     select()-based loop reports an EOF'd socket 'readable'
-          #     forever - a zero-delay busy loop that spammed ~220k log lines.
-          #  2) Switched to recv_match(blocking=False) in a manually-paced
-          #     loop (bounds any spam to our own explicit sleep) and added a
-          #     GCS heartbeat_send(), reasoning ArduPilot's serial-over-TCP
-          #     emulation might treat a silent read-only client as a dead
-          #     line. The spam dropped to a handful of lines (fix worked),
-          #     but the connection still died almost immediately even with
-          #     heartbeats being sent - so that wasn't the (whole) story.
-          #  3) The real remaining bug was in THIS script, not the server:
-          #     when pymavlink's handle_eof()/handle_disconnect() fires, it
-          #     does not raise - it just prints and returns. The old loop's
-          #     'if conn is None: reconnect' guard therefore never re-fired
-          #     once the first connection object existed, even after that
-          #     connection was long dead - it just kept polling the same
-          #     corpse every 0.2s until the outer deadline, never trying a
-          #     fresh TCP connection again.
-          #
-          # This version fixes #3: every outer iteration is its own short
-          # "session" against a brand new connection object, unconditionally
-          # closed in a finally block, regardless of whether an exception
-          # was raised or handle_eof() just silently gave up. If ArduPilot
-          # really does drop every single connection quickly, this at least
-          # produces many 'Connection on serial port 5760' lines to look at
-          # next, instead of hiding behind one dead, endlessly-reused object.
-          deadline = time.time() + 60
-          msg = None
-          session_n = 0
-          while time.time() < deadline and msg is None:
-              session_n += 1
-              conn = None
-              try:
-                  conn = mavutil.mavlink_connection('tcp:127.0.0.1:5760')
-                  session_deadline = time.time() + 3
-                  last_heartbeat_sent = 0.0
-                  while time.time() < session_deadline and msg is None:
-                      now = time.time()
-                      if now - last_heartbeat_sent > 1:
-                          conn.mav.heartbeat_send(mavutil.mavlink.MAV_TYPE_GCS, mavutil.mavlink.MAV_AUTOPILOT_INVALID, 0, 0, 0)
-                          last_heartbeat_sent = now
-                      msg = conn.recv_match(type='HEARTBEAT', blocking=False)
-                      if msg is None:
-                          time.sleep(0.2)
-              except (ConnectionRefusedError, ConnectionResetError, BrokenPipeError, OSError) as e:
-                  print(f'session {session_n}: {e!r}')
-              finally:
-                  if conn is not None:
-                      conn.close()
-              if msg is None:
-                  time.sleep(0.5)
-          print(f'{session_n} connection session(s) attempted')
-          if msg is None:
-              print('Timed out waiting for a heartbeat from SITL', file=sys.stderr)
-              sys.exit(1)
-          print('Got heartbeat from SITL:', msg)
-          "
+          deadline=$((SECONDS + 30))
+          while [ $SECONDS -lt $deadline ]; do
+            if grep -q "Waiting for connection" /tmp/arducopter.log 2>/dev/null; then
+              echo "SITL is listening:"
+              cat /tmp/arducopter.log
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "SITL never reached 'Waiting for connection' within 30s:" >&2
+          cat /tmp/arducopter.log >&2 || true
+          exit 1
 
       - name: pytest -m sitl against live SITL
         env:
