@@ -21,6 +21,7 @@ packages this job has no reason to carry).
 
 import socket
 import threading
+import time
 
 from pymavlink import mavutil
 
@@ -59,9 +60,22 @@ def udp_to_tcp():
 
 
 def tcp_to_udp():
+    # blocking=True here would trust pymavlink's own select()-based
+    # throttling, which does not throttle at all once the socket is EOF'd -
+    # select() reports an EOF'd socket "readable" immediately forever - so a
+    # single dead TCP connection could spin this loop at full CPU speed
+    # forever, flooding the log at thousands of lines/second (this exact bug
+    # was hit and fixed in an earlier diagnostic version of the wait-for-
+    # heartbeat step this relay replaced; it's fixed here the same way).
+    # blocking=False plus our own explicit sleep bounds the worst case to a
+    # few log lines per second regardless of what the socket is doing - if
+    # ArduPilot really does close the one connection it will ever accept,
+    # there is nothing to reconnect to, so all this relay can do is log
+    # quietly and keep idling rather than spin.
     while True:
-        msg = tcp_conn.recv_match(blocking=True, timeout=1)
+        msg = tcp_conn.recv_match(type=None, blocking=False)
         if msg is None:
+            time.sleep(0.05)
             continue
         try:
             udp_sock.sendto(msg.get_msgbuf(), UDP_DEST)
@@ -69,7 +83,26 @@ def tcp_to_udp():
             pass
 
 
+def tcp_heartbeat():
+    # Send a GCS heartbeat to the autopilot ourselves, independent of
+    # whether any real UDP client has connected to us yet. Reasoned from an
+    # earlier, unrelated finding: ArduPilot's serial-over-TCP emulation
+    # appears to treat a silently-connected client as a dead line and close
+    # it - dronekit's own Vehicle sends exactly this heartbeat once
+    # connected (see dronekit/vehicle.py:465), so a real dronekit client
+    # never hits this, but this relay is the one holding the TCP side open
+    # before any dronekit client exists, so it needs to do the same thing
+    # itself from the moment it connects.
+    while True:
+        try:
+            tcp_conn.mav.heartbeat_send(mavutil.mavlink.MAV_TYPE_GCS, mavutil.mavlink.MAV_AUTOPILOT_INVALID, 0, 0, 0)
+        except OSError:
+            pass
+        time.sleep(1)
+
+
 if __name__ == "__main__":
     threading.Thread(target=udp_to_tcp, daemon=True).start()
+    threading.Thread(target=tcp_heartbeat, daemon=True).start()
     print(f"relay: tcp:{TCP_ADDR[0]}:{TCP_ADDR[1]} <-> udp (sending to {UDP_DEST[0]}:{UDP_DEST[1]})", flush=True)
     tcp_to_udp()
