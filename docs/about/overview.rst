@@ -49,10 +49,10 @@ A complete API reference is available :ref:`here <api_reference>`.
 Technical support
 =================
 
-This documentation is a great place to get started with developing DroneKit Python APIs. 
+This documentation is a great place to get started with developing DroneKit Python APIs.
 
-If you run into problems, the best place to ask questions is the `DroneKit-Python Forum <https://discuss.dronekit.io/c/python>`_. 
-If your problem turns out to be a bug, then it should be `posted on Github <https://github.com/Onikore/dronekit2/issues>`_.
+If you run into problems, or your problem turns out to be a bug, please
+`open an issue on GitHub <https://github.com/Onikore/dronekit2/issues>`_.
 
 
 
