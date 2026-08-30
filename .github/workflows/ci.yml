@@ -159,7 +159,16 @@ jobs:
 
       - name: Launch ArduCopter SITL in the background
         run: |
-          nohup ./arducopter --model quad --instance 0 --speedup 1 \
+          # stdbuf -oL forces line-buffered stdout: without it, a C/C++
+          # program writing to a redirected file (not a tty) typically gets
+          # fully-buffered stdio, so lines like "Connection on serial port
+          # 5760" can sit in the process's memory for a long time before
+          # actually landing in arducopter.log - confirmed against a real
+          # run where that exact line only appeared in the log dump at the
+          # very end of the job, well after steps that needed to observe it
+          # in real time had already timed out. This makes the log file a
+          # trustworthy real-time signal instead of a delayed one.
+          nohup stdbuf -oL -eL ./arducopter --model quad --instance 0 --speedup 1 \
             --home -35.363261,149.165230,584,353 --wipe \
             > /tmp/arducopter.log 2>&1 &
           disown

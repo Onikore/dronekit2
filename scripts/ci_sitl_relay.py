@@ -35,28 +35,50 @@ TCP_ADDR = ("127.0.0.1", 5760)
 # it must actively send *to* it instead, the way an autopilot does.
 UDP_DEST = ("127.0.0.1", 14550)
 
+
+def log(msg):
+    # Two failed attempts at fixing this job's "sitl" step blind (9b9d769,
+    # b98731e, 522d6c7) without enough visibility into what was actually
+    # happening led to two more silent-guess iterations. This timestamps
+    # every relay lifecycle event explicitly so the next failure (if there
+    # is one) can be diagnosed from evidence instead of another guess.
+    print(f"[relay {time.monotonic():.3f}] {msg}", flush=True)
+
+
+log(f"connecting to arducopter over tcp:{TCP_ADDR[0]}:{TCP_ADDR[1]} ...")
+_connect_start = time.monotonic()
 tcp_conn = mavutil.mavlink_connection(f"tcp:{TCP_ADDR[0]}:{TCP_ADDR[1]}")
+log(f"tcp connect() returned after {time.monotonic() - _connect_start:.3f}s")
 # No explicit bind: the OS assigns this socket a stable ephemeral local
 # port on first use, which is fine - clients learn our address from the
 # first packet they receive from us and reply there.
 udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 udp_sock.settimeout(1.0)
 
+_first_udp_from_client = True
+_first_tcp_msg = True
+_heartbeats_sent = 0
+
 
 def udp_to_tcp():
+    global _first_udp_from_client
     while True:
         try:
-            data, _addr = udp_sock.recvfrom(4096)
+            data, addr = udp_sock.recvfrom(4096)
         except socket.timeout:
             continue
-        except OSError:
+        except OSError as e:
             # e.g. a stale client's port becoming unreachable (ICMP) between
             # tests - transient, not fatal to the relay itself.
+            log(f"udp recvfrom() OSError (transient, continuing): {e!r}")
             continue
+        if _first_udp_from_client:
+            log(f"first UDP packet ever received, from {addr}, {len(data)} bytes - forwarding to TCP")
+            _first_udp_from_client = False
         try:
             tcp_conn.write(data)
-        except OSError:
-            pass
+        except OSError as e:
+            log(f"tcp_conn.write() OSError: {e!r}")
 
 
 def tcp_to_udp():
@@ -72,15 +94,36 @@ def tcp_to_udp():
     # ArduPilot really does close the one connection it will ever accept,
     # there is nothing to reconnect to, so all this relay can do is log
     # quietly and keep idling rather than spin.
+    global _first_tcp_msg
+    eof_count = 0
+    last_eof_log = 0.0
     while True:
         msg = tcp_conn.recv_match(type=None, blocking=False)
         if msg is None:
             time.sleep(0.05)
             continue
+        if msg.get_type() == "BAD_DATA":
+            # pymavlink's handle_eof()/handle_disconnect() print their own
+            # unconditional message and return None from recv() - they
+            # don't surface as a BAD_DATA msg or raise, so this branch is
+            # currently unreachable, but kept as a documented non-goal:
+            # this relay does not attempt to distinguish "no data yet" from
+            # "socket is dead" beyond what its own throttled loop already
+            # bounds, since ArduPilot accepts only one TCP connection ever
+            # - there is nothing to reconnect to either way.
+            eof_count += 1
+            now = time.monotonic()
+            if now - last_eof_log > 5:
+                log(f"BAD_DATA from tcp_conn ({eof_count} total so far)")
+                last_eof_log = now
+            continue
+        if _first_tcp_msg:
+            log(f"first real MAVLink message from arducopter: {msg.get_type()}")
+            _first_tcp_msg = False
         try:
             udp_sock.sendto(msg.get_msgbuf(), UDP_DEST)
-        except OSError:
-            pass
+        except OSError as e:
+            log(f"udp_sock.sendto() OSError: {e!r}")
 
 
 def tcp_heartbeat():
@@ -93,16 +136,20 @@ def tcp_heartbeat():
     # never hits this, but this relay is the one holding the TCP side open
     # before any dronekit client exists, so it needs to do the same thing
     # itself from the moment it connects.
+    global _heartbeats_sent
     while True:
         try:
             tcp_conn.mav.heartbeat_send(mavutil.mavlink.MAV_TYPE_GCS, mavutil.mavlink.MAV_AUTOPILOT_INVALID, 0, 0, 0)
-        except OSError:
-            pass
+            _heartbeats_sent += 1
+            if _heartbeats_sent <= 3:
+                log(f"sent GCS heartbeat #{_heartbeats_sent} to arducopter")
+        except OSError as e:
+            log(f"tcp_conn.mav.heartbeat_send() OSError: {e!r}")
         time.sleep(1)
 
 
 if __name__ == "__main__":
     threading.Thread(target=udp_to_tcp, daemon=True).start()
     threading.Thread(target=tcp_heartbeat, daemon=True).start()
-    print(f"relay: tcp:{TCP_ADDR[0]}:{TCP_ADDR[1]} <-> udp (sending to {UDP_DEST[0]}:{UDP_DEST[1]})", flush=True)
+    log(f"relay running: tcp:{TCP_ADDR[0]}:{TCP_ADDR[1]} <-> udp (sending to {UDP_DEST[0]}:{UDP_DEST[1]})")
     tcp_to_udp()
