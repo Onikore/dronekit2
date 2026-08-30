@@ -59,7 +59,7 @@ def test_wait_for_timeout_uses_monotonic_not_walltime(monkeypatch):
     monkeypatch.setattr(dronekit.time, "time", boom)
 
     with pytest.raises(DKTimeoutError):
-        Vehicle.wait_for(None, lambda: False, timeout=0.05, interval=0.02)
+        Vehicle.wait_for(None, lambda: False, timeout=0.05, interval=0.02)  # type: ignore[arg-type]
 
 
 class _StubMaster:
@@ -92,7 +92,7 @@ def test_command_sequence_upload_timeout_uses_monotonic_not_walltime(monkeypatch
 
     monkeypatch.setattr(dronekit.time, "time", boom)
 
-    cmds = CommandSequence(_StubVehicleForUpload())
+    cmds = CommandSequence(_StubVehicleForUpload())  # type: ignore[arg-type]
     with pytest.raises(DKTimeoutError):
         cmds.upload(timeout=0.05)
 

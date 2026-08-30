@@ -2,7 +2,7 @@ import time
 
 
 def assert_readback(vehicle, values):
-    i = 10
+    i = 10.0
     while i > 0:
         time.sleep(0.1)
         i -= 0.1
