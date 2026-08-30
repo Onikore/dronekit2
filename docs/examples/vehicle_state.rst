@@ -149,9 +149,9 @@ In summary, after cloning the repository:
         Remove Vehicle attribute observer
 
        Read and write parameters
-        Read vehicle param 'THR_MIN': 130.0
-        Write vehicle param 'THR_MIN' : 10
-        Read new value of param 'THR_MIN': 10.0
+        Read vehicle param 'MOT_SPIN_MIN': 0.15
+        Write vehicle param 'MOT_SPIN_MIN' : 0.10
+        Read new value of param 'MOT_SPIN_MIN': 0.1
 
        Print all parameters (iterate `vehicle.parameters`):
         Key:RC7_REV Value:1.0
@@ -163,20 +163,20 @@ In summary, after cloning the repository:
         Key:BATT_CURR_PIN Value:12.0
 
        Create parameter observer using decorator
-       Write vehicle param 'THR_MIN' : 20 (and wait for callback)
-        PARAMETER CALLBACK: THR_MIN changed to: 20.0
+       Write vehicle param 'MOT_SPIN_MIN' : 0.20 (and wait for callback)
+        PARAMETER CALLBACK: MOT_SPIN_MIN changed to: 0.2
 
        Create (removable) observer for any parameter using wildcard string
-        Change THR_MID and THR_MIN parameters (and wait for callback)
-        ANY PARAMETER CALLBACK: THR_MID changed to: 400.0
-        PARAMETER CALLBACK: THR_MIN changed to: 30.0
-        ANY PARAMETER CALLBACK: THR_MIN changed to: 30.0
+        Change MOT_SPIN_ARM and MOT_SPIN_MIN parameters (and wait for callback)
+        ANY PARAMETER CALLBACK: MOT_SPIN_ARM changed to: 0.08
+        PARAMETER CALLBACK: MOT_SPIN_MIN changed to: 0.3
+        ANY PARAMETER CALLBACK: MOT_SPIN_MIN changed to: 0.3
 
        Reset vehicle attributes/parameters and exit
        >>> DISARMING MOTORS
-        PARAMETER CALLBACK: THR_MIN changed to: 130.0
-        ANY PARAMETER CALLBACK: THR_MIN changed to: 130.0
-        ANY PARAMETER CALLBACK: THR_MID changed to: 500.0
+        PARAMETER CALLBACK: MOT_SPIN_MIN changed to: 0.15
+        ANY PARAMETER CALLBACK: MOT_SPIN_MIN changed to: 0.15
+        ANY PARAMETER CALLBACK: MOT_SPIN_ARM changed to: 0.1
 
        Close vehicle object
        Completed   

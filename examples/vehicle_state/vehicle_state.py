@@ -7,7 +7,7 @@ vehicle_state.py:
 Demonstrates how to get and set vehicle state and parameter information,
 and how to observe vehicle attribute (state) changes.
 
-Full documentation is provided at http://python.dronekit.io/examples/vehicle_state.html
+Full documentation is provided at https://github.com/Onikore/dronekit2/blob/main/docs/examples/vehicle_state.rst
 """
 
 import os
@@ -210,11 +210,11 @@ vehicle.remove_attribute_listener("*", wildcard_callback)
 
 # Get/Set Vehicle Parameters
 print("\nRead and write parameters")
-print(f" Read vehicle param 'THR_MIN': {vehicle.parameters['THR_MIN']}")
+print(f" Read vehicle param 'MOT_SPIN_MIN': {vehicle.parameters['MOT_SPIN_MIN']}")
 
-print(" Write vehicle param 'THR_MIN' : 10")
-vehicle.parameters["THR_MIN"] = 10
-print(f" Read new value of param 'THR_MIN': {vehicle.parameters['THR_MIN']}")
+print(" Write vehicle param 'MOT_SPIN_MIN' : 0.10")
+vehicle.parameters["MOT_SPIN_MIN"] = 0.10
+print(f" Read new value of param 'MOT_SPIN_MIN': {vehicle.parameters['MOT_SPIN_MIN']}")
 
 
 print("\nPrint all parameters (iterate `vehicle.parameters`):")
@@ -228,16 +228,16 @@ print("\nCreate parameter observer using decorator")
 # Observer added using decorator can't be removed.
 
 
-@vehicle.parameters.on_attribute("THR_MIN")
-def decorated_thr_min_callback(self, attr_name, value):
+@vehicle.parameters.on_attribute("MOT_SPIN_MIN")
+def decorated_mot_spin_min_callback(self, attr_name, value):
     print(f" PARAMETER CALLBACK: {attr_name} changed to: {value}")
 
 
-print("Write vehicle param 'THR_MIN' : 20 (and wait for callback)")
-vehicle.parameters["THR_MIN"] = 20
+print("Write vehicle param 'MOT_SPIN_MIN' : 0.20 (and wait for callback)")
+vehicle.parameters["MOT_SPIN_MIN"] = 0.20
 for _ in range(1, 5):
     # Callbacks may not be updated for a few seconds
-    if vehicle.parameters["THR_MIN"] == 20:
+    if vehicle.parameters["MOT_SPIN_MIN"] == 0.20:
         break
     time.sleep(1)
 
@@ -252,17 +252,17 @@ def any_parameter_callback(self, attr_name, value):
 
 # Add observer for the vehicle's any/all parameters parameter (defined using wildcard string ``'*'``)
 vehicle.parameters.add_attribute_listener("*", any_parameter_callback)
-print(" Change THR_MID and THR_MIN parameters (and wait for callback)")
-vehicle.parameters["THR_MID"] = 400
-vehicle.parameters["THR_MIN"] = 30
+print(" Change MOT_SPIN_ARM and MOT_SPIN_MIN parameters (and wait for callback)")
+vehicle.parameters["MOT_SPIN_ARM"] = 0.08
+vehicle.parameters["MOT_SPIN_MIN"] = 0.30
 
 
 ## Reset variables to sensible values.
 print("\nReset vehicle attributes/parameters and exit")
 vehicle.mode = VehicleMode("STABILIZE")
 # vehicle.armed = False
-vehicle.parameters["THR_MIN"] = 130
-vehicle.parameters["THR_MID"] = 500
+vehicle.parameters["MOT_SPIN_MIN"] = 0.15
+vehicle.parameters["MOT_SPIN_ARM"] = 0.10
 
 
 # Close vehicle object before exiting script

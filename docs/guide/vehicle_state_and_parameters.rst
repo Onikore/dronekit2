@@ -369,13 +369,14 @@ Getting parameters
 The parameters are read using the parameter name as a key (case-insensitive). Reads will always succeed unless you 
 attempt to access an unsupported parameter (which will result in a ``KeyError`` exception).
    
-The code snippet below shows how to get the Minimum Throttle (THR_MIN) setting. On Copter and Rover (not Plane), this is the minimum PWM setting for the 
-throttle at which the motors will keep spinning.
+The code snippet below shows how to get the Minimum Motor Spin (MOT_SPIN_MIN) setting. On Copter,
+this is the minimum throttle (as a fraction of full range, ``0`` to ``1``) sent to the motors
+when armed and the throttle stick is at zero, so they keep spinning rather than stopping.
 
 .. code:: python
 
-    # Print the value of the THR_MIN parameter.
-    print("Param: %s" % vehicle.parameters['THR_MIN'])
+    # Print the value of the MOT_SPIN_MIN parameter.
+    print(f"Param: {vehicle.parameters['MOT_SPIN_MIN']}")
 
 
 
@@ -386,8 +387,8 @@ Vehicle parameters are set as shown in the code fragment below, using the parame
 
 .. code:: python
 
-    # Change the parameter value (Copter, Rover)
-    vehicle.parameters['THR_MIN']=100
+    # Change the parameter value (Copter)
+    vehicle.parameters['MOT_SPIN_MIN'] = 0.1
 
     
 .. _vehicle_state_iterating_parameters:
@@ -419,15 +420,15 @@ The parameters are cached, so that callback functions are only invoked when para
     Observing parameters is virtually identical to :ref:`observing attributes <vehicle_state_observe_attributes>`.
 
 
-The code snippet below shows how to add a callback function to observe changes in the "THR_MIN"
-parameter using a decorator. Note that the parameter name is case-insensitive, and that callbacks
-added using a decorator cannot be removed.
+The code snippet below shows how to add a callback function to observe changes in the
+"MOT_SPIN_MIN" parameter using a decorator. Note that the parameter name is case-insensitive, and
+that callbacks added using a decorator cannot be removed.
 
 .. code-block:: python
-     
-    @vehicle.parameters.on_attribute('THR_MIN')  
-    def decorated_thr_min_callback(self, attr_name, value):
-        print(" PARAMETER CALLBACK: %s changed to: %s" % (attr_name, value))
+
+    @vehicle.parameters.on_attribute('MOT_SPIN_MIN')
+    def decorated_mot_spin_min_callback(self, attr_name, value):
+        print(f" PARAMETER CALLBACK: {attr_name} changed to: {value}")
 
 The ``observer`` callback function is invoked with the following arguments:
         
