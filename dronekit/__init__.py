@@ -1,4 +1,3 @@
-# DroneAPI module
 """
 This is the API Reference for the DroneKit-Python API.
 
