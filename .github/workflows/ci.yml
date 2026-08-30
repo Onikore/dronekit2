@@ -142,35 +142,60 @@ jobs:
           import sys, time
           from pymavlink import mavutil
 
-          # ArduPilot's SITL TCP driver can accept a connection before it is
-          # actually ready to hold it open (SERIAL0 listen() happens very
-          # early in boot, well before physics/AHRS settle) and then close
-          # it - confirmed against a real CI run: the server log showed one
-          # 'Connection on serial port 5760' and nothing after, while the
-          # client spammed ~220k 'EOF on TCP socket' lines in ~30s. Cause:
-          # pymavlink's mavtcp defaults to autoreconnect=False, so handle_eof()
-          # never actually reconnects; and select() on an already-EOF'd
-          # socket returns 'readable' immediately forever (reading it just
-          # yields 0 bytes again), so recv_match()'s own throttling never
-          # kicks in either - a true zero-delay busy loop on a dead socket.
-          # Fix: build a brand new connection object (and explicitly close
-          # the dead one) on every attempt instead of trusting pymavlink's
-          # own reconnect, with a short per-attempt timeout and an explicit
-          # sleep between attempts.
+          # Confirmed against two real CI runs (not guessed): the server log
+          # showed exactly one 'Connection on serial port 5760' and nothing
+          # after, while the client spammed tens/hundreds of thousands of
+          # 'EOF on TCP socket' lines. Root cause: dronekit's own Vehicle
+          # sends a GCS heartbeat once a second from the moment it connects
+          # (see Vehicle.initialize()'s forward_loop listener, which calls
+          # self._master.mav.heartbeat_send(...)) - real dronekit clients
+          # never hit this. This diagnostic script was a bare pymavlink
+          # client that only ever *read*, never wrote anything back, and
+          # ArduPilot's serial-over-TCP emulation appears to treat a
+          # silent client as a dead line and closes it almost immediately
+          # after accepting it. Fixed by sending a GCS heartbeat ourselves,
+          # matching what dronekit itself does.
+          #
+          # Second, independent belt-and-braces fix: use recv_match(blocking
+          # =False) in a manually-paced loop instead of wait_heartbeat()'s
+          # blocking=True path. wait_heartbeat() relies on pymavlink's own
+          # select()-based throttling internally, which does not actually
+          # throttle once a socket is EOF'd - select() reports an EOF'd
+          # socket 'readable' immediately forever (reading it just yields 0
+          # bytes again), so that inner loop can spin at full CPU speed with
+          # zero delay. A single non-blocking check per outer-loop iteration,
+          # paced by our own explicit sleep, cannot spin regardless of what
+          # the socket is doing - so even if the heartbeat fix above doesn't
+          # fully prevent the server from ever closing the connection, this
+          # bounds the worst case to a few log lines per second, not
+          # thousands.
           deadline = time.time() + 60
           msg = None
+          conn = None
+          last_heartbeat_sent = 0.0
           while time.time() < deadline and msg is None:
-              conn = None
+              if conn is None:
+                  try:
+                      conn = mavutil.mavlink_connection('tcp:127.0.0.1:5760')
+                  except (ConnectionRefusedError, ConnectionResetError, BrokenPipeError):
+                      conn = None
+                      time.sleep(1)
+                      continue
+              now = time.time()
+              if now - last_heartbeat_sent > 1:
+                  try:
+                      conn.mav.heartbeat_send(mavutil.mavlink.MAV_TYPE_GCS, mavutil.mavlink.MAV_AUTOPILOT_INVALID, 0, 0, 0)
+                  except (BrokenPipeError, ConnectionResetError, OSError):
+                      pass
+                  last_heartbeat_sent = now
               try:
-                  conn = mavutil.mavlink_connection('tcp:127.0.0.1:5760')
-                  msg = conn.wait_heartbeat(timeout=1)
-              except (ConnectionRefusedError, ConnectionResetError, BrokenPipeError):
-                  pass
-              finally:
-                  if conn is not None:
-                      conn.close()
+                  msg = conn.recv_match(type='HEARTBEAT', blocking=False)
+              except (ConnectionResetError, BrokenPipeError, OSError):
+                  msg = None
               if msg is None:
-                  time.sleep(1)
+                  time.sleep(0.2)
+          if conn is not None:
+              conn.close()
           if msg is None:
               print('Timed out waiting for a heartbeat from SITL', file=sys.stderr)
               sys.exit(1)
