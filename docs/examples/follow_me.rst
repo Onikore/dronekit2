@@ -22,11 +22,13 @@ DroneKit (for Linux) and the vehicle should be set up as described in :ref:`inst
 
 Once you've done that:
 
-#. Install the *gpsd* service (as shown for Ubuntu Linux below):
+#. Install the *gpsd* service, its command-line clients, and its Python bindings (as shown for
+   Ubuntu Linux below - the script does ``import gps``, which ``gpsd``/``gpsd-clients`` alone do
+   not provide):
 
    .. code-block:: bash
 
-       sudo apt-get install gpsd gpsd-clients
+       sudo apt-get install gpsd gpsd-clients python3-gps
 
    You can then plug in a USB GPS and run the "xgps" client to confirm that it is working.
    
@@ -76,10 +78,10 @@ Once you've done that:
         ...
         Altitude:  4.76000022888
        Reached target altitude
-       Going to: Location:lat=50.616468333,lon=7.131903333,alt=30,is_relative=True
+       Going to: LocationGlobalRelative:lat=50.616468333,lon=7.131903333,alt=30
        ...
-       Going to: Location:lat=50.616468333,lon=7.131903333,alt=30,is_relative=True
-       Going to: Location:lat=50.616468333,lon=7.131903333,alt=30,is_relative=True
+       Going to: LocationGlobalRelative:lat=50.616468333,lon=7.131903333,alt=30
+       Going to: LocationGlobalRelative:lat=50.616468333,lon=7.131903333,alt=30
        User has changed flight modes - aborting follow-me
        Close vehicle object
        Completed
@@ -117,31 +119,30 @@ the mode is changed.
 .. code-block:: python
 
     import gps
-    import socket
-    
+
     ...
 
     try:
         # Use the python gps package to access the laptop GPS
         gpsd = gps.gps(mode=gps.WATCH_ENABLE)
 
-        #Arm and take off to an altitude of 5 meters
+        # Arm and take off to an altitude of 5 meters
         arm_and_takeoff(5)
 
         while True:
-        
+
             if vehicle.mode.name != "GUIDED":
                 print("User has changed flight modes - aborting follow-me")
-                break    
-                
+                break
+
             # Read the GPS state from the laptop
-            gpsd.next()
+            next(gpsd)
 
             # Once we have a valid location (see gpsd documentation) we can start moving our vehicle around
             if (gpsd.valid & gps.LATLON_SET) != 0:
                 altitude = 30  # in meters
                 dest = LocationGlobalRelative(gpsd.fix.latitude, gpsd.fix.longitude, altitude)
-                print("Going to: %s" % dest)
+                print(f"Going to: {dest}")
 
                 # A better implementation would only send new waypoints if the position had changed significantly
                 vehicle.simple_goto(dest)
@@ -149,8 +150,8 @@ the mode is changed.
                 # Send a new target every two seconds
                 # For a complete implementation of follow me you'd want adjust this delay
                 time.sleep(2)
-                
-    except socket.error:
+
+    except OSError:
         print("Error: gpsd service does not seem to be running, plug in USB GPS or run run-fake-gps.sh")
         sys.exit(1)
 
