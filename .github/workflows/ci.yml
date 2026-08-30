@@ -106,11 +106,39 @@ jobs:
     # the job; still continue-on-error since a live pytest run against it has
     # never actually been observed to pass in this repo's CI yet.
     #
-    # Running the binary directly (no sim_vehicle.py/MAVProxy wrapper) means
-    # it listens on plain TCP, not UDP: SERIAL0 defaults to TCP port 5760
-    # (5760 + 10 * instance number), which is why DRONEKIT_TEST_CONNECTION
-    # here is tcp:127.0.0.1:5760, not a udp: string like earlier attempts at
-    # this job used.
+    # Architecture, worked out the hard way across several real CI runs: the
+    # arducopter binary run directly (no wrapper) accepts exactly ONE TCP
+    # connection for the entire life of the process - confirmed directly
+    # from logs (one real connection got ConnectionResetError, every attempt
+    # after it got ConnectionRefusedError, meaning the server had stopped
+    # accepting entirely). That's fatal for this test suite's `vehicle`
+    # fixture, which is function-scoped and opens a fresh connection per
+    # test - the first test's teardown closes the only connection SITL will
+    # ever accept, and every test after it fails setup with "Timeout in
+    # initializing connection" (confirmed: that's exactly what happened when
+    # dronekit.connect() talked to the binary directly over TCP).
+    #
+    # Fixed by putting a relay in front of it - not to build anything (still
+    # using the prebuilt binary above), only to multiplex: something needs
+    # to become the one TCP client arducopter will ever accept, and
+    # rebroadcast everything over UDP, which has no such per-connection
+    # limit - any number of tests can open and close a UDP "connection" to
+    # it freely. This is exactly why the very first version of this job
+    # (before it was rewritten to build from source, then to talk raw TCP)
+    # used sim_vehicle.py's --out=udp:... in the first place.
+    #
+    # That relay is scripts/ci_sitl_relay.py - a ~30-line hand-rolled
+    # TCP<->UDP forwarder, not MAVProxy. MAVProxy was tried first (it's the
+    # standard tool for exactly this), but its CLI entry point imports `wx`
+    # (wxPython) unconditionally at module load, even with
+    # --daemon --non-interactive: a known, still-open upstream issue
+    # (ArduPilot/MAVProxy#592), reproduced locally here, not assumed. Fixing
+    # that would mean installing system GTK packages this job has no other
+    # reason to carry, for a dependency this job never actually needs (no
+    # GUI, no map, no console - just relay bytes). The hand-rolled version
+    # was tested end-to-end locally first (a fake single-connection TCP
+    # ArduPilot server + 3 sequential UDP clients, all getting a heartbeat)
+    # before being trusted here.
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
@@ -137,27 +165,11 @@ jobs:
           disown
 
       - name: Wait for SITL's log to show it's listening
-        # Three earlier attempts at this step all made a TCP probe connection
-        # of their own before pytest ran, and all three converged on the same
-        # discovery: ArduPilot's SITL, run directly (no sim_vehicle.py/
-        # MAVProxy in front of it), accepts exactly ONE TCP connection for
-        # the life of the process - confirmed directly from real CI logs:
-        # session 1 got ConnectionResetError, and every one of sessions 2-25
-        # after it got ConnectionRefusedError, meaning the server had
-        # stopped accepting entirely, not just dropping that one client.
-        # Any prior probe connection - even a bare connect-and-close that
-        # never sent a byte - burns that one slot, and pytest's own
-        # dronekit.connect() then finds the port refusing connections.
-        #
-        # So this step makes zero network connections. It just polls the
-        # binary's own stdout/stderr log for the "Waiting for connection"
-        # line it prints once bind()+listen() succeed, which needs no
-        # socket at all. The actual (only, real) TCP connection is made by
-        # dronekit.connect() inside the "pytest -m sitl" step below, via
-        # the `vehicle` fixture in dronekit/test/conftest.py, which already
-        # has its own 30s timeout and sends a correct GCS heartbeat via
-        # Vehicle.initialize()'s forward_loop listener - no need to
-        # reimplement that logic here at all.
+        # Makes zero network connections of its own - see the job-level
+        # comment above for why that matters here. Just polls the binary's
+        # own log for the "Waiting for connection" line it prints once
+        # bind()+listen() succeeds, so the relay (the next step) doesn't try
+        # to be the one-and-only client before the port actually exists.
         run: |
           deadline=$((SECONDS + 30))
           while [ $SECONDS -lt $deadline ]; do
@@ -172,14 +184,44 @@ jobs:
           cat /tmp/arducopter.log >&2 || true
           exit 1
 
+      - name: Launch the TCP<->UDP relay to multiplex the single TCP slot
+        run: |
+          nohup python scripts/ci_sitl_relay.py \
+            > /tmp/relay.log 2>&1 &
+          disown
+
+      - name: Wait for a MAVLink heartbeat over UDP (127.0.0.1:14550)
+        # Unlike the raw-TCP port, UDP has no connection limit, so a plain
+        # wait_heartbeat() retry loop here is safe - it doesn't consume
+        # anything pytest needs afterwards.
+        run: |
+          python -c "
+          import sys, time
+          from pymavlink import mavutil
+          deadline = time.time() + 60
+          conn = mavutil.mavlink_connection('udpin:127.0.0.1:14550')
+          msg = None
+          while time.time() < deadline and msg is None:
+              msg = conn.wait_heartbeat(timeout=5)
+          if msg is None:
+              print('Timed out waiting for a heartbeat over UDP', file=sys.stderr)
+              sys.exit(1)
+          print('Got heartbeat over UDP:', msg)
+          conn.close()
+          "
+
       - name: pytest -m sitl against live SITL
         env:
-          DRONEKIT_TEST_CONNECTION: "tcp:127.0.0.1:5760"
+          DRONEKIT_TEST_CONNECTION: "udp:127.0.0.1:14550"
         run: pytest dronekit/test -q -m sitl
 
       - name: SITL log (always, for debugging)
         if: always()
         run: cat /tmp/arducopter.log || true
+
+      - name: Relay log (always, for debugging)
+        if: always()
+        run: cat /tmp/relay.log || true
 
   docs:
     name: docs (sphinx)
