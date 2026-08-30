@@ -3,7 +3,8 @@
 
 ## Version 3.0.0
 
-This is the first release of this fork (PyPI package `dronekit2`, source at
+This is the first release of this fork (to be published as PyPI package `dronekit2` - see the
+[README](README.md#installing) for installing straight from source in the meantime; source at
 [github.com/Onikore/dronekit2](https://github.com/Onikore/dronekit2)), which picks up
 maintenance of DroneKit-Python after the upstream `dronekit`/`dronekit-python` project went
 dormant after 2.9.2. For the full upgrade guide (with code samples) see
@@ -47,8 +48,9 @@ dormant after 2.9.2. For the full upgrade guide (with code samples) see
 * **Test suite migrated from `nose` to `pytest`.** SITL-dependent tests are skipped
   automatically unless `DRONEKIT_TEST_CONNECTION` is set (works against either a local SITL
   instance or a real flight controller over serial).
-* **CI migrated to GitHub Actions**, replacing the old Travis/AppVeyor/CircleCI setup; releases
-  are published to PyPI via Trusted Publishing (`.github/workflows/release.yml`).
+* **CI migrated to GitHub Actions**, replacing the old Travis/AppVeyor/CircleCI setup; future
+  releases will publish to PyPI via Trusted Publishing (`.github/workflows/release.yml`) once the
+  package is first published there.
 * Internal: the `pymavlink.dialects.v10.ardupilotmega` import used for a few EKF status
   constants was switched to `v20` (the constants are identical between dialects - a no-op for
   behavior, done to standardize on the current dialect going forward).
