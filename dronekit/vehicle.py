@@ -801,7 +801,7 @@ class Vehicle(HasObservers):
     @property
     def wind(self) -> Wind | None:
         """
-        Current wind status (:pu:class: `Wind`)
+        Current wind status (:py:class:`Wind`)
         """
         if self._wind_direction is None or self._wind_speed is None or self._wind_speed_z is None:
             return None
@@ -1173,7 +1173,7 @@ class Vehicle(HasObservers):
 
         Wait for condition, a callable, to return True.  If timeout is
         nonzero, raise a TimeoutError(errmsg) if the condition is not
-        True after timeout seconds.  Check the condition everal
+        True after timeout seconds.  Check the condition every
         interval seconds.
         """
 
@@ -1201,7 +1201,7 @@ class Vehicle(HasObservers):
         """Arm the vehicle.
 
         If wait is True, wait for arm operation to complete before
-        returning.  If timeout is nonzero, raise a TimeouTerror if the
+        returning.  If timeout is nonzero, raise a TimeoutError if the
         vehicle has not armed after timeout seconds.
         """
 
@@ -1214,7 +1214,7 @@ class Vehicle(HasObservers):
         """Disarm the vehicle.
 
         If wait is True, wait for disarm operation to complete before
-        returning.  If timeout is nonzero, raise a TimeouTerror if the
+        returning.  If timeout is nonzero, raise a TimeoutError if the
         vehicle has not disarmed after timeout seconds.
         """
         self.armed = False
@@ -1223,9 +1223,8 @@ class Vehicle(HasObservers):
             self.wait_for(lambda: not self.armed, timeout=timeout, errmsg="failed to disarm vehicle")
 
     def wait_for_mode(self, mode: VehicleMode | str, timeout: float | None = None) -> None:
-        """Set the flight mode.
+        """Set the flight mode and wait for it to change before returning.
 
-        If wait is True, wait for the mode to change before returning.
         If timeout is nonzero, raise a TimeoutError if the flight mode
         hasn't changed after timeout seconds.
         """
@@ -1280,6 +1279,13 @@ class Vehicle(HasObservers):
         self.wait_for(check_alt, timeout=timeout, errmsg="failed to reach specified altitude")
 
     def wait_simple_takeoff(self, alt: float | None = None, epsilon: float = 0.1, timeout: float | None = None) -> None:
+        """Call :py:func:`simple_takeoff` and wait for the vehicle to reach altitude.
+
+        If alt is given, waits (via :py:func:`wait_for_alt`) for the vehicle to get within
+        epsilon meters of it before returning; if timeout is nonzero, raises a TimeoutError if
+        that altitude has not been reached after timeout seconds. If alt is None, returns as soon
+        as the takeoff command has been sent, without waiting.
+        """
         self.simple_takeoff(alt)
 
         if alt is not None:
