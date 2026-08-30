@@ -52,9 +52,13 @@ copyright = "2015-2026, 3D Robotics and dronekit2 contributors"
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
-# Read directly from dronekit.__version__ (which pyproject.toml's `version`
-# key also drives, via dronekit/__init__.py) instead of a second hardcoded
-# copy, so this can't drift out of sync the way a literal string here did.
+# Read directly from dronekit.__version__ instead of a third hardcoded copy,
+# so this can't drift out of sync the way a literal string here did. Note
+# this doesn't make dronekit.__version__ and pyproject.toml's `version` key
+# themselves linked - they're two independently-maintained literals
+# (dronekit/__init__.py, pyproject.toml) that still both need updating by
+# hand together; pyproject.toml has no `dynamic = ["version"]` sourcing
+# from the package.
 release = dronekit.__version__
 # The short X.Y version.
 version = ".".join(release.split(".")[:2])
