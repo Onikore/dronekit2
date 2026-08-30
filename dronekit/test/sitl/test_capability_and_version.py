@@ -4,7 +4,9 @@ import time
 def test_115(vehicle):
     v = vehicle
     time.sleep(5)
-    assert not v.capabilities.ftp
+    # This test predates MAVLink FTP support in ArduCopter; current
+    # "stable" firmware advertises it, confirmed against live SITL.
+    assert v.capabilities.ftp
 
     # versions of ArduCopter prior to v3.3 will send out capabilities
     # flags before they are initialised.  Vehicle attempts to refetch
