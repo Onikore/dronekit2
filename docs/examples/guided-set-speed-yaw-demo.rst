@@ -233,7 +233,7 @@ This takes a function argument of either :ref:`Vehicle.simple_goto() <guided_mod
         gotoFunction(targetLocation)
 
         while vehicle.mode.name=="GUIDED": #Stop action if we are no longer in guided mode.
-            remainingDistance=get_distance_metres(vehicle.location.global_frame, targetLocation)
+            remainingDistance=get_distance_metres(vehicle.location.global_relative_frame, targetLocation)
             print("Distance to target: ", remainingDistance)
             if remainingDistance<=targetDistance*0.01: #Just below target, in case of undershoot.
                 print("Reached target")
@@ -390,9 +390,11 @@ At time of writing, acceleration and yaw bits are ignored.
 Testbed settings
 ================
 
-This example has been tested on Windows against SITL running both natively and in a virtual machine (as described in :ref:`installing_dronekit`).
+This example was originally tested on Windows against SITL running both natively and in a
+virtual machine (as described in :ref:`installing_dronekit`), against the versions below - kept
+here as historical context, not a claim about what's tested against today.
 
-* DroneKit version: 2.0.2
+* DroneKit version: 2.0.2 (pre-fork)
 * ArduPilot version: 3.3
 
 
