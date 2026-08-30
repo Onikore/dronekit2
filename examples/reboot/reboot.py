@@ -26,3 +26,7 @@ vehicle = connect(connection_string, wait_ready=True)
 
 vehicle.reboot()
 time.sleep(1)
+
+# Close vehicle object before exiting script
+print("Close vehicle object")
+vehicle.close()
