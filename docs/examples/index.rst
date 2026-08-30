@@ -24,6 +24,10 @@ during missions and outside missions using custom commands.
    Flight Replay <flight_replay>
    Channel Overrides <channel_overrides>
    Performance Test <performance_test>
+   Reboot <reboot>
+   Play Tune <play_tune>
+   Set Attitude Target <set_attitude_target>
+   microGCS <microgcs>
    
 
 
