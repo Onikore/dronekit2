@@ -255,3 +255,43 @@ jobs:
 
       - name: sphinx-build
         run: sphinx-build -W -b html docs docs/_build/html
+
+  docs-deploy:
+    name: docs (deploy to GitHub Pages)
+    needs: docs
+    # Only main pushes actually publish - PRs still get the build-only
+    # `docs` job above as a gate, but nothing from a PR should touch the
+    # live Pages site before it's merged.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install docs dependencies
+        run: pip install -e ".[docs]"
+
+      - name: sphinx-build
+        run: sphinx-build -W -b html docs docs/_build/html
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/_build/html
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
