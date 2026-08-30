@@ -183,16 +183,15 @@ shown in :ref:`example_mission_basic`):
 
 .. code:: python
 
-    print("Generating %s waypoints from replay..." % len(messages))
+    print(f"Generating {len(messages)} waypoints from replay...")
     cmds = vehicle.commands
     cmds.clear()
-    for i in xrange(0, len(messages)):
-        pt = messages[i]
-        lat = pt['lat']
-        lon = pt['lon']
+    for pt in messages:
+        lat = pt.lat
+        lon = pt.lon
         # To prevent accidents we don't trust the altitude in the original flight, instead
         # we just put in a conservative cruising altitude.
-        altitude = 30.0 # pt['alt']
+        altitude = 30.0
         cmd = Command( 0,
                        0,
                        0,

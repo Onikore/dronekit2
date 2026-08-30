@@ -142,7 +142,7 @@ For example, the code snippet below polls the attribute values to confirm they h
     
     vehicle.mode = VehicleMode("GUIDED")
     vehicle.armed = True
-    while not vehicle.mode.name=='GUIDED' and not vehicle.armed and not api.exit:
+    while not vehicle.mode.name=='GUIDED' and not vehicle.armed:
         print(" Getting ready to take off ...")
         time.sleep(1)
 
@@ -401,8 +401,8 @@ Listing all parameters
 
     
     print("\nPrint all parameters (iterate `vehicle.parameters`):")
-    for key, value in vehicle.parameters.iteritems():
-        print(" Key:%s Value:%s" % (key,value))
+    for key, value in vehicle.parameters.items():
+        print(f" Key:{key} Value:{value}")
 
 
 

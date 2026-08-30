@@ -82,7 +82,7 @@ running the connect within a ``try-catch`` block as shown:
         print('Timeout!')
         
     # Other error
-    except:
+    except Exception:
         print('Some other error!')
 
 .. tip::

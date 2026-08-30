@@ -36,7 +36,7 @@ class RawIMU:
         xacc=None,
         yacc=None,
         zacc=None,
-        xygro=None,
+        xgyro=None,
         ygyro=None,
         zgyro=None,
         xmag=None,
@@ -50,7 +50,7 @@ class RawIMU:
         self.xacc = xacc
         self.yacc = yacc
         self.zacc = zacc
-        self.xgyro = zgyro
+        self.xgyro = xgyro
         self.ygyro = ygyro
         self.zgyro = zgyro
         self.xmag = xmag
