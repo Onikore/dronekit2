@@ -136,6 +136,18 @@ jobs:
     # with no per-connection state to exhaust). No relay, no MAVProxy, no
     # wx, no from-source build - the prebuilt binary already does this
     # natively.
+    #
+    # One catch found only by reading _tcp_start_connection() itself:
+    # SERIAL0's default device string is "tcp:0:wait", and that trailing
+    # ":wait" makes _begin() call a BLOCKING accept() right there, on the
+    # same thread that sequentially begin()s every other serial port
+    # afterwards. With no relay/probe left to connect to port 5760 (this is
+    # deliberate now - see above), that accept() blocks forever, so SERIAL1
+    # (and its --serial1=udpclient flag) never even gets initialized -
+    # confirmed by arducopter.log stopping dead at "Waiting for connection
+    # ...." with no later "UDP connection ..." line, in two real CI runs.
+    # Fixed by also overriding --serial0=tcp:0 (no ":wait"): SERIAL0 still
+    # listens (harmless, unused), but startup no longer blocks on it.
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
@@ -167,27 +179,28 @@ jobs:
           # trustworthy real-time signal instead of a delayed one.
           nohup stdbuf -oL -eL ./arducopter --model quad --instance 0 --speedup 1 \
             --home -35.363261,149.165230,584,353 --wipe \
+            --serial0=tcp:0 \
             --serial1=udpclient:127.0.0.1:14550 \
             > /tmp/arducopter.log 2>&1 &
           disown
 
-      - name: Wait for SITL's log to show it's listening
+      - name: Wait for SITL's log to show SERIAL1's UDP output is up
         # Makes zero network connections of its own - see the job-level
-        # comment above for why that matters here. Just polls the binary's
-        # own log for the "Waiting for connection" line it prints once
-        # bind()+listen() succeeds, so the heartbeat-wait step (next) doesn't
-        # race the UDP output being set up.
+        # comment above for why that matters here. Greps the binary's own
+        # log for the "UDP connection ..." line _begin() prints once it's
+        # parsed --serial1 and connect()ed the UDP socket, so the
+        # heartbeat-wait step (next) doesn't race that setup.
         run: |
           deadline=$((SECONDS + 30))
           while [ $SECONDS -lt $deadline ]; do
-            if grep -q "Waiting for connection" /tmp/arducopter.log 2>/dev/null; then
-              echo "SITL is listening:"
+            if grep -q "UDP connection 127.0.0.1:14550" /tmp/arducopter.log 2>/dev/null; then
+              echo "SITL's SERIAL1 UDP output is up:"
               cat /tmp/arducopter.log
               exit 0
             fi
             sleep 1
           done
-          echo "SITL never reached 'Waiting for connection' within 30s:" >&2
+          echo "SITL never printed 'UDP connection 127.0.0.1:14550' within 30s:" >&2
           cat /tmp/arducopter.log >&2 || true
           exit 1
 
