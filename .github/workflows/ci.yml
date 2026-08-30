@@ -126,10 +126,11 @@ jobs:
     # ArduPilot/MAVProxy#592, reproduced locally, not assumed).
     #
     # What actually works: arducopter has a second, independent UART, and
-    # --serial1=udp:127.0.0.1:14550 gives it its own dedicated UDP output,
-    # entirely separate from SERIAL0's TCP port (confirmed by reading
-    # ArduPilot's own source - libraries/AP_HAL_SITL/UARTDriver.cpp's
-    # _udp_start_client() - the "one connection" limit is specific to
+    # --serial1=udpclient:127.0.0.1:14550 gives it its own dedicated UDP
+    # output, entirely separate from SERIAL0's TCP port (confirmed by
+    # reading ArduPilot's own source - libraries/AP_HAL_SITL/UARTDriver.cpp's
+    # _begin(), which parses "udpclient:host:port" as a distinct device type
+    # from "tcp"/"tcpclient" - the "one connection" limit is specific to
     # SERIAL0's TCP accept() loop and does not apply here at all: this is a
     # plain UDP socket that connect()s to a fixed peer and send()s to it,
     # with no per-connection state to exhaust). No relay, no MAVProxy, no
@@ -166,7 +167,7 @@ jobs:
           # trustworthy real-time signal instead of a delayed one.
           nohup stdbuf -oL -eL ./arducopter --model quad --instance 0 --speedup 1 \
             --home -35.363261,149.165230,584,353 --wipe \
-            --serial1=udp:127.0.0.1:14550 \
+            --serial1=udpclient:127.0.0.1:14550 \
             > /tmp/arducopter.log 2>&1 &
           disown
 
