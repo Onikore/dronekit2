@@ -146,8 +146,14 @@ jobs:
     # (and its --serial1=udpclient flag) never even gets initialized -
     # confirmed by arducopter.log stopping dead at "Waiting for connection
     # ...." with no later "UDP connection ..." line, in two real CI runs.
-    # Fixed by also overriding --serial0=tcp:0 (no ":wait"): SERIAL0 still
-    # listens (harmless, unused), but startup no longer blocks on it.
+    # Fixed with --serial0=none (SERIAL0 is unused here - all MAVLink
+    # traffic goes over SERIAL1 - so it's skipped outright rather than left
+    # bound-but-idle on port 5760: dronekit/test/sitl/test_timeout.py's
+    # test_timeout_empty binds its own dummy server on that exact port, and
+    # a real CI run confirmed the collision - "Address already in use" -
+    # once SERIAL0 was changed to listen instead of blocking. Verified
+    # locally in Docker that --serial0=none boots cleanly, SERIAL1 still
+    # comes up immediately, and port 5760 is free again.
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
@@ -196,7 +202,7 @@ jobs:
             stdbuf -oL -eL ./arducopter --model quad --instance 0 --speedup 1 \
               --home -35.363261,149.165230,584,353 --wipe \
               --defaults copter.parm \
-              --serial0=tcp:0 \
+              --serial0=none \
               --serial1=udpclient:127.0.0.1:14550 \
               >> /tmp/arducopter.log 2>&1
             echo "=== arducopter exited with status $? ===" >> /tmp/arducopter.log
