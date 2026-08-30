@@ -72,11 +72,11 @@ In summary, after cloning the repository:
        Set Ch3 override to 300 (dictionary syntax)
         Channel overrides: {'3': 300}
        Set Ch1-Ch8 overrides to 110-810 respectively
-        Channel overrides: {'1': 110, '3': 310, '2': 210, '5': 510, '4': 4100, '7': 710, '6': 610, '8': 810}
+        Channel overrides: {'1': 110, '3': 310, '2': 210, '5': 510, '4': 410, '7': 710, '6': 610, '8': 810}
         Cancel Ch2 override (indexing syntax)
-        Channel overrides: {'1': 110, '3': 310, '5': 510, '4': 4100, '7': 710, '6': 610, '8': 810}
+        Channel overrides: {'1': 110, '3': 310, '5': 510, '4': 410, '7': 710, '6': 610, '8': 810}
        Clear Ch3 override (del syntax)
-        Channel overrides: {'1': 110, '5': 510, '4': 4100, '7': 710, '6': 610, '8': 810}
+        Channel overrides: {'1': 110, '5': 510, '4': 410, '7': 710, '6': 610, '8': 810}
        Clear Ch5, Ch6 override and set channel 3 to 500 (dictionary syntax)
         Channel overrides: {'3': 500}
        Clear all overrides

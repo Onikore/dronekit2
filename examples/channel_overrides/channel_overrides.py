@@ -14,7 +14,7 @@ for simulating user input and when implementing certain types of joystick contro
 They are provided for development purposes. Please raise an issue explaining why you need them
 and we will try to find a better alternative: https://github.com/dronekit/dronekit-python/issues
 
-Full documentation is provided at http://python.dronekit.io/examples/channel_overrides.html
+Full documentation is provided at https://github.com/Onikore/dronekit2/blob/main/docs/examples/channel_overrides.rst
 """
 
 import os
@@ -70,7 +70,7 @@ vehicle.channels.overrides = {"3": 300}
 print(f" Channel overrides: {vehicle.channels.overrides}")
 
 print("Set Ch1-Ch8 overrides to 110-810 respectively")
-vehicle.channels.overrides = {"1": 110, "2": 210, "3": 310, "4": 4100, "5": 510, "6": 610, "7": 710, "8": 810}
+vehicle.channels.overrides = {"1": 110, "2": 210, "3": 310, "4": 410, "5": 510, "6": 610, "7": 710, "8": 810}
 print(f" Channel overrides: {vehicle.channels.overrides}")
 
 
