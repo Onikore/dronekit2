@@ -91,7 +91,7 @@ jobs:
     name: sitl (ArduPilot SITL, best-effort)
     needs: test
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     # Uses ArduPilot's own official prebuilt SITL binary
     # (firmware.ardupilot.org/Copter/stable/SITL_x86_64_linux_gnu/arducopter -
     # verified reachable, HTTP 200, ~7 MB) instead of cloning the whole
@@ -197,14 +197,20 @@ jobs:
         # comment above for why that matters here. Greps the binary's own
         # log for the "UDP connection ..." line _begin() prints once it's
         # parsed --serial1 and connect()ed the UDP socket, so the
-        # heartbeat-wait step (next) doesn't race that setup. Verified
-        # locally this line lands in well under 1s. A real CI run with a 90s
-        # deadline still hadn't reached it - identical log signature to the
-        # fast local case, just far slower, pointing at CPU throttling on
-        # the shared runner rather than a logic bug. 180s buys real margin;
-        # the job's own timeout-minutes was raised to match.
+        # heartbeat-wait step (next) doesn't race that setup.
+        #
+        # PROVISIONAL/diagnostic: two real CI runs both stopped dead at
+        # "Smoothing reset at 0.001" (the first FDM physics tick - so the
+        # process genuinely reached its main loop, this isn't stuck in
+        # setup()) and never printed the UDP connection line even after a
+        # full 180s, while a local Docker run with the identical binary and
+        # flags reached it in under 1s. That's a real behavioral difference
+        # between this runner and Docker, not just slowness - so instead of
+        # continuing to guess timeout values, this now attaches strace to
+        # the still-running process on timeout and dumps what syscall it's
+        # actually blocked in, to diagnose from evidence next run.
         run: |
-          deadline=$((SECONDS + 180))
+          deadline=$((SECONDS + 30))
           while [ $SECONDS -lt $deadline ]; do
             if grep -q "UDP connection 127.0.0.1:14550" /tmp/arducopter.log 2>/dev/null; then
               echo "SITL's SERIAL1 UDP output is up:"
@@ -213,8 +219,19 @@ jobs:
             fi
             sleep 1
           done
-          echo "SITL never printed 'UDP connection 127.0.0.1:14550' within 180s:" >&2
+          echo "SITL never printed 'UDP connection 127.0.0.1:14550' within 30s:" >&2
           cat /tmp/arducopter.log >&2 || true
+          pid=$(pgrep -x arducopter || true)
+          if [ -n "$pid" ]; then
+            command -v strace >/dev/null 2>&1 || sudo apt-get install -y -qq strace >&2
+            echo "Attaching strace to pid $pid for 5s to see what it's blocked on:" >&2
+            sudo strace -f -tt -p "$pid" -o /tmp/strace.log &
+            strace_pid=$!
+            sleep 5
+            kill "$strace_pid" 2>/dev/null || true
+            wait "$strace_pid" 2>/dev/null || true
+            cat /tmp/strace.log >&2 || true
+          fi
           exit 1
 
       - name: Wait for a MAVLink heartbeat over UDP (127.0.0.1:14550)
