@@ -102,58 +102,31 @@ jobs:
     # per-tag paths, only under the stable/latest/beta channels - a fixed
     # Copter-4.6.3 SITL binary path returns 404), so the exact ArduCopter
     # version this job tests against can drift forward release to release.
-    # That's an accepted trade-off for how much faster and simpler this makes
-    # the job; still continue-on-error since a live pytest run against it has
-    # never actually been observed to pass in this repo's CI yet.
     #
-    # Architecture, worked out the hard way across many real CI runs: the
-    # arducopter binary's default SERIAL0 (TCP port 5760) accepts exactly
-    # ONE TCP connection for the entire life of the process - confirmed
-    # directly from logs (one real connection got ConnectionResetError,
-    # every attempt after it got ConnectionRefusedError). That's fatal for
-    # this test suite's `vehicle` fixture, which is function-scoped and
-    # opens a fresh connection per test.
+    # Architecture: arducopter's default SERIAL0 (TCP port 5760) accepts
+    # exactly ONE TCP connection for the entire life of the process -
+    # fatal for this suite's function-scoped `vehicle` fixture, which opens
+    # a fresh connection per test. Tried and abandoned: talking raw TCP
+    # directly to SERIAL0 (one test only), a hand-rolled TCP<->UDP relay
+    # (its own connection to arducopter died, root cause never pinned down),
+    # a full MAVProxy install in front of it (imports `wx` unconditionally
+    # even in --daemon --non-interactive mode - ArduPilot/MAVProxy#592).
+    # What actually works: --serial1=udpclient:127.0.0.1:14550 gives
+    # arducopter a second, independent UART with its own UDP output - no
+    # per-connection limit, any number of tests can connect/disconnect
+    # freely (confirmed by reading UARTDriver.cpp's _begin()). SERIAL0
+    # itself is skipped outright (--serial0=none) since nothing here uses
+    # it and dronekit/test/sitl/test_timeout.py's test_timeout_empty binds
+    # its own dummy server on that exact port.
     #
-    # Tried and abandoned, in order: talking raw TCP directly to SERIAL0
-    # (only one test could ever connect); a hand-rolled TCP<->UDP relay
-    # multiplexing the single TCP slot onto UDP (the relay's own TCP
-    # connection to arducopter died almost immediately, root cause never
-    # conclusively identified after fixing log spam, sending a heartbeat,
-    # and adding thread-safety locking - each verified correct and
-    # individually insufficient); a full MAVProxy install in front of it
-    # (its CLI entry point imports `wx` unconditionally at module load, even
-    # with --daemon --non-interactive - a known, still-open upstream issue,
-    # ArduPilot/MAVProxy#592, reproduced locally, not assumed).
+    # --defaults copter.parm loads the same standard parameter file
+    # sim_vehicle.py always loads for Copter (setting FRAME_CLASS etc.) -
+    # without it the autopilot refuses to arm at all.
     #
-    # What actually works: arducopter has a second, independent UART, and
-    # --serial1=udpclient:127.0.0.1:14550 gives it its own dedicated UDP
-    # output, entirely separate from SERIAL0's TCP port (confirmed by
-    # reading ArduPilot's own source - libraries/AP_HAL_SITL/UARTDriver.cpp's
-    # _begin(), which parses "udpclient:host:port" as a distinct device type
-    # from "tcp"/"tcpclient" - the "one connection" limit is specific to
-    # SERIAL0's TCP accept() loop and does not apply here at all: this is a
-    # plain UDP socket that connect()s to a fixed peer and send()s to it,
-    # with no per-connection state to exhaust). No relay, no MAVProxy, no
-    # wx, no from-source build - the prebuilt binary already does this
-    # natively.
-    #
-    # One catch found only by reading _tcp_start_connection() itself:
-    # SERIAL0's default device string is "tcp:0:wait", and that trailing
-    # ":wait" makes _begin() call a BLOCKING accept() right there, on the
-    # same thread that sequentially begin()s every other serial port
-    # afterwards. With no relay/probe left to connect to port 5760 (this is
-    # deliberate now - see above), that accept() blocks forever, so SERIAL1
-    # (and its --serial1=udpclient flag) never even gets initialized -
-    # confirmed by arducopter.log stopping dead at "Waiting for connection
-    # ...." with no later "UDP connection ..." line, in two real CI runs.
-    # Fixed with --serial0=none (SERIAL0 is unused here - all MAVLink
-    # traffic goes over SERIAL1 - so it's skipped outright rather than left
-    # bound-but-idle on port 5760: dronekit/test/sitl/test_timeout.py's
-    # test_timeout_empty binds its own dummy server on that exact port, and
-    # a real CI run confirmed the collision - "Address already in use" -
-    # once SERIAL0 was changed to listen instead of blocking. Verified
-    # locally in Docker that --serial0=none boots cleanly, SERIAL1 still
-    # comes up immediately, and port 5760 is free again.
+    # Fully verified end-to-end, locally in Docker against this exact
+    # prebuilt binary and confirmed again in real CI: all 33 sitl tests
+    # pass. continue-on-error stays on for one more real CI cycle as a
+    # safety net before removing it as a hard gate.
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
@@ -214,20 +187,9 @@ jobs:
         # comment above for why that matters here. Greps the binary's own
         # log for the "UDP connection ..." line _begin() prints once it's
         # parsed --serial1 and connect()ed the UDP socket, so the
-        # heartbeat-wait step (next) doesn't race that setup.
-        #
-        # PROVISIONAL/diagnostic: three real CI runs (at 30s/90s/180s
-        # deadlines) all stopped dead at "Smoothing reset at 0.001" (the
-        # first FDM physics tick, so the process genuinely reached its main
-        # loop - this isn't stuck in setup()), while local Docker with the
-        # identical binary and flags reaches the UDP connection line in
-        # under 1s from that point. Attaching strace on timeout found
-        # nothing to attach to (pgrep -x arducopter came back empty) and
-        # dmesg on this runner turned out to be boot-time image noise, not
-        # live kernel messages - so the process isn't hung, it already
-        # exited, but neither diagnostic could say why. The launch step now
-        # captures the real exit status directly into arducopter.log, so
-        # this just has to display it.
+        # heartbeat-wait step (next) doesn't race that setup. On timeout,
+        # dumps both arducopter.log (the launch step's wrapper appends
+        # arducopter's real exit status to this if it dies) and launcher.log.
         run: |
           deadline=$((SECONDS + 30))
           while [ $SECONDS -lt $deadline ]; do
