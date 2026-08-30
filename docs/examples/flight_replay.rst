@@ -112,7 +112,7 @@ In summary, after cloning the repository:
 
    .. code-block:: bash
 
-       python simple_goto.py --connect 127.0.0.1:14550
+       python flight_replay.py --connect 127.0.0.1:14550
        
 
        
