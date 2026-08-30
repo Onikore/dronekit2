@@ -61,7 +61,7 @@ class Locations(HasObservers):
         self._east: float | None = None
         self._down: float | None = None
 
-        @vehicle.on_message("LOCAL_POSITION_NED")
+        @vehicle.on_message("LOCAL_POSITION_NED")  # type: ignore[no-redef]
         def listener(vehicle: VehicleLike, name: str, m: Any) -> None:  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
             self._north = m.x
             self._east = m.y
