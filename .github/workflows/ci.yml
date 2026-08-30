@@ -141,22 +141,40 @@ jobs:
           python -c "
           import sys, time
           from pymavlink import mavutil
+
+          # ArduPilot's SITL TCP driver can accept a connection before it is
+          # actually ready to hold it open (SERIAL0 listen() happens very
+          # early in boot, well before physics/AHRS settle) and then close
+          # it - confirmed against a real CI run: the server log showed one
+          # 'Connection on serial port 5760' and nothing after, while the
+          # client spammed ~220k 'EOF on TCP socket' lines in ~30s. Cause:
+          # pymavlink's mavtcp defaults to autoreconnect=False, so handle_eof()
+          # never actually reconnects; and select() on an already-EOF'd
+          # socket returns 'readable' immediately forever (reading it just
+          # yields 0 bytes again), so recv_match()'s own throttling never
+          # kicks in either - a true zero-delay busy loop on a dead socket.
+          # Fix: build a brand new connection object (and explicitly close
+          # the dead one) on every attempt instead of trusting pymavlink's
+          # own reconnect, with a short per-attempt timeout and an explicit
+          # sleep between attempts.
           deadline = time.time() + 60
-          conn = None
-          while time.time() < deadline and conn is None:
+          msg = None
+          while time.time() < deadline and msg is None:
+              conn = None
               try:
                   conn = mavutil.mavlink_connection('tcp:127.0.0.1:5760')
-              except ConnectionRefusedError:
-                  time.sleep(2)
-          if conn is None:
-              print('Could not open a TCP connection to SITL', file=sys.stderr)
-              sys.exit(1)
-          msg = conn.wait_heartbeat(timeout=30)
+                  msg = conn.wait_heartbeat(timeout=1)
+              except (ConnectionRefusedError, ConnectionResetError, BrokenPipeError):
+                  pass
+              finally:
+                  if conn is not None:
+                      conn.close()
+              if msg is None:
+                  time.sleep(1)
           if msg is None:
               print('Timed out waiting for a heartbeat from SITL', file=sys.stderr)
               sys.exit(1)
           print('Got heartbeat from SITL:', msg)
-          conn.close()
           "
 
       - name: pytest -m sitl against live SITL
