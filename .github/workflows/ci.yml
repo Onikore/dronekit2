@@ -91,7 +91,7 @@ jobs:
     name: sitl (ArduPilot SITL, best-effort)
     needs: test
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     # Uses ArduPilot's own official prebuilt SITL binary
     # (firmware.ardupilot.org/Copter/stable/SITL_x86_64_linux_gnu/arducopter -
     # verified reachable, HTTP 200, ~7 MB) instead of cloning the whole
@@ -198,10 +198,13 @@ jobs:
         # log for the "UDP connection ..." line _begin() prints once it's
         # parsed --serial1 and connect()ed the UDP socket, so the
         # heartbeat-wait step (next) doesn't race that setup. Verified
-        # locally this line lands well under 30s, but real CI runners are
-        # shared/throttled, so 90s buys real margin over the bare minimum.
+        # locally this line lands in well under 1s. A real CI run with a 90s
+        # deadline still hadn't reached it - identical log signature to the
+        # fast local case, just far slower, pointing at CPU throttling on
+        # the shared runner rather than a logic bug. 180s buys real margin;
+        # the job's own timeout-minutes was raised to match.
         run: |
-          deadline=$((SECONDS + 90))
+          deadline=$((SECONDS + 180))
           while [ $SECONDS -lt $deadline ]; do
             if grep -q "UDP connection 127.0.0.1:14550" /tmp/arducopter.log 2>/dev/null; then
               echo "SITL's SERIAL1 UDP output is up:"
@@ -210,7 +213,7 @@ jobs:
             fi
             sleep 1
           done
-          echo "SITL never printed 'UDP connection 127.0.0.1:14550' within 90s:" >&2
+          echo "SITL never printed 'UDP connection 127.0.0.1:14550' within 180s:" >&2
           cat /tmp/arducopter.log >&2 || true
           exit 1
 
