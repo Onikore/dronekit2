@@ -238,19 +238,25 @@ The **create_attribute.py** file first imports the ``MyVehicle`` class.
 
 
 .. code-block:: python
-    :emphasize-lines: 2
+    :emphasize-lines: 1
 
-    from dronekit import connect, Vehicle
-    from my_vehicle import MyVehicle #Our custom vehicle class
-    import time
+    from my_vehicle import MyVehicle  # Our custom vehicle class
+
+    from dronekit import connect
 
 
-We then call ``connect()``, specifying this new class in the ``vehicle_class`` argument.    
-    
+We then call ``connect()``, specifying this new class in the ``vehicle_class`` argument.
+``connection_string`` comes from ``get_connection_string()``, the ``--connect``-argument helper
+shared across the examples (in ``examples/_common.py`` - see :ref:`running_examples_top`) - it
+errors out clearly if you didn't pass ``--connect``, instead of the auto-launched simulator this
+example used to fall back to.
+
 .. code-block:: python
 
-    # Connect to our custom vehicle_class `MyVehicle` at address `args.connect`
-    vehicle = connect(args.connect, wait_ready=True, vehicle_class=MyVehicle)  
+    connection_string = get_connection_string(args.connect)
+
+    # Connect to our custom vehicle_class `MyVehicle`
+    vehicle = connect(connection_string, wait_ready=True, vehicle_class=MyVehicle)
     
 ``connect()`` returns a ``MyVehicle`` class which can be used in *exactly the same way* as ``Vehicle`` but with an 
 additional attribute ``raw_imu``. You can query the attribute to get any of its members, and even add an observer as shown:
