@@ -106,39 +106,35 @@ jobs:
     # the job; still continue-on-error since a live pytest run against it has
     # never actually been observed to pass in this repo's CI yet.
     #
-    # Architecture, worked out the hard way across several real CI runs: the
-    # arducopter binary run directly (no wrapper) accepts exactly ONE TCP
-    # connection for the entire life of the process - confirmed directly
-    # from logs (one real connection got ConnectionResetError, every attempt
-    # after it got ConnectionRefusedError, meaning the server had stopped
-    # accepting entirely). That's fatal for this test suite's `vehicle`
-    # fixture, which is function-scoped and opens a fresh connection per
-    # test - the first test's teardown closes the only connection SITL will
-    # ever accept, and every test after it fails setup with "Timeout in
-    # initializing connection" (confirmed: that's exactly what happened when
-    # dronekit.connect() talked to the binary directly over TCP).
+    # Architecture, worked out the hard way across many real CI runs: the
+    # arducopter binary's default SERIAL0 (TCP port 5760) accepts exactly
+    # ONE TCP connection for the entire life of the process - confirmed
+    # directly from logs (one real connection got ConnectionResetError,
+    # every attempt after it got ConnectionRefusedError). That's fatal for
+    # this test suite's `vehicle` fixture, which is function-scoped and
+    # opens a fresh connection per test.
     #
-    # Fixed by putting a relay in front of it - not to build anything (still
-    # using the prebuilt binary above), only to multiplex: something needs
-    # to become the one TCP client arducopter will ever accept, and
-    # rebroadcast everything over UDP, which has no such per-connection
-    # limit - any number of tests can open and close a UDP "connection" to
-    # it freely. This is exactly why the very first version of this job
-    # (before it was rewritten to build from source, then to talk raw TCP)
-    # used sim_vehicle.py's --out=udp:... in the first place.
+    # Tried and abandoned, in order: talking raw TCP directly to SERIAL0
+    # (only one test could ever connect); a hand-rolled TCP<->UDP relay
+    # multiplexing the single TCP slot onto UDP (the relay's own TCP
+    # connection to arducopter died almost immediately, root cause never
+    # conclusively identified after fixing log spam, sending a heartbeat,
+    # and adding thread-safety locking - each verified correct and
+    # individually insufficient); a full MAVProxy install in front of it
+    # (its CLI entry point imports `wx` unconditionally at module load, even
+    # with --daemon --non-interactive - a known, still-open upstream issue,
+    # ArduPilot/MAVProxy#592, reproduced locally, not assumed).
     #
-    # That relay is scripts/ci_sitl_relay.py - a ~30-line hand-rolled
-    # TCP<->UDP forwarder, not MAVProxy. MAVProxy was tried first (it's the
-    # standard tool for exactly this), but its CLI entry point imports `wx`
-    # (wxPython) unconditionally at module load, even with
-    # --daemon --non-interactive: a known, still-open upstream issue
-    # (ArduPilot/MAVProxy#592), reproduced locally here, not assumed. Fixing
-    # that would mean installing system GTK packages this job has no other
-    # reason to carry, for a dependency this job never actually needs (no
-    # GUI, no map, no console - just relay bytes). The hand-rolled version
-    # was tested end-to-end locally first (a fake single-connection TCP
-    # ArduPilot server + 3 sequential UDP clients, all getting a heartbeat)
-    # before being trusted here.
+    # What actually works: arducopter has a second, independent UART, and
+    # --serial1=udp:127.0.0.1:14550 gives it its own dedicated UDP output,
+    # entirely separate from SERIAL0's TCP port (confirmed by reading
+    # ArduPilot's own source - libraries/AP_HAL_SITL/UARTDriver.cpp's
+    # _udp_start_client() - the "one connection" limit is specific to
+    # SERIAL0's TCP accept() loop and does not apply here at all: this is a
+    # plain UDP socket that connect()s to a fixed peer and send()s to it,
+    # with no per-connection state to exhaust). No relay, no MAVProxy, no
+    # wx, no from-source build - the prebuilt binary already does this
+    # natively.
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
@@ -170,6 +166,7 @@ jobs:
           # trustworthy real-time signal instead of a delayed one.
           nohup stdbuf -oL -eL ./arducopter --model quad --instance 0 --speedup 1 \
             --home -35.363261,149.165230,584,353 --wipe \
+            --serial1=udp:127.0.0.1:14550 \
             > /tmp/arducopter.log 2>&1 &
           disown
 
@@ -177,8 +174,8 @@ jobs:
         # Makes zero network connections of its own - see the job-level
         # comment above for why that matters here. Just polls the binary's
         # own log for the "Waiting for connection" line it prints once
-        # bind()+listen() succeeds, so the relay (the next step) doesn't try
-        # to be the one-and-only client before the port actually exists.
+        # bind()+listen() succeeds, so the heartbeat-wait step (next) doesn't
+        # race the UDP output being set up.
         run: |
           deadline=$((SECONDS + 30))
           while [ $SECONDS -lt $deadline ]; do
@@ -193,14 +190,9 @@ jobs:
           cat /tmp/arducopter.log >&2 || true
           exit 1
 
-      - name: Launch the TCP<->UDP relay to multiplex the single TCP slot
-        run: |
-          nohup python scripts/ci_sitl_relay.py \
-            > /tmp/relay.log 2>&1 &
-          disown
-
       - name: Wait for a MAVLink heartbeat over UDP (127.0.0.1:14550)
-        # Unlike the raw-TCP port, UDP has no connection limit, so a plain
+        # arducopter itself is sending this, straight off --serial1 - no
+        # relay in between. UDP has no connection limit, so a plain
         # wait_heartbeat() retry loop here is safe - it doesn't consume
         # anything pytest needs afterwards.
         run: |
@@ -227,10 +219,6 @@ jobs:
       - name: SITL log (always, for debugging)
         if: always()
         run: cat /tmp/arducopter.log || true
-
-      - name: Relay log (always, for debugging)
-        if: always()
-        run: cat /tmp/relay.log || true
 
   docs:
     name: docs (sphinx)
