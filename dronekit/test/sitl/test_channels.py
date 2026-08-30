@@ -15,10 +15,18 @@ def assert_readback(vehicle, values):
 
 
 def test_timeout(vehicle):
-    assert len(vehicle.channels) == 8
+    # 18, not 8: dronekit reads the modern RC_CHANNELS message (up to 18
+    # channels) in preference to the legacy 8-channel RC_CHANNELS_RAW -
+    # confirmed against live SITL, which now sends RC_CHANNELS. Overrides
+    # stay at 8: RC_CHANNELS_OVERRIDE, the message channels.overrides sends,
+    # is fixed at 8 channels in the wire protocol regardless (see
+    # dronekit/channels.py's ChannelsOverride - "Fixed by MAVLink").
+    assert len(vehicle.channels) == 18
     assert len(vehicle.channels.overrides) == 8
 
-    assert sorted(vehicle.channels.keys()) == [str(x) for x in range(1, 9)]
+    # sorted() on strings orders "10" before "2" lexicographically, so sort
+    # both sides identically instead of comparing to a numeric range.
+    assert sorted(vehicle.channels.keys()) == sorted(str(x) for x in range(1, 19))
     assert sorted(vehicle.channels.overrides.keys()) == []
 
     assert type(vehicle.channels["1"]) is int
@@ -58,7 +66,7 @@ def test_timeout(vehicle):
 
     # test
     try:
-        vehicle.channels["9"]
+        vehicle.channels["19"]
         raise AssertionError("Can read over end of channels")
     except AssertionError:
         raise
