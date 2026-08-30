@@ -184,12 +184,23 @@ jobs:
           # very end of the job, well after steps that needed to observe it
           # in real time had already timed out. This makes the log file a
           # trustworthy real-time signal instead of a delayed one.
-          nohup stdbuf -oL -eL ./arducopter --model quad --instance 0 --speedup 1 \
-            --home -35.363261,149.165230,584,353 --wipe \
-            --defaults copter.parm \
-            --serial0=tcp:0 \
-            --serial1=udpclient:127.0.0.1:14550 \
-            > /tmp/arducopter.log 2>&1 &
+          # Wrapped in `bash -c '...; echo exit status'` rather than just
+          # backgrounding the binary directly: three real CI runs all showed
+          # arducopter gone (pgrep found nothing) by the time the next step
+          # checked, with no trace of why anywhere (dmesg on this runner is
+          # just boot-time image noise, not live kernel messages) - a
+          # backgrounded, disowned process has no shell left to report a
+          # crash like "Segmentation fault" when it dies, so the exit status
+          # was lost. This captures it directly in the log instead.
+          nohup bash -c '
+            stdbuf -oL -eL ./arducopter --model quad --instance 0 --speedup 1 \
+              --home -35.363261,149.165230,584,353 --wipe \
+              --defaults copter.parm \
+              --serial0=tcp:0 \
+              --serial1=udpclient:127.0.0.1:14550 \
+              >> /tmp/arducopter.log 2>&1
+            echo "=== arducopter exited with status $? ===" >> /tmp/arducopter.log
+          ' > /tmp/launcher.log 2>&1 &
           disown
 
       - name: Wait for SITL's log to show SERIAL1's UDP output is up
@@ -204,12 +215,13 @@ jobs:
         # first FDM physics tick, so the process genuinely reached its main
         # loop - this isn't stuck in setup()), while local Docker with the
         # identical binary and flags reaches the UDP connection line in
-        # under 1s from that point. The strace-attach added here found
-        # nothing to attach to - pgrep -x arducopter came back empty - which
-        # means the process isn't hung at all, it has already exited or
-        # crashed by the time we check, silently (a backgrounded, disowned
-        # job has no shell left to report a crash like "Segmentation fault"
-        # when it dies). Dumping ps aux and dmesg here to find out why.
+        # under 1s from that point. Attaching strace on timeout found
+        # nothing to attach to (pgrep -x arducopter came back empty) and
+        # dmesg on this runner turned out to be boot-time image noise, not
+        # live kernel messages - so the process isn't hung, it already
+        # exited, but neither diagnostic could say why. The launch step now
+        # captures the real exit status directly into arducopter.log, so
+        # this just has to display it.
         run: |
           deadline=$((SECONDS + 30))
           while [ $SECONDS -lt $deadline ]; do
@@ -222,23 +234,7 @@ jobs:
           done
           echo "SITL never printed 'UDP connection 127.0.0.1:14550' within 30s:" >&2
           cat /tmp/arducopter.log >&2 || true
-          echo "--- ps aux (is arducopter even still alive?) ---" >&2
-          ps aux >&2 || true
-          echo "--- dmesg tail (segfault? OOM-killed?) ---" >&2
-          sudo dmesg --time-format iso 2>&1 | tail -80 >&2 || true
-          pid=$(pgrep -x arducopter || true)
-          if [ -n "$pid" ]; then
-            command -v strace >/dev/null 2>&1 || sudo apt-get install -y -qq strace >&2
-            echo "Attaching strace to pid $pid for 5s to see what it's blocked on:" >&2
-            sudo strace -f -tt -p "$pid" -o /tmp/strace.log &
-            strace_pid=$!
-            sleep 5
-            kill "$strace_pid" 2>/dev/null || true
-            wait "$strace_pid" 2>/dev/null || true
-            cat /tmp/strace.log >&2 || true
-          else
-            echo "arducopter is NOT running - it exited/crashed silently after the last log line above." >&2
-          fi
+          cat /tmp/launcher.log >&2 || true
           exit 1
 
       - name: Wait for a MAVLink heartbeat over UDP (127.0.0.1:14550)
