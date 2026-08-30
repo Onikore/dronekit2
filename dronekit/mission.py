@@ -172,7 +172,7 @@ class CommandSequence:
     The code to download the commands from a vehicle is shown below:
 
     .. code-block:: python
-        :emphasize-lines: 5-10
+        :emphasize-lines: 5-7
 
         #Connect to a vehicle object (for example, on com14)
         vehicle = connect('com14', wait_ready=True)

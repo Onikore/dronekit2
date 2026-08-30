@@ -168,12 +168,11 @@ jobs:
   docs:
     name: docs (sphinx)
     runs-on: ubuntu-latest
-    # PROVISIONAL: docs/conf.py depends on sphinx_3dr_theme, which is dead
-    # (unmaintained, not installable in a way this task can rely on). Fixing
-    # that is out of scope for this CI migration - a later task replaces the
-    # theme. Kept as continue-on-error so the job still runs and reports
-    # real status rather than being silently skipped.
-    continue-on-error: true
+    # sphinx_3dr_theme (dead) was replaced with furo in E8; the two warnings
+    # `-W` used to trip on (a stale :emphasize-lines: range in
+    # dronekit/mission.py's CommandSequence docstring, and a toctree entry
+    # for docs/examples/performance_test.rst that didn't exist yet) are both
+    # fixed, so this is now a real, blocking gate rather than provisional.
     steps:
       - uses: actions/checkout@v4
 
