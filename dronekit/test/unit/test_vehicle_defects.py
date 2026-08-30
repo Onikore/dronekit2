@@ -26,11 +26,11 @@ from dronekit.mavlink import MAVConnection
 # D5 - no bare `except:` clauses left in either module
 # ---------------------------------------------------------------------------
 
+
 def _bare_except_lines(module):
     source = pathlib.Path(module.__file__).read_text()
     tree = ast.parse(source)
-    return [node.lineno for node in ast.walk(tree)
-            if isinstance(node, ast.ExceptHandler) and node.type is None]
+    return [node.lineno for node in ast.walk(tree) if isinstance(node, ast.ExceptHandler) and node.type is None]
 
 
 def test_no_bare_except_clauses_in_dronekit_init():
@@ -44,20 +44,19 @@ def test_no_bare_except_clauses_in_dronekit_init():
 
 def test_no_bare_except_clauses_in_mavlink_module():
     lines = _bare_except_lines(dronekit.mavlink)
-    assert lines == [], (
-        f"Bare `except:` clauses found at dronekit/mavlink.py line(s): {lines!r}"
-    )
+    assert lines == [], f"Bare `except:` clauses found at dronekit/mavlink.py line(s): {lines!r}"
 
 
 # ---------------------------------------------------------------------------
 # D6 - duration measurements use time.monotonic(), not time.time()
 # ---------------------------------------------------------------------------
 
+
 def test_wait_for_timeout_uses_monotonic_not_walltime(monkeypatch):
     def boom():
-        raise AssertionError('wait_for() must not call time.time() to measure a timeout')
+        raise AssertionError("wait_for() must not call time.time() to measure a timeout")
 
-    monkeypatch.setattr(dronekit.time, 'time', boom)
+    monkeypatch.setattr(dronekit.time, "time", boom)
 
     with pytest.raises(DKTimeoutError):
         Vehicle.wait_for(None, lambda: False, timeout=0.05, interval=0.02)
@@ -68,10 +67,10 @@ class _StubMaster:
         self.calls = []
 
     def waypoint_clear_all_send(self):
-        self.calls.append('clear_all')
+        self.calls.append("clear_all")
 
     def waypoint_count_send(self, n):
-        self.calls.append(('count_send', n))
+        self.calls.append(("count_send", n))
 
 
 class _StubWploader:
@@ -89,9 +88,9 @@ class _StubVehicleForUpload:
 
 def test_command_sequence_upload_timeout_uses_monotonic_not_walltime(monkeypatch):
     def boom():
-        raise AssertionError('upload() timeout must not call time.time()')
+        raise AssertionError("upload() timeout must not call time.time()")
 
-    monkeypatch.setattr(dronekit.time, 'time', boom)
+    monkeypatch.setattr(dronekit.time, "time", boom)
 
     cmds = CommandSequence(_StubVehicleForUpload())
     with pytest.raises(DKTimeoutError):
@@ -102,9 +101,10 @@ def test_command_sequence_upload_timeout_uses_monotonic_not_walltime(monkeypatch
 # Shared fixture / fakes for D8 and D10
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def vehicle():
-    handler = MAVConnection('udpin:127.0.0.1:0')
+    handler = MAVConnection("udpin:127.0.0.1:0")
     v = Vehicle(handler)
     try:
         yield v
@@ -120,7 +120,7 @@ class _FakeMissionCountMsg:
         self.count = count
 
     def get_type(self):
-        return 'MISSION_COUNT'
+        return "MISSION_COUNT"
 
 
 class _FakeMissionItemMsg:
@@ -131,7 +131,7 @@ class _FakeMissionItemMsg:
         self.z = z
 
     def get_type(self):
-        return 'MISSION_ITEM'
+        return "MISSION_ITEM"
 
 
 class _FakeGlobalPositionIntMsg:
@@ -148,21 +148,22 @@ class _FakeGlobalPositionIntMsg:
         self.vz = 0
 
     def get_type(self):
-        return 'GLOBAL_POSITION_INT'
+        return "GLOBAL_POSITION_INT"
 
 
 def _complete_download(vehicle, n_wp=1):
     """Drive a commands.download() to completion the way the vehicle's
     real MISSION_COUNT/MISSION_ITEM listeners would, given a mission of
     n_wp waypoints (including the home waypoint at seq 0)."""
-    vehicle.notify_message_listeners('MISSION_COUNT', _FakeMissionCountMsg(n_wp))
+    vehicle.notify_message_listeners("MISSION_COUNT", _FakeMissionCountMsg(n_wp))
     for seq in range(n_wp):
-        vehicle.notify_message_listeners('MISSION_ITEM', _FakeMissionItemMsg(seq))
+        vehicle.notify_message_listeners("MISSION_ITEM", _FakeMissionItemMsg(seq))
 
 
 # ---------------------------------------------------------------------------
 # D8 - CommandSequence.__len__/__getitem__ during an in-progress download()
 # ---------------------------------------------------------------------------
+
 
 def test_len_raises_while_download_in_progress(vehicle):
     vehicle.commands.download()
@@ -180,7 +181,7 @@ def test_len_works_before_any_download():
     """Sanity check: a Vehicle that has never had download() called on it
     (the common case - _wp_download_in_progress defaults to False) must not
     be affected by the guard."""
-    handler = MAVConnection('udpin:127.0.0.1:0')
+    handler = MAVConnection("udpin:127.0.0.1:0")
     try:
         v = Vehicle(handler)
         assert len(v.commands) == 0
@@ -202,6 +203,7 @@ def test_len_and_getitem_work_again_once_download_completes(vehicle):
 # D10 - torn read across Locations' global_frame / global_relative_frame
 # ---------------------------------------------------------------------------
 
+
 def test_global_frame_property_never_returns_a_torn_combination(vehicle):
     """Pre-fix, _lat/_lon/_alt were three separate instance attributes
     updated by three separate statements inside the GLOBAL_POSITION_INT
@@ -217,12 +219,14 @@ def test_global_frame_property_never_returns_a_torn_combination(vehicle):
     that was actually received.
     """
     vehicle.notify_message_listeners(
-        'GLOBAL_POSITION_INT', _FakeGlobalPositionIntMsg(lat=12345670, lon=76543210, alt=1000, relative_alt=500))
+        "GLOBAL_POSITION_INT", _FakeGlobalPositionIntMsg(lat=12345670, lon=76543210, alt=1000, relative_alt=500)
+    )
     first = vehicle.location.global_frame
     assert (first.lat, first.lon, first.alt) == (1.234567, 7.654321, 1.0)
 
     vehicle.notify_message_listeners(
-        'GLOBAL_POSITION_INT', _FakeGlobalPositionIntMsg(lat=20000000, lon=80000000, alt=2000, relative_alt=600))
+        "GLOBAL_POSITION_INT", _FakeGlobalPositionIntMsg(lat=20000000, lon=80000000, alt=2000, relative_alt=600)
+    )
     second = vehicle.location.global_frame
     assert (second.lat, second.lon, second.alt) == (2.0, 8.0, 2.0)
 
@@ -237,7 +241,8 @@ def test_global_frame_read_returns_a_copy_not_the_live_cached_object(vehicle):
     mutating what a caller reads back must not corrupt the cached value
     that the next reader sees."""
     vehicle.notify_message_listeners(
-        'GLOBAL_POSITION_INT', _FakeGlobalPositionIntMsg(lat=1000000, lon=2000000, alt=100, relative_alt=50))
+        "GLOBAL_POSITION_INT", _FakeGlobalPositionIntMsg(lat=1000000, lon=2000000, alt=100, relative_alt=50)
+    )
 
     frame = vehicle.location.global_frame
     frame.alt = 99999
@@ -246,14 +251,15 @@ def test_global_frame_read_returns_a_copy_not_the_live_cached_object(vehicle):
 
 
 def test_global_relative_frame_updates_on_every_message_independent_of_alt_gate():
-    handler = MAVConnection('udpin:127.0.0.1:0')
+    handler = MAVConnection("udpin:127.0.0.1:0")
     try:
         v = Vehicle(handler)
         # alt=0 on the very first message means the global_frame "require
         # non-zero first alt" gate never fires, but global_relative_frame
         # must still update - it isn't gated at all.
         v.notify_message_listeners(
-            'GLOBAL_POSITION_INT', _FakeGlobalPositionIntMsg(lat=1000000, lon=2000000, alt=0, relative_alt=250))
+            "GLOBAL_POSITION_INT", _FakeGlobalPositionIntMsg(lat=1000000, lon=2000000, alt=0, relative_alt=250)
+        )
         rel = v.location.global_relative_frame
         assert (rel.lat, rel.lon, rel.alt) == (0.1, 0.2, 0.25)
         assert v.location.global_frame.alt is None  # gate never opened

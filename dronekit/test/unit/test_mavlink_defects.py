@@ -24,6 +24,7 @@ from dronekit.mavlink import MAVConnection, mavudpin_multi
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 class _RecordingSocket:
     """Stand-in for the real UDP socket so write()/recv() tests don't touch
     the network at all - just records what mavudpin_multi tried to do."""
@@ -39,7 +40,7 @@ class _RecordingSocket:
         self.connect_calls.append(addr)
 
     def recvfrom(self, bufsize):
-        raise AssertionError('recvfrom should be stubbed per-test')
+        raise AssertionError("recvfrom should be stubbed per-test")
 
 
 def _broadcast_client():
@@ -47,14 +48,14 @@ def _broadcast_client():
     broadcast=True), with its real socket swapped out for a recording stub
     right after construction (the constructor itself needs a real socket to
     set SO_BROADCAST etc., but nothing after that does)."""
-    m = mavudpin_multi('127.0.0.1:0', input=False, broadcast=True)
+    m = mavudpin_multi("127.0.0.1:0", input=False, broadcast=True)
     m.port.close()
     m.port = _RecordingSocket()
     return m
 
 
 def _udpin_client():
-    m = mavudpin_multi('127.0.0.1:0', input=True)
+    m = mavudpin_multi("127.0.0.1:0", input=True)
     m.port.close()
     m.port = _RecordingSocket()
     return m
@@ -63,6 +64,7 @@ def _udpin_client():
 # ---------------------------------------------------------------------------
 # D1 - mavudpin_multi.write() locking onto the first broadcast responder
 # ---------------------------------------------------------------------------
+
 
 def test_write_locks_onto_first_broadcast_responder_without_crashing():
     """self.addresses is a set (see mavudpin_multi.__init__), so indexing it
@@ -74,32 +76,33 @@ def test_write_locks_onto_first_broadcast_responder_without_crashing():
     side effects happen instead.
     """
     m = _broadcast_client()
-    m.addresses = {('192.168.1.42', 14550)}
+    m.addresses = {("192.168.1.42", 14550)}
     assert m.broadcast is True
 
-    m.write(b'ping')
+    m.write(b"ping")
 
     assert m.broadcast is False
-    assert m.destination_addr == ('192.168.1.42', 14550)
-    assert m.port.connect_calls == [('192.168.1.42', 14550)]
-    assert m.port.sendto_calls == [(b'ping', ('192.168.1.42', 14550))]
+    assert m.destination_addr == ("192.168.1.42", 14550)
+    assert m.port.connect_calls == [("192.168.1.42", 14550)]
+    assert m.port.sendto_calls == [(b"ping", ("192.168.1.42", 14550))]
 
 
 def test_write_udp_server_sends_to_every_known_address():
     """Unrelated to D1, but pins down the udp_server fan-out branch so a
     future change to write() can't silently break it."""
     m = _udpin_client()
-    m.addresses = {('10.0.0.1', 100), ('10.0.0.2', 200)}
+    m.addresses = {("10.0.0.1", 100), ("10.0.0.2", 200)}
 
-    m.write(b'hello')
+    m.write(b"hello")
 
     sent_addrs = {addr for (_buf, addr) in m.port.sendto_calls}
-    assert sent_addrs == {('10.0.0.1', 100), ('10.0.0.2', 200)}
+    assert sent_addrs == {("10.0.0.1", 100), ("10.0.0.2", 200)}
 
 
 # ---------------------------------------------------------------------------
 # D2 - mavudpin_multi.recv()
 # ---------------------------------------------------------------------------
+
 
 def test_recv_returns_bytes_not_str_on_would_block():
     """Pre-fix, the EAGAIN/EWOULDBLOCK/ECONNREFUSED path returned "" (str).
@@ -110,7 +113,7 @@ def test_recv_returns_bytes_not_str_on_would_block():
     m = _udpin_client()
 
     def raise_would_block(bufsize):
-        raise OSError(errno.EWOULDBLOCK, 'would block')
+        raise OSError(errno.EWOULDBLOCK, "would block")
 
     m.port.recvfrom = raise_would_block
 
@@ -134,7 +137,7 @@ def test_recv_reraises_unexpected_socket_error_instead_of_unboundlocalerror():
     m = _udpin_client()
 
     def raise_econnreset(bufsize):
-        raise OSError(errno.ECONNRESET, 'connection reset')
+        raise OSError(errno.ECONNRESET, "connection reset")
 
     m.port.recvfrom = raise_econnreset
 
@@ -162,13 +165,14 @@ def test_recv_reraises_unexpected_socket_error_instead_of_unboundlocalerror():
 # D3 - MAVConnection.stop_threads() before start()
 # ---------------------------------------------------------------------------
 
+
 def test_stop_threads_before_start_does_not_raise():
     """Pre-fix, Thread.join() on a thread that was never started raises
     RuntimeError('cannot join thread before it is started'). This is
     exactly what happens if close() (or the atexit handler) runs before
     start() was ever called.
     """
-    handler = MAVConnection('udpin:127.0.0.1:0')
+    handler = MAVConnection("udpin:127.0.0.1:0")
     try:
         assert handler.mavlink_thread_in.ident is None
         assert handler.mavlink_thread_out.ident is None
@@ -186,7 +190,7 @@ def test_stop_threads_after_start_still_joins(monkeypatch):
     """Make sure the D3 fix didn't turn stop_threads() into a no-op for the
     case it's actually supposed to handle: a thread that really was
     started."""
-    handler = MAVConnection('udpin:127.0.0.1:0')
+    handler = MAVConnection("udpin:127.0.0.1:0")
     try:
         handler._alive = False  # thread functions loop on self._alive
         handler.start()
@@ -205,6 +209,7 @@ def test_stop_threads_after_start_still_joins(monkeypatch):
 # D4 - mavudpin_multi.address / MAVConnection.reset() fallback
 # ---------------------------------------------------------------------------
 
+
 def test_mavudpin_multi_has_address_attribute_for_reset_fallback():
     """reset()'s fallback path (used when self.master has no .reset())
     does `mavutil.mavlink_connection(self.master.address)`. mavudpin_multi
@@ -216,23 +221,23 @@ def test_mavudpin_multi_has_address_attribute_for_reset_fallback():
     mavfile.__init__) gets caught immediately instead of surfacing as an
     AttributeError deep inside reset().
     """
-    m = mavudpin_multi('127.0.0.1:0', input=True)
+    m = mavudpin_multi("127.0.0.1:0", input=True)
     try:
-        assert m.address == '127.0.0.1:0'
-        assert not hasattr(m, 'reset')  # confirms reset() takes the fallback path
+        assert m.address == "127.0.0.1:0"
+        assert not hasattr(m, "reset")  # confirms reset() takes the fallback path
     finally:
         m.close()
 
 
 def test_reset_fallback_does_not_raise_attributeerror_for_udpin(monkeypatch):
-    handler = MAVConnection('udpin:127.0.0.1:0')
+    handler = MAVConnection("udpin:127.0.0.1:0")
     try:
-        assert not hasattr(handler.master, 'reset')
+        assert not hasattr(handler.master, "reset")
 
         calls = []
 
         class _StubMaster:
-            address = 'stub-address'
+            address = "stub-address"
 
             def close(self):
                 pass
@@ -241,11 +246,11 @@ def test_reset_fallback_does_not_raise_attributeerror_for_udpin(monkeypatch):
             calls.append(address)
             return _StubMaster()
 
-        monkeypatch.setattr(mavlink_mod.mavutil, 'mavlink_connection', fake_mavlink_connection)
+        monkeypatch.setattr(mavlink_mod.mavutil, "mavlink_connection", fake_mavlink_connection)
 
         handler.reset()  # must not raise AttributeError
 
-        assert calls == ['127.0.0.1:0']
+        assert calls == ["127.0.0.1:0"]
         assert isinstance(handler.master, _StubMaster)
     finally:
         atexit.unregister(handler._onexit)
@@ -255,6 +260,7 @@ def test_reset_fallback_does_not_raise_attributeerror_for_udpin(monkeypatch):
 # ---------------------------------------------------------------------------
 # D7 - atexit should hold only a weak reference to MAVConnection
 # ---------------------------------------------------------------------------
+
 
 def _clear_pymavlink_input_global():
     """pymavlink's mavutil.mavfile.__init__ stashes `self` into the
@@ -281,7 +287,7 @@ def test_mavconnection_is_garbage_collectable_after_close():
     weakref + atexit.unregister(), a closed connection should be
     collectable immediately.
     """
-    handler = MAVConnection('udpin:127.0.0.1:0')
+    handler = MAVConnection("udpin:127.0.0.1:0")
     ref = weakref.ref(handler)
 
     handler.close()
@@ -301,7 +307,7 @@ def test_atexit_callback_closure_captures_a_weakref_not_the_connection_itself():
     reference cycles (e.g. the fix_targets monkey-patch closure on
     master.mav.send) so it isolates only what D7 actually changed.
     """
-    handler = MAVConnection('udpin:127.0.0.1:0')
+    handler = MAVConnection("udpin:127.0.0.1:0")
     try:
         closure_cells = handler._onexit.__closure__ or ()
         captured = [c.cell_contents for c in closure_cells]
@@ -328,6 +334,7 @@ def test_atexit_callback_closure_captures_a_weakref_not_the_connection_itself():
 # D9 - resource leak in dronekit.connect() on partial failure
 # ---------------------------------------------------------------------------
 
+
 def test_connect_closes_handler_when_vehicle_construction_raises(monkeypatch):
     """If anything between MAVConnection construction and connect()'s
     `return vehicle` raises, the caller never gets a reference to the
@@ -349,14 +356,14 @@ def test_connect_closes_handler_when_vehicle_construction_raises(monkeypatch):
         created_handlers.append(h)
         return h
 
-    monkeypatch.setattr(dronekit.mavlink, 'MAVConnection', fake_mavconnection)
+    monkeypatch.setattr(dronekit.mavlink, "MAVConnection", fake_mavconnection)
 
     class ExplodingVehicle:
         def __init__(self, handler):
-            raise RuntimeError('boom during vehicle construction')
+            raise RuntimeError("boom during vehicle construction")
 
-    with pytest.raises(RuntimeError, match='boom during vehicle construction'):
-        dronekit.connect('udpin:127.0.0.1:0', vehicle_class=ExplodingVehicle, _initialize=False)
+    with pytest.raises(RuntimeError, match="boom during vehicle construction"):
+        dronekit.connect("udpin:127.0.0.1:0", vehicle_class=ExplodingVehicle, _initialize=False)
 
     assert len(created_handlers) == 1
     assert created_handlers[0].closed is True

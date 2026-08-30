@@ -20,16 +20,16 @@ import argparse
 
 from _common import add_connection_argument, get_connection_string
 
-parser = argparse.ArgumentParser(description='Play tune on vehicle buzzer.')
+parser = argparse.ArgumentParser(description="Play tune on vehicle buzzer.")
 add_connection_argument(parser)
-parser.add_argument('--tune', type=str, help="tune to play", default="AAAA")
+parser.add_argument("--tune", type=str, help="tune to play", default="AAAA")
 args = parser.parse_args()
 
 connection_string = get_connection_string(args.connect)
 
 
 # Connect to the Vehicle
-print(f'Connecting to vehicle on: {connection_string}')
+print(f"Connecting to vehicle on: {connection_string}")
 vehicle = connect(connection_string, wait_ready=True)
 
 vehicle.play_tune(args.tune)

@@ -41,7 +41,7 @@ pip install git+https://github.com/Onikore/dronekit2.git
 from dronekit import connect
 
 # Connect to a vehicle (real or simulated) speaking MAVLink on this UDP endpoint.
-vehicle = connect('127.0.0.1:14550', wait_ready=True)
+vehicle = connect("127.0.0.1:14550", wait_ready=True)
 
 # Use the returned Vehicle object to query device state - e.g. to get the mode:
 print(f"Mode: {vehicle.mode.name}")

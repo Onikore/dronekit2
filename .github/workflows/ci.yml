@@ -17,14 +17,11 @@ jobs:
   lint:
     name: lint (ruff)
     runs-on: ubuntu-latest
-    # PROVISIONAL: continue-on-error because `ruff check .` / `ruff format --check .`
-    # currently fail against the tree as-is (hundreds of pre-existing violations,
-    # including inside dronekit/ itself). E3 is CI-config-only and explicitly may
-    # not touch dronekit/*.py or dronekit/test/** content, so those violations
-    # can't be fixed here. This job still runs and reports real signal on every
-    # push/PR; a follow-up task should either clean up the codebase and drop this
-    # flag, or narrow the ruff scope/config deliberately.
-    continue-on-error: true
+    # A follow-up task cleaned up the ~580 pre-existing violations this job
+    # used to continue-on-error past; `ruff check .` is now a real, blocking
+    # gate. The one line ruff itself cannot wrap (a long ArduPilot wiki URL
+    # inside Command's RST docstring, in dronekit/mission.py) is scoped out
+    # via pyproject.toml's [tool.ruff.lint.per-file-ignores], not this flag.
     steps:
       - uses: actions/checkout@v4
 

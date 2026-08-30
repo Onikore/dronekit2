@@ -8,8 +8,8 @@ def test_timeout(vehicle):
     # NOTE these are *very inappropriate settings*
     # to make on a real vehicle. They are leveraged
     # exclusively for simulation. Take heed!!!
-    vehicle.parameters['FS_GCS_ENABLE'] = 0
-    vehicle.parameters['FS_EKF_THRESH'] = 100
+    vehicle.parameters["FS_GCS_ENABLE"] = 0
+    vehicle.parameters["FS_EKF_THRESH"] = 100
 
     def arm_and_takeoff(aTargetAltitude):
         """
@@ -22,8 +22,8 @@ def test_timeout(vehicle):
 
         # Copter should arm in GUIDED mode
         vehicle.mode = VehicleMode("GUIDED")
-        wait_for(lambda: vehicle.mode.name == 'GUIDED', 60)
-        assert vehicle.mode.name == 'GUIDED'
+        wait_for(lambda: vehicle.mode.name == "GUIDED", 60)
+        assert vehicle.mode.name == "GUIDED"
 
         # Arm copter.
         vehicle.armed = True
@@ -43,11 +43,11 @@ def test_timeout(vehicle):
                 # print "Reached target altitude"
                 break
 
-            assert vehicle.mode.name == 'GUIDED'
+            assert vehicle.mode.name == "GUIDED"
             time.sleep(1)
 
     arm_and_takeoff(10)
-    vehicle.wait_ready('location.local_frame', timeout=60)
+    vehicle.wait_ready("location.local_frame", timeout=60)
 
     # .north, .east, and .down are initialized to None.
     # Any other value suggests that a LOCAL_POSITION_NED was received and parsed.
@@ -65,13 +65,13 @@ def test_timeout(vehicle):
 
 
 def test_location_notify(vehicle):
-    ret = {'success': False}
+    ret = {"success": False}
 
-    @vehicle.location.on_attribute('global_frame')
+    @vehicle.location.on_attribute("global_frame")
     def callback(*args):
         assert args[2].alt != 0
-        ret['success'] = True
+        ret["success"] = True
 
-    wait_for(lambda: ret['success'], 30)
+    wait_for(lambda: ret["success"], 30)
 
-    assert ret['success'], 'Expected location object to emit notifications.'
+    assert ret["success"], "Expected location object to emit notifications."

@@ -25,7 +25,7 @@ import argparse
 
 from _common import add_connection_argument, get_connection_string
 
-parser = argparse.ArgumentParser(description='Control Copter and send commands in GUIDED mode ')
+parser = argparse.ArgumentParser(description="Control Copter and send commands in GUIDED mode ")
 add_connection_argument(parser)
 args = parser.parse_args()
 
@@ -33,8 +33,9 @@ connection_string = get_connection_string(args.connect)
 
 
 # Connect to the Vehicle
-print(f'Connecting to vehicle on: {connection_string}')
+print(f"Connecting to vehicle on: {connection_string}")
 vehicle = connect(connection_string, wait_ready=True)
+
 
 def arm_and_takeoff_nogps(aTargetAltitude):
     """
@@ -53,7 +54,6 @@ def arm_and_takeoff_nogps(aTargetAltitude):
         print(" Waiting for vehicle to initialise...")
         time.sleep(1)
 
-
     print("Arming motors")
     # Copter should arm in GUIDED_NOGPS mode
     vehicle.mode = VehicleMode("GUIDED_NOGPS")
@@ -70,17 +70,16 @@ def arm_and_takeoff_nogps(aTargetAltitude):
     while True:
         current_altitude = vehicle.location.global_relative_frame.alt
         print(f" Altitude: {current_altitude:f}  Desired: {aTargetAltitude:f}")
-        if current_altitude >= aTargetAltitude*0.95: # Trigger just below target alt.
+        if current_altitude >= aTargetAltitude * 0.95:  # Trigger just below target alt.
             print("Reached target altitude")
             break
-        elif current_altitude >= aTargetAltitude*0.6:
+        elif current_altitude >= aTargetAltitude * 0.6:
             thrust = SMOOTH_TAKEOFF_THRUST
-        set_attitude(thrust = thrust)
+        set_attitude(thrust=thrust)
         time.sleep(0.2)
 
-def send_attitude_target(roll_angle = 0.0, pitch_angle = 0.0,
-                         yaw_angle = None, yaw_rate = 0.0, use_yaw_rate = False,
-                         thrust = 0.5):
+
+def send_attitude_target(roll_angle=0.0, pitch_angle=0.0, yaw_angle=None, yaw_rate=0.0, use_yaw_rate=False, thrust=0.5):
     """
     use_yaw_rate: the yaw can be controlled using yaw_angle OR yaw_rate.
                   When one is used, the other is ignored by Ardupilot.
@@ -95,21 +94,22 @@ def send_attitude_target(roll_angle = 0.0, pitch_angle = 0.0,
     # Thrust == 0.5: Hold the altitude
     # Thrust <  0.5: Descend
     msg = vehicle.message_factory.set_attitude_target_encode(
-        0, # time_boot_ms
-        1, # Target system
-        1, # Target component
+        0,  # time_boot_ms
+        1,  # Target system
+        1,  # Target component
         0b00000000 if use_yaw_rate else 0b00000100,
-        to_quaternion(roll_angle, pitch_angle, yaw_angle), # Quaternion
-        0, # Body roll rate in radian
-        0, # Body pitch rate in radian
-        math.radians(yaw_rate), # Body yaw rate in radian/second
-        thrust  # Thrust
+        to_quaternion(roll_angle, pitch_angle, yaw_angle),  # Quaternion
+        0,  # Body roll rate in radian
+        0,  # Body pitch rate in radian
+        math.radians(yaw_rate),  # Body yaw rate in radian/second
+        thrust,  # Thrust
     )
     vehicle.send_mavlink(msg)
 
-def set_attitude(roll_angle = 0.0, pitch_angle = 0.0,
-                 yaw_angle = None, yaw_rate = 0.0, use_yaw_rate = False,
-                 thrust = 0.5, duration = 0):
+
+def set_attitude(
+    roll_angle=0.0, pitch_angle=0.0, yaw_angle=None, yaw_rate=0.0, use_yaw_rate=False, thrust=0.5, duration=0
+):
     """
     Note that from AC3.3 the message should be re-sent more often than every
     second, as an ATTITUDE_TARGET order has a timeout of 1s.
@@ -117,21 +117,16 @@ def set_attitude(roll_angle = 0.0, pitch_angle = 0.0,
     The code below should work on either version.
     Sending the message multiple times is the recommended way.
     """
-    send_attitude_target(roll_angle, pitch_angle,
-                         yaw_angle, yaw_rate, False,
-                         thrust)
+    send_attitude_target(roll_angle, pitch_angle, yaw_angle, yaw_rate, False, thrust)
     start = time.time()
     while time.time() - start < duration:
-        send_attitude_target(roll_angle, pitch_angle,
-                             yaw_angle, yaw_rate, False,
-                             thrust)
+        send_attitude_target(roll_angle, pitch_angle, yaw_angle, yaw_rate, False, thrust)
         time.sleep(0.1)
     # Reset attitude, or it will persist for 1s more due to the timeout
-    send_attitude_target(0, 0,
-                         0, 0, True,
-                         thrust)
+    send_attitude_target(0, 0, 0, 0, True, thrust)
 
-def to_quaternion(roll = 0.0, pitch = 0.0, yaw = 0.0):
+
+def to_quaternion(roll=0.0, pitch=0.0, yaw=0.0):
     """
     Convert degrees to quaternions
     """
@@ -149,12 +144,13 @@ def to_quaternion(roll = 0.0, pitch = 0.0, yaw = 0.0):
 
     return [w, x, y, z]
 
+
 # Take off 2.5m in GUIDED_NOGPS mode.
 arm_and_takeoff_nogps(2.5)
 
 # Hold the position for 3 seconds.
 print("Hold position for 3 seconds")
-set_attitude(duration = 3)
+set_attitude(duration=3)
 
 # Uncomment the lines below for testing roll angle and yaw rate.
 # Make sure that there is enough space for testing this.
@@ -165,10 +161,10 @@ set_attitude(duration = 3)
 # Move the drone forward and backward.
 # Note that it will be in front of original position due to inertia.
 print("Move forward")
-set_attitude(pitch_angle = -5, thrust = 0.5, duration = 3.21)
+set_attitude(pitch_angle=-5, thrust=0.5, duration=3.21)
 
 print("Move backward")
-set_attitude(pitch_angle = 5, thrust = 0.5, duration = 3)
+set_attitude(pitch_angle=5, thrust=0.5, duration=3)
 
 
 print("Setting LAND mode...")

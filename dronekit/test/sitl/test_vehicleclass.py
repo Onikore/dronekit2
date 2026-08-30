@@ -12,7 +12,7 @@ class DummyVehicle(Vehicle):
         def success_fn(self, name, m):
             self.success = True
 
-        self.add_message_listener('HEARTBEAT', success_fn)
+        self.add_message_listener("HEARTBEAT", success_fn)
 
 
 def test_timeout(sitl_connection_string):

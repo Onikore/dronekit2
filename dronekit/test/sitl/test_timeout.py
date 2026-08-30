@@ -14,7 +14,7 @@ def test_timeout(sitl_connection_string):
 
         start = time.time()
         while vehicle._handler._alive and time.time() - start < 30:
-            time.sleep(.1)
+            time.sleep(0.1)
 
         assert vehicle._handler._alive is False
     finally:
@@ -25,12 +25,12 @@ def test_timeout_empty():
     # Create a dummy server.
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s.bind(('127.0.0.1', 5760))
+    s.bind(("127.0.0.1", 5760))
     s.listen(1)
 
     try:
         # Connect with timeout of 10s.
-        vehicle = connect('tcp:127.0.0.1:5760', wait_ready=True, heartbeat_timeout=20)
+        vehicle = connect("tcp:127.0.0.1:5760", wait_ready=True, heartbeat_timeout=20)
 
         vehicle.close()
 

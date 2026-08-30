@@ -8,20 +8,22 @@ from dronekit.util import ErrprinterHandler
 from dronekit.vehicle import Vehicle, default_still_waiting_callback
 
 
-def connect(ip: str,
-            _initialize: bool = True,
-            wait_ready: bool | list[str] | None = None,
-            timeout: float = 30,
-            still_waiting_callback: Callable[[Any], None] = default_still_waiting_callback,
-            still_waiting_interval: float = 1,
-            status_printer: Callable[[str], None] | None = None,
-            vehicle_class: type[Vehicle] | None = None,
-            rate: int = 4,
-            baud: int = 115200,
-            heartbeat_timeout: float = 30,
-            source_system: int = 255,
-            source_component: int = 0,
-            use_native: bool = False) -> Vehicle:
+def connect(
+    ip: str,
+    _initialize: bool = True,
+    wait_ready: bool | list[str] | None = None,
+    timeout: float = 30,
+    still_waiting_callback: Callable[[Any], None] = default_still_waiting_callback,
+    still_waiting_interval: float = 1,
+    status_printer: Callable[[str], None] | None = None,
+    vehicle_class: type[Vehicle] | None = None,
+    rate: int = 4,
+    baud: int = 115200,
+    heartbeat_timeout: float = 30,
+    source_system: int = 255,
+    source_component: int = 0,
+    use_native: bool = False,
+) -> Vehicle:
     """
     Returns a :py:class:`Vehicle` object connected to the address specified by string parameter ``ip``.
     Connection string parameters (``ip``) for different targets are listed in the
@@ -84,8 +86,9 @@ def connect(ip: str,
     if not vehicle_class:
         vehicle_class = Vehicle
 
-    handler = MAVConnection(ip, baud=baud, source_system=source_system,
-                             source_component=source_component, use_native=use_native)
+    handler = MAVConnection(
+        ip, baud=baud, source_system=source_system, source_component=source_component, use_native=use_native
+    )
     # If anything below raises (vehicle_class construction, initialize()'s
     # heartbeat timeout, wait_ready()'s timeout, ...) the caller never gets
     # a reference to `handler` or `vehicle`, so nothing else can close the
@@ -103,9 +106,11 @@ def connect(ip: str,
 
         if wait_ready:
             if wait_ready is True:
-                vehicle.wait_ready(still_waiting_interval=still_waiting_interval,
-                                   still_waiting_callback=still_waiting_callback,
-                                   timeout=timeout)
+                vehicle.wait_ready(
+                    still_waiting_interval=still_waiting_interval,
+                    still_waiting_callback=still_waiting_callback,
+                    timeout=timeout,
+                )
             else:
                 vehicle.wait_ready(*wait_ready)
     except Exception:

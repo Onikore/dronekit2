@@ -10,5 +10,4 @@ class APIException(Exception):
 
 
 class TimeoutError(APIException):
-    '''Raised by operations that have timeouts.'''
-
+    """Raised by operations that have timeouts."""

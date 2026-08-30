@@ -21,7 +21,7 @@ import argparse
 
 from _common import add_connection_argument, get_connection_string
 
-parser = argparse.ArgumentParser(description='Commands vehicle using vehicle.simple_goto.')
+parser = argparse.ArgumentParser(description="Commands vehicle using vehicle.simple_goto.")
 add_connection_argument(parser)
 args = parser.parse_args()
 
@@ -29,7 +29,7 @@ connection_string = get_connection_string(args.connect)
 
 
 # Connect to the Vehicle
-print(f'Connecting to vehicle on: {connection_string}')
+print(f"Connecting to vehicle on: {connection_string}")
 vehicle = connect(connection_string, wait_ready=True)
 
 

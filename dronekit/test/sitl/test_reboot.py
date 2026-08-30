@@ -10,10 +10,10 @@ def test_reboot(vehicle):
         if message.command == 246:  # reboot/shutdown
             reboot_acks.append(message)
 
-    vehicle.add_message_listener('COMMAND_ACK', on_ack)
+    vehicle.add_message_listener("COMMAND_ACK", on_ack)
     vehicle.reboot()
     time.sleep(0.5)
-    vehicle.remove_message_listener('COMMAND_ACK', on_ack)
+    vehicle.remove_message_listener("COMMAND_ACK", on_ack)
 
     assert len(reboot_acks) == 1  # one and only one ACK
     assert reboot_acks[0].command == 246  # for the correct command

@@ -9,24 +9,24 @@ def test_115(sitl_connection_string):
     the autopilot messages are correctly logged.
     """
 
-    logging_check = {'ok': False}
+    logging_check = {"ok": False}
 
     def errprinter_fn(msg):
         if isinstance(msg, str) and "APM:Copter" in msg:
-            logging_check['ok'] = True
+            logging_check["ok"] = True
 
     vehicle = connect(sitl_connection_string, wait_ready=False, status_printer=errprinter_fn)
 
     try:
         i = 5
-        while not logging_check['ok'] and i > 0:
+        while not logging_check["ok"] and i > 0:
             time.sleep(1)
             i -= 1
 
-        assert logging_check['ok']
+        assert logging_check["ok"]
     finally:
         vehicle.close()
 
         # Cleanup the logger
-        autopilotLogger = logging.getLogger('autopilot')
+        autopilotLogger = logging.getLogger("autopilot")
         autopilotLogger.removeHandler(autopilotLogger.handlers[0])

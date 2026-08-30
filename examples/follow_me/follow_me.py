@@ -22,21 +22,20 @@ import gps
 from dronekit import LocationGlobalRelative, VehicleMode, connect
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-#Set up option parsing to get connection string
+# Set up option parsing to get connection string
 import argparse
 
 from _common import add_connection_argument, get_connection_string
 
-parser = argparse.ArgumentParser(description='Tracks GPS position of your computer (Linux only).')
+parser = argparse.ArgumentParser(description="Tracks GPS position of your computer (Linux only).")
 add_connection_argument(parser)
 args = parser.parse_args()
 
 connection_string = get_connection_string(args.connect)
 
 # Connect to the Vehicle
-print(f'Connecting to vehicle on: {connection_string}')
+print(f"Connecting to vehicle on: {connection_string}")
 vehicle = connect(connection_string, wait_ready=True, timeout=300)
-
 
 
 def arm_and_takeoff(aTargetAltitude):
@@ -50,7 +49,6 @@ def arm_and_takeoff(aTargetAltitude):
         print(" Waiting for vehicle to initialise...")
         time.sleep(1)
 
-
     print("Arming motors")
     # Copter should arm in GUIDED mode
     vehicle.mode = VehicleMode("GUIDED")
@@ -61,28 +59,26 @@ def arm_and_takeoff(aTargetAltitude):
         time.sleep(1)
 
     print("Taking off!")
-    vehicle.simple_takeoff(aTargetAltitude) # Take off to target altitude
+    vehicle.simple_takeoff(aTargetAltitude)  # Take off to target altitude
 
     # Wait until the vehicle reaches a safe height before processing the goto (otherwise the command
     #  after Vehicle.simple_takeoff will execute immediately).
     while True:
         print(" Altitude: ", vehicle.location.global_relative_frame.alt)
-        if vehicle.location.global_relative_frame.alt>=aTargetAltitude*0.95: #Trigger just below target alt.
+        if vehicle.location.global_relative_frame.alt >= aTargetAltitude * 0.95:  # Trigger just below target alt.
             print("Reached target altitude")
             break
         time.sleep(1)
-
 
 
 try:
     # Use the python gps package to access the laptop GPS
     gpsd = gps.gps(mode=gps.WATCH_ENABLE)
 
-    #Arm and take off to altitude of 5 meters
+    # Arm and take off to altitude of 5 meters
     arm_and_takeoff(5)
 
     while True:
-
         if vehicle.mode.name != "GUIDED":
             print("User has changed flight modes - aborting follow-me")
             break
@@ -107,7 +103,7 @@ except OSError:
     print("Error: gpsd service does not seem to be running, plug in USB GPS or run run-fake-gps.sh")
     sys.exit(1)
 
-#Close vehicle object before exiting script
+# Close vehicle object before exiting script
 print("Close vehicle object")
 vehicle.close()
 

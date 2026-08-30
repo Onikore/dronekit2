@@ -116,9 +116,24 @@ def test_227(vehicle):
 
     assert_commands(0)
 
-    vehicle.commands.add(Command(0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
-                                 mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, 10, 10,
-                                 10))
+    vehicle.commands.add(
+        Command(
+            0,
+            0,
+            0,
+            mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+            mavutil.mavlink.MAV_CMD_NAV_WAYPOINT,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            10,
+            10,
+            10,
+        )
+    )
     vehicle.flush()  # Send commands
 
     assert_commands(1)

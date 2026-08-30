@@ -30,7 +30,7 @@ class ChannelsOverride(dict):
 
     def __setitem__(self, key: Any, value: Any) -> None:
         if not (0 < int(key) <= self._count):
-            raise KeyError(f'Invalid channel index {key}')
+            raise KeyError(f"Invalid channel index {key}")
         if not value:
             try:
                 dict.__delitem__(self, str(key))
@@ -88,7 +88,7 @@ class Channels(dict):
 
     def __setitem__(self, key: Any, value: Any) -> None:
         if self._readonly:
-            raise TypeError('__setitem__ is not supported on Channels object')
+            raise TypeError("__setitem__ is not supported on Channels object")
         return dict.__setitem__(self, str(key), value)
 
     def __len__(self) -> int:

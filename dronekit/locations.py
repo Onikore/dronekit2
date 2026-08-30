@@ -39,38 +39,36 @@ class Locations(HasObservers):
         self._global_frame = LocationGlobal(None, None, None)
         self._global_relative_frame = LocationGlobalRelative(None, None, None)
 
-        @vehicle.on_message('GLOBAL_POSITION_INT')
+        @vehicle.on_message("GLOBAL_POSITION_INT")
         def listener(vehicle: VehicleLike, name: str, m: Any) -> None:
             lat = m.lat / 1.0e7
             lon = m.lon / 1.0e7
 
             self._global_relative_frame = LocationGlobalRelative(lat, lon, m.relative_alt / 1000.0)
-            self.notify_attribute_listeners('global_relative_frame', self.global_relative_frame)
-            vehicle.notify_attribute_listeners('location.global_relative_frame',
-                                               vehicle.location.global_relative_frame)
+            self.notify_attribute_listeners("global_relative_frame", self.global_relative_frame)
+            vehicle.notify_attribute_listeners("location.global_relative_frame", vehicle.location.global_relative_frame)
 
             if self._global_frame.alt is not None or m.alt != 0:
                 # Require first alt value to be non-0
                 # TODO is this the proper check to do?
                 self._global_frame = LocationGlobal(lat, lon, m.alt / 1000.0)
-                self.notify_attribute_listeners('global_frame', self.global_frame)
-                vehicle.notify_attribute_listeners('location.global_frame',
-                                                   vehicle.location.global_frame)
+                self.notify_attribute_listeners("global_frame", self.global_frame)
+                vehicle.notify_attribute_listeners("location.global_frame", vehicle.location.global_frame)
 
-            vehicle.notify_attribute_listeners('location', vehicle.location)
+            vehicle.notify_attribute_listeners("location", vehicle.location)
 
         self._north: float | None = None
         self._east: float | None = None
         self._down: float | None = None
 
-        @vehicle.on_message('LOCAL_POSITION_NED')
+        @vehicle.on_message("LOCAL_POSITION_NED")
         def listener(vehicle: VehicleLike, name: str, m: Any) -> None:  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
             self._north = m.x
             self._east = m.y
             self._down = m.z
-            self.notify_attribute_listeners('local_frame', self.local_frame)
-            vehicle.notify_attribute_listeners('location.local_frame', vehicle.location.local_frame)
-            vehicle.notify_attribute_listeners('location', vehicle.location)
+            self.notify_attribute_listeners("local_frame", self.local_frame)
+            vehicle.notify_attribute_listeners("location.local_frame", vehicle.location.local_frame)
+            vehicle.notify_attribute_listeners("location", vehicle.location)
 
     @property
     def local_frame(self) -> LocationLocal:

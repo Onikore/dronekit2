@@ -8,8 +8,8 @@ def test_110(vehicle):
     # NOTE these are *very inappropriate settings*
     # to make on a real vehicle. They are leveraged
     # exclusively for simulation. Take heed!!!
-    vehicle.parameters['FS_GCS_ENABLE'] = 0
-    vehicle.parameters['FS_EKF_THRESH'] = 100
+    vehicle.parameters["FS_GCS_ENABLE"] = 0
+    vehicle.parameters["FS_EKF_THRESH"] = 100
 
     # Await armability.
     wait_for(lambda: vehicle.is_armable, 60)
@@ -28,11 +28,11 @@ def test_110(vehicle):
 
     # When the same (event, callback) pair is passed to add_attribute_listener,
     # only one instance of the observer callback should be added.
-    vehicle.add_attribute_listener('armed', armed_callback)
-    vehicle.add_attribute_listener('armed', armed_callback)
-    vehicle.add_attribute_listener('armed', armed_callback)
-    vehicle.add_attribute_listener('armed', armed_callback)
-    vehicle.add_attribute_listener('armed', armed_callback)
+    vehicle.add_attribute_listener("armed", armed_callback)
+    vehicle.add_attribute_listener("armed", armed_callback)
+    vehicle.add_attribute_listener("armed", armed_callback)
+    vehicle.add_attribute_listener("armed", armed_callback)
+    vehicle.add_attribute_listener("armed", armed_callback)
 
     # arm and see update.
     vehicle.armed = True
@@ -49,8 +49,8 @@ def test_110(vehicle):
     # NOTE: We test if armed_callback were treating adding each additional callback
     # and remove_attribute_listener were removing them one at a time; in this
     # case, there would be three callbacks still attached.
-    vehicle.remove_attribute_listener('armed', armed_callback)
-    vehicle.remove_attribute_listener('armed', armed_callback)
+    vehicle.remove_attribute_listener("armed", armed_callback)
+    vehicle.remove_attribute_listener("armed", armed_callback)
     callcount = armed_callback.called
 
     # Disarm and see update.

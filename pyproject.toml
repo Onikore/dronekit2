@@ -58,6 +58,14 @@ target-version = "py39"
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B"]
 
+[tool.ruff.lint.per-file-ignores]
+# Command's docstring links to ArduPilot wiki pages with long URLs inside RST
+# inline hyperlinks (`` `text <url>`_ ``); wrapping them would either break
+# the link or leak a "# noqa" into the rendered API docs, since this text is
+# a docstring, not a comment. Scoped to this one file rather than raised
+# line-length globally.
+"dronekit/mission.py" = ["E501"]
+
 [tool.pytest.ini_options]
 markers = [
     "sitl: requires a running ArduPilot SITL instance",

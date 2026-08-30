@@ -19,12 +19,12 @@ from pymavlink import mavutil  # Needed for command message definitions
 from dronekit import LocationGlobal, LocationGlobalRelative, VehicleMode, connect
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-#Set up option parsing to get connection string
+# Set up option parsing to get connection string
 import argparse
 
 from _common import add_connection_argument, get_connection_string
 
-parser = argparse.ArgumentParser(description='Control Copter and send commands in GUIDED mode ')
+parser = argparse.ArgumentParser(description="Control Copter and send commands in GUIDED mode ")
 add_connection_argument(parser)
 args = parser.parse_args()
 
@@ -32,7 +32,7 @@ connection_string = get_connection_string(args.connect)
 
 
 # Connect to the Vehicle
-print(f'Connecting to vehicle on: {connection_string}')
+print(f"Connecting to vehicle on: {connection_string}")
 vehicle = connect(connection_string, wait_ready=True)
 
 
@@ -47,7 +47,6 @@ def arm_and_takeoff(aTargetAltitude):
         print(" Waiting for vehicle to initialise...")
         time.sleep(1)
 
-
     print("Arming motors")
     # Copter should arm in GUIDED mode
     vehicle.mode = VehicleMode("GUIDED")
@@ -58,21 +57,20 @@ def arm_and_takeoff(aTargetAltitude):
         time.sleep(1)
 
     print("Taking off!")
-    vehicle.simple_takeoff(aTargetAltitude) # Take off to target altitude
+    vehicle.simple_takeoff(aTargetAltitude)  # Take off to target altitude
 
     # Wait until the vehicle reaches a safe height before processing the goto (otherwise the command
     #  after Vehicle.simple_takeoff will execute immediately).
     while True:
         print(" Altitude: ", vehicle.location.global_relative_frame.alt)
-        if vehicle.location.global_relative_frame.alt>=aTargetAltitude*0.95: #Trigger just below target alt.
+        if vehicle.location.global_relative_frame.alt >= aTargetAltitude * 0.95:  # Trigger just below target alt.
             print("Reached target altitude")
             break
         time.sleep(1)
 
 
-#Arm and take of to altitude of 5 meters
+# Arm and take of to altitude of 5 meters
 arm_and_takeoff(5)
-
 
 
 """
@@ -87,6 +85,7 @@ The set of commands demonstrated here include:
 The full set of available commands are listed here:
 http://dev.ardupilot.com/wiki/copter-commands-in-guided-mode/
 """
+
 
 def condition_yaw(heading, relative=False):
     """
@@ -103,19 +102,23 @@ def condition_yaw(heading, relative=False):
     http://copter.ardupilot.com/wiki/common-mavlink-mission-command-messages-mav_cmd/#mav_cmd_condition_yaw
     """
     if relative:
-        is_relative = 1 #yaw relative to direction of travel
+        is_relative = 1  # yaw relative to direction of travel
     else:
-        is_relative = 0 #yaw is an absolute angle
+        is_relative = 0  # yaw is an absolute angle
     # create the CONDITION_YAW command using command_long_encode()
     msg = vehicle.message_factory.command_long_encode(
-        0, 0,    # target system, target component
-        mavutil.mavlink.MAV_CMD_CONDITION_YAW, #command
-        0, #confirmation
-        heading,    # param 1, yaw in degrees
-        0,          # param 2, yaw speed deg/s
-        1,          # param 3, direction -1 ccw, 1 cw
-        is_relative, # param 4, relative offset 1, absolute angle 0
-        0, 0, 0)    # param 5 ~ 7 not used
+        0,
+        0,  # target system, target component
+        mavutil.mavlink.MAV_CMD_CONDITION_YAW,  # command
+        0,  # confirmation
+        heading,  # param 1, yaw in degrees
+        0,  # param 2, yaw speed deg/s
+        1,  # param 3, direction -1 ccw, 1 cw
+        is_relative,  # param 4, relative offset 1, absolute angle 0
+        0,
+        0,
+        0,
+    )  # param 5 ~ 7 not used
     # send command to vehicle
     vehicle.send_mavlink(msg)
 
@@ -131,17 +134,20 @@ def set_roi(location):
     """
     # create the MAV_CMD_DO_SET_ROI command
     msg = vehicle.message_factory.command_long_encode(
-        0, 0,    # target system, target component
-        mavutil.mavlink.MAV_CMD_DO_SET_ROI, #command
-        0, #confirmation
-        0, 0, 0, 0, #params 1-4
+        0,
+        0,  # target system, target component
+        mavutil.mavlink.MAV_CMD_DO_SET_ROI,  # command
+        0,  # confirmation
+        0,
+        0,
+        0,
+        0,  # params 1-4
         location.lat,
         location.lon,
-        location.alt
-        )
+        location.alt,
+    )
     # send command to vehicle
     vehicle.send_mavlink(msg)
-
 
 
 """
@@ -158,6 +164,7 @@ Specifically, it provides:
 * get_bearing - Get the bearing in degrees to a LocationGlobal
 """
 
+
 def get_location_metres(original_location, dNorth, dEast):
     """
     Returns a LocationGlobal object containing the latitude/longitude `dNorth` and `dEast` metres from the
@@ -172,18 +179,18 @@ def get_location_metres(original_location, dNorth, dEast):
     For more information see:
     http://gis.stackexchange.com/questions/2951/algorithm-for-offsetting-a-latitude-longitude-by-some-amount-of-meters
     """
-    earth_radius = 6378137.0 #Radius of "spherical" earth
-    #Coordinate offsets in radians
-    dLat = dNorth/earth_radius
-    dLon = dEast/(earth_radius*math.cos(math.pi*original_location.lat/180))
+    earth_radius = 6378137.0  # Radius of "spherical" earth
+    # Coordinate offsets in radians
+    dLat = dNorth / earth_radius
+    dLon = dEast / (earth_radius * math.cos(math.pi * original_location.lat / 180))
 
-    #New position in decimal degrees
-    newlat = original_location.lat + (dLat * 180/math.pi)
-    newlon = original_location.lon + (dLon * 180/math.pi)
+    # New position in decimal degrees
+    newlat = original_location.lat + (dLat * 180 / math.pi)
+    newlon = original_location.lon + (dLon * 180 / math.pi)
     if type(original_location) is LocationGlobal:
-        targetlocation=LocationGlobal(newlat, newlon,original_location.alt)
+        targetlocation = LocationGlobal(newlat, newlon, original_location.alt)
     elif type(original_location) is LocationGlobalRelative:
-        targetlocation=LocationGlobalRelative(newlat, newlon,original_location.alt)
+        targetlocation = LocationGlobalRelative(newlat, newlon, original_location.alt)
     else:
         raise Exception("Invalid Location object passed")
 
@@ -200,7 +207,7 @@ def get_distance_metres(aLocation1, aLocation2):
     """
     dlat = aLocation2.lat - aLocation1.lat
     dlong = aLocation2.lon - aLocation1.lon
-    return math.sqrt((dlat*dlat) + (dlong*dlong)) * 1.113195e5
+    return math.sqrt((dlat * dlat) + (dlong * dlong)) * 1.113195e5
 
 
 def get_bearing(aLocation1, aLocation2):
@@ -219,7 +226,6 @@ def get_bearing(aLocation1, aLocation2):
     return bearing
 
 
-
 """
 Functions to move the vehicle to a specified position (as opposed to controlling movement by setting
 velocity components).
@@ -235,6 +241,7 @@ The methods include:
     This method reports distance to the destination.
 """
 
+
 def goto_position_target_global_int(aLocation):
     """
     Send SET_POSITION_TARGET_GLOBAL_INT command to request the vehicle fly to a specified LocationGlobal.
@@ -245,23 +252,27 @@ def goto_position_target_global_int(aLocation):
     At time of writing, acceleration and yaw bits are ignored.
     """
     msg = vehicle.message_factory.set_position_target_global_int_encode(
-        0,       # time_boot_ms (not used)
-        0, 0,    # target system, target component
-        mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT, # frame
-        0b0000111111111000, # type_mask (only speeds enabled)
-        aLocation.lat*1e7, # lat_int - X Position in WGS84 frame in 1e7 * meters
-        aLocation.lon*1e7, # lon_int - Y Position in WGS84 frame in 1e7 * meters
+        0,  # time_boot_ms (not used)
+        0,
+        0,  # target system, target component
+        mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT,  # frame
+        0b0000111111111000,  # type_mask (only speeds enabled)
+        aLocation.lat * 1e7,  # lat_int - X Position in WGS84 frame in 1e7 * meters
+        aLocation.lon * 1e7,  # lon_int - Y Position in WGS84 frame in 1e7 * meters
         # alt - Altitude in meters in AMSL altitude, not WGS84 if absolute or relative, above terrain if
         # GLOBAL_TERRAIN_ALT_INT
         aLocation.alt,
-        0, # X velocity in NED frame in m/s
-        0, # Y velocity in NED frame in m/s
-        0, # Z velocity in NED frame in m/s
-        0, 0, 0, # afx, afy, afz acceleration (not supported yet, ignored in GCS_Mavlink)
-        0, 0)    # yaw, yaw_rate (not supported yet, ignored in GCS_Mavlink)
+        0,  # X velocity in NED frame in m/s
+        0,  # Y velocity in NED frame in m/s
+        0,  # Z velocity in NED frame in m/s
+        0,
+        0,
+        0,  # afx, afy, afz acceleration (not supported yet, ignored in GCS_Mavlink)
+        0,
+        0,
+    )  # yaw, yaw_rate (not supported yet, ignored in GCS_Mavlink)
     # send command to vehicle
     vehicle.send_mavlink(msg)
-
 
 
 def goto_position_target_local_ned(north, east, down):
@@ -281,17 +292,25 @@ def goto_position_target_local_ned(north, east, down):
 
     """
     msg = vehicle.message_factory.set_position_target_local_ned_encode(
-        0,       # time_boot_ms (not used)
-        0, 0,    # target system, target component
-        mavutil.mavlink.MAV_FRAME_LOCAL_NED, # frame
-        0b0000111111111000, # type_mask (only positions enabled)
-        north, east, down, # x, y, z positions (or North, East, Down in the MAV_FRAME_BODY_NED frame
-        0, 0, 0, # x, y, z velocity in m/s  (not used)
-        0, 0, 0, # x, y, z acceleration (not supported yet, ignored in GCS_Mavlink)
-        0, 0)    # yaw, yaw_rate (not supported yet, ignored in GCS_Mavlink)
+        0,  # time_boot_ms (not used)
+        0,
+        0,  # target system, target component
+        mavutil.mavlink.MAV_FRAME_LOCAL_NED,  # frame
+        0b0000111111111000,  # type_mask (only positions enabled)
+        north,
+        east,
+        down,  # x, y, z positions (or North, East, Down in the MAV_FRAME_BODY_NED frame
+        0,
+        0,
+        0,  # x, y, z velocity in m/s  (not used)
+        0,
+        0,
+        0,  # x, y, z acceleration (not supported yet, ignored in GCS_Mavlink)
+        0,
+        0,
+    )  # yaw, yaw_rate (not supported yet, ignored in GCS_Mavlink)
     # send command to vehicle
     vehicle.send_mavlink(msg)
-
 
 
 def goto(dNorth, dEast, gotoFunction=vehicle.simple_goto):
@@ -310,18 +329,17 @@ def goto(dNorth, dEast, gotoFunction=vehicle.simple_goto):
     targetDistance = get_distance_metres(currentLocation, targetLocation)
     gotoFunction(targetLocation)
 
-    #print "DEBUG: targetLocation: %s" % targetLocation
-    #print "DEBUG: targetLocation: %s" % targetDistance
+    # print "DEBUG: targetLocation: %s" % targetLocation
+    # print "DEBUG: targetLocation: %s" % targetDistance
 
-    while vehicle.mode.name=="GUIDED": #Stop action if we are no longer in guided mode.
-        #print "DEBUG: mode: %s" % vehicle.mode.name
-        remainingDistance=get_distance_metres(vehicle.location.global_relative_frame, targetLocation)
+    while vehicle.mode.name == "GUIDED":  # Stop action if we are no longer in guided mode.
+        # print "DEBUG: mode: %s" % vehicle.mode.name
+        remainingDistance = get_distance_metres(vehicle.location.global_relative_frame, targetLocation)
         print("Distance to target: ", remainingDistance)
-        if remainingDistance<=targetDistance*0.01: #Just below target, in case of undershoot.
+        if remainingDistance <= targetDistance * 0.01:  # Just below target, in case of undershoot.
             print("Reached target")
             break
         time.sleep(2)
-
 
 
 """
@@ -334,6 +352,7 @@ The methods include:
 * send_ned_velocity - Sets velocity components using SET_POSITION_TARGET_LOCAL_NED command
 * send_global_velocity - Sets velocity components using SET_POSITION_TARGET_GLOBAL_INT command
 """
+
 
 def send_ned_velocity(velocity_x, velocity_y, velocity_z, duration):
     """
@@ -353,21 +372,28 @@ def send_ned_velocity(velocity_x, velocity_y, velocity_z, duration):
     At time of writing, acceleration and yaw bits are ignored.
     """
     msg = vehicle.message_factory.set_position_target_local_ned_encode(
-        0,       # time_boot_ms (not used)
-        0, 0,    # target system, target component
-        mavutil.mavlink.MAV_FRAME_LOCAL_NED, # frame
-        0b0000111111000111, # type_mask (only speeds enabled)
-        0, 0, 0, # x, y, z positions (not used)
-        velocity_x, velocity_y, velocity_z, # x, y, z velocity in m/s
-        0, 0, 0, # x, y, z acceleration (not supported yet, ignored in GCS_Mavlink)
-        0, 0)    # yaw, yaw_rate (not supported yet, ignored in GCS_Mavlink)
+        0,  # time_boot_ms (not used)
+        0,
+        0,  # target system, target component
+        mavutil.mavlink.MAV_FRAME_LOCAL_NED,  # frame
+        0b0000111111000111,  # type_mask (only speeds enabled)
+        0,
+        0,
+        0,  # x, y, z positions (not used)
+        velocity_x,
+        velocity_y,
+        velocity_z,  # x, y, z velocity in m/s
+        0,
+        0,
+        0,  # x, y, z acceleration (not supported yet, ignored in GCS_Mavlink)
+        0,
+        0,
+    )  # yaw, yaw_rate (not supported yet, ignored in GCS_Mavlink)
 
     # send command to vehicle on 1 Hz cycle
-    for _ in range(0,duration):
+    for _ in range(0, duration):
         vehicle.send_mavlink(msg)
         time.sleep(1)
-
-
 
 
 def send_global_velocity(velocity_x, velocity_y, velocity_z, duration):
@@ -387,22 +413,27 @@ def send_global_velocity(velocity_x, velocity_y, velocity_z, duration):
     At time of writing, acceleration and yaw bits are ignored.
     """
     msg = vehicle.message_factory.set_position_target_global_int_encode(
-        0,       # time_boot_ms (not used)
-        0, 0,    # target system, target component
-        mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT, # frame
-        0b0000111111000111, # type_mask (only speeds enabled)
-        0, # lat_int - X Position in WGS84 frame in 1e7 * meters
-        0, # lon_int - Y Position in WGS84 frame in 1e7 * meters
-        0, # alt - Altitude in meters in AMSL altitude(not WGS84 if absolute or relative)
+        0,  # time_boot_ms (not used)
+        0,
+        0,  # target system, target component
+        mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT,  # frame
+        0b0000111111000111,  # type_mask (only speeds enabled)
+        0,  # lat_int - X Position in WGS84 frame in 1e7 * meters
+        0,  # lon_int - Y Position in WGS84 frame in 1e7 * meters
+        0,  # alt - Altitude in meters in AMSL altitude(not WGS84 if absolute or relative)
         # altitude above terrain if GLOBAL_TERRAIN_ALT_INT
-        velocity_x, # X velocity in NED frame in m/s
-        velocity_y, # Y velocity in NED frame in m/s
-        velocity_z, # Z velocity in NED frame in m/s
-        0, 0, 0, # afx, afy, afz acceleration (not supported yet, ignored in GCS_Mavlink)
-        0, 0)    # yaw, yaw_rate (not supported yet, ignored in GCS_Mavlink)
+        velocity_x,  # X velocity in NED frame in m/s
+        velocity_y,  # Y velocity in NED frame in m/s
+        velocity_z,  # Z velocity in NED frame in m/s
+        0,
+        0,
+        0,  # afx, afy, afz acceleration (not supported yet, ignored in GCS_Mavlink)
+        0,
+        0,
+    )  # yaw, yaw_rate (not supported yet, ignored in GCS_Mavlink)
 
     # send command to vehicle on 1 Hz cycle
-    for _ in range(0,duration):
+    for _ in range(0, duration):
         vehicle.send_mavlink(msg)
         time.sleep(1)
 
@@ -417,7 +448,7 @@ the distance-to-target.
 print("TRIANGLE path using standard Vehicle.simple_goto()")
 
 print("Set groundspeed to 5m/s.")
-vehicle.groundspeed=5
+vehicle.groundspeed = 5
 
 print("Position North 80 West 50")
 goto(80, -50)
@@ -427,8 +458,6 @@ goto(0, 100)
 
 print("Position North -80 West 50")
 goto(-80, -50)
-
-
 
 
 """
@@ -463,7 +492,6 @@ print("Position North 100 West 130")
 goto(100, -130, goto_position_target_global_int)
 
 
-
 """
 Fly the vehicle in a 50m square path, using the SET_POSITION_TARGET_LOCAL_NED command
 and specifying a target position (rather than controlling movement using velocity vectors).
@@ -481,10 +509,10 @@ camera gimbal at the the selected location (in this case it aligns the whole veh
 """
 
 print("SQUARE path using SET_POSITION_TARGET_LOCAL_NED and position parameters")
-DURATION = 20 #Set duration for each segment.
+DURATION = 20  # Set duration for each segment.
 
 print(f"North 50m, East 0m, 10m altitude for {DURATION} seconds")
-goto_position_target_local_ned(50,0,-10)
+goto_position_target_local_ned(50, 0, -10)
 print("Point ROI at current location (home position)")
 # NOTE that this has to be called after the goto command as first "move" command of a particular type
 # "resets" ROI/YAW commands
@@ -492,20 +520,19 @@ set_roi(vehicle.location.global_relative_frame)
 time.sleep(DURATION)
 
 print("North 50m, East 50m, 10m altitude")
-goto_position_target_local_ned(50,50,-10)
+goto_position_target_local_ned(50, 50, -10)
 time.sleep(DURATION)
 
 print("Point ROI at current location")
 set_roi(vehicle.location.global_relative_frame)
 
 print("North 0m, East 50m, 10m altitude")
-goto_position_target_local_ned(0,50,-10)
+goto_position_target_local_ned(0, 50, -10)
 time.sleep(DURATION)
 
 print("North 0m, East 0m, 10m altitude")
-goto_position_target_local_ned(0,0,-10)
+goto_position_target_local_ned(0, 0, -10)
 time.sleep(DURATION)
-
 
 
 """
@@ -519,7 +546,7 @@ so that the front of the vehicle points in the direction of travel
 """
 
 
-#Set up velocity vector to map to each direction.
+# Set up velocity vector to map to each direction.
 # vx > 0 => fly North
 # vx < 0 => fly South
 NORTH = 2
@@ -545,32 +572,32 @@ print("Yaw 180 absolute (South)")
 condition_yaw(180)
 
 print("Velocity South & up")
-send_ned_velocity(SOUTH,0,UP,DURATION)
-send_ned_velocity(0,0,0,1)
+send_ned_velocity(SOUTH, 0, UP, DURATION)
+send_ned_velocity(0, 0, 0, 1)
 
 
 print("Yaw 270 absolute (West)")
 condition_yaw(270)
 
 print("Velocity West & down")
-send_ned_velocity(0,WEST,DOWN,DURATION)
-send_ned_velocity(0,0,0,1)
+send_ned_velocity(0, WEST, DOWN, DURATION)
+send_ned_velocity(0, 0, 0, 1)
 
 
 print("Yaw 0 absolute (North)")
 condition_yaw(0)
 
 print("Velocity North")
-send_ned_velocity(NORTH,0,0,DURATION)
-send_ned_velocity(0,0,0,1)
+send_ned_velocity(NORTH, 0, 0, DURATION)
+send_ned_velocity(0, 0, 0, 1)
 
 
 print("Yaw 90 absolute (East)")
 condition_yaw(90)
 
 print("Velocity East")
-send_ned_velocity(0,EAST,0,DURATION)
-send_ned_velocity(0,0,0,1)
+send_ned_velocity(0, EAST, 0, DURATION)
+send_ned_velocity(0, 0, 0, 1)
 
 
 """
@@ -592,21 +619,21 @@ print("Yaw 225 absolute")
 condition_yaw(225)
 
 print("Velocity South, West and Up")
-send_global_velocity(SOUTH,WEST,UP,DURATION)
-send_global_velocity(0,0,0,1)
+send_global_velocity(SOUTH, WEST, UP, DURATION)
+send_global_velocity(0, 0, 0, 1)
 
 
 print("Yaw 90 relative (to previous yaw heading)")
-condition_yaw(90,relative=True)
+condition_yaw(90, relative=True)
 
 print("Velocity North, West and Down")
-send_global_velocity(NORTH,WEST,DOWN,DURATION)
-send_global_velocity(0,0,0,1)
+send_global_velocity(NORTH, WEST, DOWN, DURATION)
+send_global_velocity(0, 0, 0, 1)
 
 print("Set new home location to current location")
-vehicle.home_location=vehicle.location.global_frame
+vehicle.home_location = vehicle.location.global_frame
 print("Get new home location")
-#This reloads the home location in DroneKit and GCSs
+# This reloads the home location in DroneKit and GCSs
 cmds = vehicle.commands
 cmds.download()
 cmds.wait_ready()
@@ -614,19 +641,19 @@ print(f" Home Location: {vehicle.home_location}")
 
 
 print("Yaw 90 relative (to previous yaw heading)")
-condition_yaw(90,relative=True)
+condition_yaw(90, relative=True)
 
 print("Velocity North and East")
-send_global_velocity(NORTH,EAST,0,DURATION)
-send_global_velocity(0,0,0,1)
+send_global_velocity(NORTH, EAST, 0, DURATION)
+send_global_velocity(0, 0, 0, 1)
 
 
 print("Yaw 90 relative (to previous yaw heading)")
-condition_yaw(90,relative=True)
+condition_yaw(90, relative=True)
 
 print("Velocity South and East")
-send_global_velocity(SOUTH,EAST,0,DURATION)
-send_global_velocity(0,0,0,1)
+send_global_velocity(SOUTH, EAST, 0, DURATION)
+send_global_velocity(0, 0, 0, 1)
 
 
 """
@@ -637,7 +664,7 @@ print("Setting LAND mode...")
 vehicle.mode = VehicleMode("LAND")
 
 
-#Close vehicle object before exiting script
+# Close vehicle object before exiting script
 print("Close vehicle object")
 vehicle.close()
 

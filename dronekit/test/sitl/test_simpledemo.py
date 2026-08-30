@@ -11,7 +11,7 @@ def test_parameter(vehicle):
     v = vehicle
 
     # Perform a simple parameter check
-    assert type(v.parameters['MOT_SPIN_MIN']) is float
+    assert type(v.parameters["MOT_SPIN_MIN"]) is float
 
 
 # This test runs second. Add as many tests as you like

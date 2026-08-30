@@ -38,7 +38,7 @@ class Attitude:
         self.roll = roll
 
     def __str__(self) -> str:
-        fmt = '{}:pitch={pitch},yaw={yaw},roll={roll}'
+        fmt = "{}:pitch={pitch},yaw={yaw},roll={roll}"
         return fmt.format(self.__class__.__name__, **vars(self))
 
 
@@ -165,8 +165,9 @@ class GPSInfo:
     .. todo:: FIXME: GPSInfo class - possibly normalize eph/epv?  report fix type as string?
     """
 
-    def __init__(self, eph: float | None, epv: float | None, fix_type: int | None,
-                 satellites_visible: int | None) -> None:
+    def __init__(
+        self, eph: float | None, epv: float | None, fix_type: int | None, satellites_visible: int | None
+    ) -> None:
         self.eph = eph
         self.epv = epv
         self.fix_type = fix_type
@@ -186,14 +187,17 @@ class Wind:
     :param wind_speed: Wind speed in m/s
     :param wind_speed_z: vertical wind speed in m/s
     """
+
     def __init__(self, wind_direction: float, wind_speed: float, wind_speed_z: float) -> None:
         self.wind_direction = wind_direction
         self.wind_speed = wind_speed
         self.wind_speed_z = wind_speed_z
 
     def __str__(self) -> str:
-        return (f"Wind: wind direction: {self.wind_direction}, wind speed: {self.wind_speed}, "
-                f"wind speed z: {self.wind_speed_z}")
+        return (
+            f"Wind: wind direction: {self.wind_direction}, wind speed: {self.wind_speed}, "
+            f"wind speed z: {self.wind_speed_z}"
+        )
 
 
 class Battery:
@@ -271,6 +275,7 @@ class Version:
         This is a composite of the product release cycle stage (rc, beta etc) and the version in that cycle - e.g. 23.
 
     """
+
     def __init__(self, raw_version: int | None, autopilot_type: int | None, vehicle_type: int | None) -> None:
         self.autopilot_type = autopilot_type
         self.vehicle_type = vehicle_type
@@ -281,9 +286,9 @@ class Version:
             self.patch = None
             self.release = None
         else:
-            self.major   = raw_version >> 24 & 0xFF
-            self.minor   = raw_version >> 16 & 0xFF
-            self.patch   = raw_version >> 8  & 0xFF
+            self.major = raw_version >> 24 & 0xFF
+            self.minor = raw_version >> 16 & 0xFF
+            self.patch = raw_version >> 8 & 0xFF
             self.release = raw_version & 0xFF
 
     def is_stable(self) -> bool:
@@ -413,20 +418,21 @@ class Capabilities:
 
         Autopilot supports onboard compass calibration (Boolean).
     """
+
     def __init__(self, capabilities: int) -> None:
-        self.mission_float                  = (((capabilities >> 0)  & 1) == 1)
-        self.param_float                    = (((capabilities >> 1)  & 1) == 1)
-        self.mission_int                    = (((capabilities >> 2)  & 1) == 1)
-        self.command_int                    = (((capabilities >> 3)  & 1) == 1)
-        self.param_union                    = (((capabilities >> 4)  & 1) == 1)
-        self.ftp                            = (((capabilities >> 5)  & 1) == 1)
-        self.set_attitude_target            = (((capabilities >> 6)  & 1) == 1)
-        self.set_attitude_target_local_ned  = (((capabilities >> 7)  & 1) == 1)
-        self.set_altitude_target_global_int = (((capabilities >> 8)  & 1) == 1)
-        self.terrain                        = (((capabilities >> 9)  & 1) == 1)
-        self.set_actuator_target            = (((capabilities >> 10) & 1) == 1)
-        self.flight_termination             = (((capabilities >> 11) & 1) == 1)
-        self.compass_calibration            = (((capabilities >> 12) & 1) == 1)
+        self.mission_float = ((capabilities >> 0) & 1) == 1
+        self.param_float = ((capabilities >> 1) & 1) == 1
+        self.mission_int = ((capabilities >> 2) & 1) == 1
+        self.command_int = ((capabilities >> 3) & 1) == 1
+        self.param_union = ((capabilities >> 4) & 1) == 1
+        self.ftp = ((capabilities >> 5) & 1) == 1
+        self.set_attitude_target = ((capabilities >> 6) & 1) == 1
+        self.set_attitude_target_local_ned = ((capabilities >> 7) & 1) == 1
+        self.set_altitude_target_global_int = ((capabilities >> 8) & 1) == 1
+        self.terrain = ((capabilities >> 9) & 1) == 1
+        self.set_actuator_target = ((capabilities >> 10) & 1) == 1
+        self.flight_termination = ((capabilities >> 11) & 1) == 1
+        self.compass_calibration = ((capabilities >> 12) & 1) == 1
 
 
 class VehicleMode:

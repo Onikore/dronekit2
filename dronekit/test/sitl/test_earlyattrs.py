@@ -11,7 +11,7 @@ def test_battery_none(sitl_connection_string):
         vehicle.initialize()
 
         # Ensure we can get battery object without throwing error.
-        vehicle.wait_ready('battery')
+        vehicle.wait_ready("battery")
         assert vehicle.battery is not None
     finally:
         vehicle.close()

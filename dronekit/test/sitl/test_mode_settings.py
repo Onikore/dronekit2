@@ -1,5 +1,5 @@
 def test_modes_set(vehicle):
     def listener(self, name, m):
-        assert self._flightmode == 'STABILIZE'
+        assert self._flightmode == "STABILIZE"
 
-    vehicle.add_message_listener('HEARTBEAT', listener)
+    vehicle.add_message_listener("HEARTBEAT", listener)

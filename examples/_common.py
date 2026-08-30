@@ -52,7 +52,7 @@ def add_connection_argument(parser, description=None):
     """
     what = description or "vehicle"
     parser.add_argument(
-        '--connect',
+        "--connect",
         help=(
             f"Connection target string for the {what}. If not specified, the "
             f"{CONNECTION_ENV_VAR} environment variable is used instead."

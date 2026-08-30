@@ -22,6 +22,7 @@ from dronekit import (
 # LocationGlobal
 # ---------------------------------------------------------------------------
 
+
 def test_location_global_stores_lat_lon_alt():
     loc = LocationGlobal(-35.363261, 149.165230, 584.0)
     assert loc.lat == -35.363261
@@ -49,6 +50,7 @@ def test_location_global_str():
 # LocationGlobalRelative
 # ---------------------------------------------------------------------------
 
+
 def test_location_global_relative_stores_lat_lon_alt():
     loc = LocationGlobalRelative(-35.361354, 149.165218, 20)
     assert loc.lat == -35.361354
@@ -75,6 +77,7 @@ def test_location_global_relative_str():
 # ---------------------------------------------------------------------------
 # LocationLocal
 # ---------------------------------------------------------------------------
+
 
 def test_location_local_stores_north_east_down():
     loc = LocationLocal(1.0, 2.0, 3.0)
@@ -120,6 +123,7 @@ def test_location_local_distance_home_none_when_all_missing():
 # Attitude
 # ---------------------------------------------------------------------------
 
+
 def test_attitude_stores_pitch_yaw_roll():
     att = Attitude(0.1, 0.2, 0.3)
     assert att.pitch == 0.1
@@ -135,6 +139,7 @@ def test_attitude_str():
 # ---------------------------------------------------------------------------
 # Battery
 # ---------------------------------------------------------------------------
+
 
 def test_battery_converts_voltage_from_millivolts():
     batt = Battery(12000, 0, 100)
@@ -172,6 +177,7 @@ def test_battery_str():
 # GPSInfo
 # ---------------------------------------------------------------------------
 
+
 def test_gps_info_stores_fields():
     gps = GPSInfo(1.5, 2.5, 3, 8)
     assert gps.eph == 1.5
@@ -197,6 +203,7 @@ def test_gps_info_str_reports_fix_and_satellite_count():
 # Wind
 # ---------------------------------------------------------------------------
 
+
 def test_wind_stores_fields():
     wind = Wind(180.0, 5.5, -0.2)
     assert wind.wind_direction == 180.0
@@ -212,6 +219,7 @@ def test_wind_str():
 # ---------------------------------------------------------------------------
 # Rangefinder
 # ---------------------------------------------------------------------------
+
 
 def test_rangefinder_stores_fields():
     rf = Rangefinder(1.23, 3.3)
@@ -236,12 +244,13 @@ def test_rangefinder_str():
 # VehicleMode
 # ---------------------------------------------------------------------------
 
+
 def test_vehicle_mode_equal_same_name():
-    assert VehicleMode('GUIDED') == VehicleMode('GUIDED')
+    assert VehicleMode("GUIDED") == VehicleMode("GUIDED")
 
 
 def test_vehicle_mode_not_equal_different_name():
-    assert VehicleMode('AUTO') != VehicleMode('GUIDED')
+    assert VehicleMode("AUTO") != VehicleMode("GUIDED")
 
 
 def test_vehicle_mode_equal_to_plain_string():
@@ -249,38 +258,40 @@ def test_vehicle_mode_equal_to_plain_string():
     # string (e.g. `while vehicle.mode.name != 'GUIDED':`), so VehicleMode's
     # __eq__/__ne__ compare against plain strings too, not just other
     # VehicleMode instances.
-    assert VehicleMode('GUIDED') == 'GUIDED'
-    assert VehicleMode('GUIDED') != 'AUTO'
+    assert VehicleMode("GUIDED") == "GUIDED"
+    assert VehicleMode("GUIDED") != "AUTO"
 
 
 def test_vehicle_mode_str():
-    assert str(VehicleMode('LOITER')) == 'VehicleMode:LOITER'
+    assert str(VehicleMode("LOITER")) == "VehicleMode:LOITER"
 
 
 # ---------------------------------------------------------------------------
 # SystemStatus
 # ---------------------------------------------------------------------------
 
+
 def test_system_status_equal_same_state():
-    assert SystemStatus('ACTIVE') == SystemStatus('ACTIVE')
+    assert SystemStatus("ACTIVE") == SystemStatus("ACTIVE")
 
 
 def test_system_status_not_equal_different_state():
-    assert SystemStatus('ACTIVE') != SystemStatus('STANDBY')
+    assert SystemStatus("ACTIVE") != SystemStatus("STANDBY")
 
 
 def test_system_status_equal_to_plain_string():
-    assert SystemStatus('ACTIVE') == 'ACTIVE'
-    assert SystemStatus('ACTIVE') != 'STANDBY'
+    assert SystemStatus("ACTIVE") == "ACTIVE"
+    assert SystemStatus("ACTIVE") != "STANDBY"
 
 
 def test_system_status_str():
-    assert str(SystemStatus('STANDBY')) == 'SystemStatus:STANDBY'
+    assert str(SystemStatus("STANDBY")) == "SystemStatus:STANDBY"
 
 
 # ---------------------------------------------------------------------------
 # Version
 # ---------------------------------------------------------------------------
+
 
 def _make_version(major, minor, patch, release, autopilot_type=3, vehicle_type=2):
     raw_version = (major << 24) | (minor << 16) | (patch << 8) | release

@@ -52,6 +52,7 @@ class Command(mavutil.mavlink.MAVLink_mission_item_message):
         altitude depends on the ``frame``.
 
     """
+
     pass
 
 
@@ -142,9 +143,20 @@ class CommandInt(mavutil.mavlink.MAVLink_mission_item_int_message):
         :return: An equivalent :py:class:`CommandInt`, with ``x``/``y`` rescaled to ``int32``.
         """
         return cls(
-            cmd.target_system, cmd.target_component, cmd.seq, cmd.frame, cmd.command,
-            cmd.current, cmd.autocontinue, cmd.param1, cmd.param2, cmd.param3, cmd.param4,
-            int(round(cmd.x * 1e7)), int(round(cmd.y * 1e7)), cmd.z,
+            cmd.target_system,
+            cmd.target_component,
+            cmd.seq,
+            cmd.frame,
+            cmd.command,
+            cmd.current,
+            cmd.autocontinue,
+            cmd.param1,
+            cmd.param2,
+            cmd.param3,
+            cmd.param4,
+            int(round(cmd.x * 1e7)),
+            int(round(cmd.y * 1e7)),
+            cmd.z,
         )
 
 
@@ -192,12 +204,12 @@ class CommandSequence:
         self._vehicle = vehicle
 
     def download(self) -> None:
-        '''
+        """
         Download all waypoints from the vehicle.
         The download is asynchronous. Use :py:func:`wait_ready()` to block your thread until the download is complete.
-        '''
+        """
         self.wait_ready()
-        self._vehicle._ready_attrs.remove('commands')
+        self._vehicle._ready_attrs.remove("commands")
         self._vehicle._wp_loaded = False
         self._vehicle._wp_download_in_progress = True
         self._vehicle._master.waypoint_request_list_send()
@@ -209,14 +221,14 @@ class CommandSequence:
 
         This can be called after :py:func:`download()` to block the thread until the asynchronous download is complete.
         """
-        return self._vehicle.wait_ready('commands', **kwargs)
+        return self._vehicle.wait_ready("commands", **kwargs)
 
     def clear(self) -> None:
-        '''
+        """
         Clear the command list.
 
         This command will be sent to the vehicle only after you call :py:func:`upload() <Vehicle.commands.upload>`.
-        '''
+        """
 
         # Add home point again.
         self.wait_ready()
@@ -227,11 +239,11 @@ class CommandSequence:
             pass
         self._vehicle._wploader.clear()
         if home:
-            self._vehicle._wploader.add(home, comment='Added by DroneKit')
+            self._vehicle._wploader.add(home, comment="Added by DroneKit")
         self._vehicle._wpts_dirty = True
 
     def add(self, cmd: Command | CommandInt) -> None:
-        '''
+        """
         Add a new command (waypoint) at the end of the command list.
 
         .. note::
@@ -245,10 +257,10 @@ class CommandSequence:
             message-class-agnostic operations (``.clear()``, ``.count()``, ``.add()``, ``.wp()``,
             ``.set()``, keyed purely by ``.seq``), so nothing here requires the float variant
             specifically.
-        '''
+        """
         self.wait_ready()
         self._vehicle._handler.fix_targets(cmd)
-        self._vehicle._wploader.add(cmd, comment='Added by DroneKit')
+        self._vehicle._wploader.add(cmd, comment="Added by DroneKit")
         self._vehicle._wpts_dirty = True
 
     def upload(self, timeout: float | None = None) -> None:
@@ -276,11 +288,11 @@ class CommandSequence:
 
     @property
     def count(self) -> int:
-        '''
+        """
         Return number of waypoints.
 
         :return: The number of waypoints in the sequence.
-        '''
+        """
         return max(self._vehicle._wploader.count() - 1, 0)
 
     @property
@@ -306,11 +318,11 @@ class CommandSequence:
             )
 
     def __len__(self) -> int:
-        '''
+        """
         Return number of waypoints.
 
         :return: The number of waypoints in the sequence.
-        '''
+        """
         self._raise_if_download_in_progress()
         return max(self._vehicle._wploader.count() - 1, 0)
 
@@ -321,10 +333,10 @@ class CommandSequence:
         elif isinstance(index, int):
             item = self._vehicle._wploader.wp(index + 1)
             if not item:
-                raise IndexError(f'Index {index} out of range.')
+                raise IndexError(f"Index {index} out of range.")
             return item
         else:
-            raise TypeError('Invalid argument type.')
+            raise TypeError("Invalid argument type.")
 
     def __setitem__(self, index: int, value: Any) -> None:
         self._vehicle._wploader.set(value, index + 1)

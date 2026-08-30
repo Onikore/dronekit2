@@ -16,8 +16,8 @@ def test_goto(vehicle):
     # NOTE these are *very inappropriate settings*
     # to make on a real vehicle. They are leveraged
     # exclusively for simulation. Take heed!!!
-    vehicle.parameters['FS_GCS_ENABLE'] = 0
-    vehicle.parameters['FS_EKF_THRESH'] = 100
+    vehicle.parameters["FS_GCS_ENABLE"] = 0
+    vehicle.parameters["FS_EKF_THRESH"] = 100
 
     def arm_and_takeoff(aTargetAltitude):
         """
@@ -34,16 +34,16 @@ def test_goto(vehicle):
         # Copter should arm in GUIDED mode
         vehicle.mode = VehicleMode("GUIDED")
         i = 60
-        while vehicle.mode.name != 'GUIDED' and i > 0:
+        while vehicle.mode.name != "GUIDED" and i > 0:
             # print " Waiting for guided %s seconds..." % (i,)
             time.sleep(1)
             i = i - 1
-        assert vehicle.mode.name == 'GUIDED'
+        assert vehicle.mode.name == "GUIDED"
 
         # Arm copter.
         vehicle.armed = True
         i = 60
-        while not vehicle.armed and vehicle.mode.name == 'GUIDED' and i > 0:
+        while not vehicle.armed and vehicle.mode.name == "GUIDED" and i > 0:
             # print " Waiting for arming %s seconds..." % (i,)
             time.sleep(1)
             i = i - 1
@@ -62,7 +62,7 @@ def test_goto(vehicle):
                 # print "Reached target altitude"
                 break
 
-            assert vehicle.mode.name == 'GUIDED'
+            assert vehicle.mode.name == "GUIDED"
             time.sleep(1)
 
     arm_and_takeoff(10)

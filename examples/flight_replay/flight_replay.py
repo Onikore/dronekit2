@@ -20,16 +20,16 @@ from pymavlink import mavutil
 from dronekit import Command, LocationGlobalRelative, VehicleMode, connect
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-#Set up option parsing to get connection string
+# Set up option parsing to get connection string
 import argparse
 
 from _common import add_connection_argument, get_connection_string
 
 parser = argparse.ArgumentParser(
-    description='Load a telemetry log and use position data to create mission waypoints for a vehicle.')
+    description="Load a telemetry log and use position data to create mission waypoints for a vehicle."
+)
 add_connection_argument(parser)
-parser.add_argument('--tlog', default='flight.tlog',
-                   help="Telemetry log containing path to replay")
+parser.add_argument("--tlog", default="flight.tlog", help="Telemetry log containing path to replay")
 args = parser.parse_args()
 
 
@@ -43,8 +43,7 @@ def get_distance_metres(aLocation1, aLocation2):
     """
     dlat = aLocation2.lat - aLocation1.lat
     dlong = aLocation2.lon - aLocation1.lon
-    return math.sqrt((dlat*dlat) + (dlong*dlong)) * 1.113195e5
-
+    return math.sqrt((dlat * dlat) + (dlong * dlong)) * 1.113195e5
 
 
 def distance_to_current_waypoint():
@@ -53,15 +52,16 @@ def distance_to_current_waypoint():
     It returns None for the first waypoint (Home location).
     """
     nextwaypoint = vehicle.commands.next
-    if nextwaypoint==0:
+    if nextwaypoint == 0:
         return None
-    missionitem=vehicle.commands[nextwaypoint-1] #commands are zero indexed
+    missionitem = vehicle.commands[nextwaypoint - 1]  # commands are zero indexed
     lat = missionitem.x
     lon = missionitem.y
     alt = missionitem.z
-    targetWaypointLocation = LocationGlobalRelative(lat,lon,alt)
+    targetWaypointLocation = LocationGlobalRelative(lat, lon, alt)
     distancetopoint = get_distance_metres(vehicle.location.global_frame, targetWaypointLocation)
     return distancetopoint
+
 
 def position_messages_from_tlog(filename):
     """
@@ -72,7 +72,7 @@ def position_messages_from_tlog(filename):
     mlog = mavutil.mavlink_connection(filename)
     while True:
         try:
-            m = mlog.recv_match(type=['GLOBAL_POSITION_INT'])
+            m = mlog.recv_match(type=["GLOBAL_POSITION_INT"])
             if m is None:
                 break
         except Exception:
@@ -87,23 +87,23 @@ def position_messages_from_tlog(filename):
     #   - only keep points that are with 3 metres of the previous kept point.
     #   - only keep the first 100 points that meet the above criteria.
     num_points = len(messages)
-    keep_point_distance=3 #metres
+    keep_point_distance = 3  # metres
     kept_messages = []
-    kept_messages.append(messages[0]) #Keep the first message
-    pt1num=0
-    pt2num=1
+    kept_messages.append(messages[0])  # Keep the first message
+    pt1num = 0
+    pt2num = 1
     while True:
-        #Keep the last point. Only record 99 points.
-        if pt2num==num_points-1 or len(kept_messages)==99:
+        # Keep the last point. Only record 99 points.
+        if pt2num == num_points - 1 or len(kept_messages) == 99:
             kept_messages.append(messages[pt2num])
             break
-        pt1 = LocationGlobalRelative(messages[pt1num].lat/1.0e7,messages[pt1num].lon/1.0e7,0)
-        pt2 = LocationGlobalRelative(messages[pt2num].lat/1.0e7,messages[pt2num].lon/1.0e7,0)
-        distance_between_points = get_distance_metres(pt1,pt2)
+        pt1 = LocationGlobalRelative(messages[pt1num].lat / 1.0e7, messages[pt1num].lon / 1.0e7, 0)
+        pt2 = LocationGlobalRelative(messages[pt2num].lat / 1.0e7, messages[pt2num].lon / 1.0e7, 0)
+        distance_between_points = get_distance_metres(pt1, pt2)
         if distance_between_points > keep_point_distance:
             kept_messages.append(messages[pt2num])
-            pt1num=pt2num
-        pt2num=pt2num+1
+            pt1num = pt2num
+        pt2num = pt2num + 1
 
     return kept_messages
 
@@ -119,7 +119,7 @@ def arm_and_takeoff(aTargetAltitude):
         time.sleep(1)
 
     # Set mode to GUIDED for arming and takeoff:
-    while (vehicle.mode.name != "GUIDED"):
+    while vehicle.mode.name != "GUIDED":
         vehicle.mode = VehicleMode("GUIDED")
         time.sleep(0.1)
 
@@ -130,14 +130,14 @@ def arm_and_takeoff(aTargetAltitude):
         time.sleep(1)
 
     print(" Taking off!")
-    vehicle.simple_takeoff(aTargetAltitude) # Take off to target altitude
+    vehicle.simple_takeoff(aTargetAltitude)  # Take off to target altitude
 
     # Wait until the vehicle reaches a safe height
     # before allowing next command to process.
     while True:
-        requiredAlt = aTargetAltitude*0.95
-        #Break and return from function just below target altitude.
-        if vehicle.location.global_relative_frame.alt>=requiredAlt:
+        requiredAlt = aTargetAltitude * 0.95
+        # Break and return from function just below target altitude.
+        if vehicle.location.global_relative_frame.alt >= requiredAlt:
             print(f" Reached target altitude of ~{aTargetAltitude:f}")
             break
         print(f" Altitude: {vehicle.location.global_relative_frame.alt:f} < {requiredAlt:f}")
@@ -159,7 +159,7 @@ if len(messages) == 0:
 connection_string = get_connection_string(args.connect)
 
 # Connect to the Vehicle
-print(f'Connecting to vehicle on: {connection_string}')
+print(f"Connecting to vehicle on: {connection_string}")
 vehicle = connect(connection_string, wait_ready=True)
 
 
@@ -171,7 +171,7 @@ cmds.wait_ready()
 cmds = vehicle.commands
 cmds.clear()
 for pt in messages:
-    #print "Point: %d %d" % (pt.lat, pt.lon,)
+    # print "Point: %d %d" % (pt.lat, pt.lon,)
     lat = pt.lat
     lon = pt.lon
     # To prevent accidents we don't trust the altitude in the original flight, instead
@@ -181,16 +181,25 @@ for pt in messages:
     # get divided by 1e7 below because Command (MISSION_ITEM) takes floats. dronekit.CommandInt
     # (MISSION_ITEM_INT) would let you pass pt.lat/pt.lon directly without that float round-trip,
     # if you need the extra precision - Command is used here to match the other mission examples.
-    cmd = Command( 0,
-                   0,
-                   0,
-                   mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
-                   mavutil.mavlink.MAV_CMD_NAV_WAYPOINT,
-                   0, 0, 0, 0, 0, 0,
-                   lat/1.0e7, lon/1.0e7, altitude)
+    cmd = Command(
+        0,
+        0,
+        0,
+        mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+        mavutil.mavlink.MAV_CMD_NAV_WAYPOINT,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        lat / 1.0e7,
+        lon / 1.0e7,
+        altitude,
+    )
     cmds.add(cmd)
 
-#Upload clear message and command messages to vehicle.
+# Upload clear message and command messages to vehicle.
 print(f"Uploading {len(messages)} waypoints to vehicle...")
 cmds.upload()
 
@@ -201,30 +210,30 @@ arm_and_takeoff(30)
 print("Starting mission")
 
 # Reset mission set to first (0) waypoint
-vehicle.commands.next=0
+vehicle.commands.next = 0
 
 # Set mode to AUTO to start mission:
-while (vehicle.mode.name != "AUTO"):
+while vehicle.mode.name != "AUTO":
     vehicle.mode = VehicleMode("AUTO")
     time.sleep(0.1)
 
 # Monitor mission for 60 seconds then RTL and quit:
 time_start = time.time()
 while time.time() - time_start < 60:
-    nextwaypoint=vehicle.commands.next
-    print(f'Distance to waypoint ({nextwaypoint}): {distance_to_current_waypoint()}')
+    nextwaypoint = vehicle.commands.next
+    print(f"Distance to waypoint ({nextwaypoint}): {distance_to_current_waypoint()}")
 
-    if nextwaypoint==len(messages):
+    if nextwaypoint == len(messages):
         print("Exit 'standard' mission when start heading to final waypoint")
         break
     time.sleep(1)
 
-print('Return to launch')
-while (vehicle.mode.name != "RTL"):
+print("Return to launch")
+while vehicle.mode.name != "RTL":
     vehicle.mode = VehicleMode("RTL")
     time.sleep(0.1)
 
-#Close vehicle object before exiting script
+# Close vehicle object before exiting script
 print("Close vehicle object")
 vehicle.close()
 

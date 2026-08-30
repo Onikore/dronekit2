@@ -58,15 +58,27 @@ def _wire_roundtrip(msg):
 # Constructing CommandInt directly
 # ---------------------------------------------------------------------------
 
+
 def test_command_int_constructs_directly():
     x_int = int(round(LAT * 1e7))
     y_int = int(round(LON * 1e7))
     cmd = CommandInt(
-        0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
-        mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0,
-        x_int, y_int, ALT,
+        0,
+        0,
+        0,
+        mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+        mavutil.mavlink.MAV_CMD_NAV_WAYPOINT,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        x_int,
+        y_int,
+        ALT,
     )
-    assert cmd.get_type() == 'MISSION_ITEM_INT'
+    assert cmd.get_type() == "MISSION_ITEM_INT"
     assert cmd.x == x_int
     assert cmd.y == y_int
     assert cmd.z == ALT
@@ -78,10 +90,22 @@ def test_command_int_constructs_directly():
 def test_command_int_is_additive_not_a_replacement_for_command():
     """Command (float32 MISSION_ITEM) must stay the default, unaffected class."""
     cmd = Command(
-        0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
-        mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, LAT, LON, ALT,
+        0,
+        0,
+        0,
+        mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+        mavutil.mavlink.MAV_CMD_NAV_WAYPOINT,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        LAT,
+        LON,
+        ALT,
     )
-    assert cmd.get_type() == 'MISSION_ITEM'
+    assert cmd.get_type() == "MISSION_ITEM"
     assert cmd.x == LAT
     assert cmd.y == LON
     assert not isinstance(cmd, CommandInt)
@@ -91,15 +115,28 @@ def test_command_int_is_additive_not_a_replacement_for_command():
 # CommandInt.from_command() conversion helper
 # ---------------------------------------------------------------------------
 
+
 def test_from_command_scales_x_y_by_1e7_and_preserves_other_fields():
     cmd = Command(
-        7, 1, 3, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
-        mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 1, 1, 11, 22, 33, 44, LAT, LON, ALT,
+        7,
+        1,
+        3,
+        mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+        mavutil.mavlink.MAV_CMD_NAV_WAYPOINT,
+        1,
+        1,
+        11,
+        22,
+        33,
+        44,
+        LAT,
+        LON,
+        ALT,
     )
     cmd_int = CommandInt.from_command(cmd)
 
     assert isinstance(cmd_int, CommandInt)
-    assert cmd_int.get_type() == 'MISSION_ITEM_INT'
+    assert cmd_int.get_type() == "MISSION_ITEM_INT"
     # Non-location fields pass through unchanged.
     assert cmd_int.target_system == cmd.target_system
     assert cmd_int.target_component == cmd.target_component
@@ -133,8 +170,20 @@ METRES_PER_DEGREE = 40075017.0 / 360.0
 
 def test_float32_mission_item_loses_precision_on_the_wire():
     cmd = Command(
-        0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
-        mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, LAT, LON, ALT,
+        0,
+        0,
+        0,
+        mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+        mavutil.mavlink.MAV_CMD_NAV_WAYPOINT,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        LAT,
+        LON,
+        ALT,
     )
     decoded = _wire_roundtrip(cmd)
 
@@ -154,10 +203,24 @@ def test_float32_mission_item_loses_precision_on_the_wire():
 
 
 def test_int32_mission_item_int_is_exact_on_the_wire():
-    cmd_int = CommandInt.from_command(Command(
-        0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
-        mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, LAT, LON, ALT,
-    ))
+    cmd_int = CommandInt.from_command(
+        Command(
+            0,
+            0,
+            0,
+            mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+            mavutil.mavlink.MAV_CMD_NAV_WAYPOINT,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            LAT,
+            LON,
+            ALT,
+        )
+    )
     decoded = _wire_roundtrip(cmd_int)
 
     # No mantissa rounding at all: the int32 the wire carries decodes back to
@@ -173,8 +236,20 @@ def test_int32_wire_precision_beats_float32_wire_precision_for_the_same_coordina
     coordinate, the int32 x 1e7 encoding preserves strictly more precision than the
     float32 encoding of the same value, over the real MAVLink wire format."""
     cmd = Command(
-        0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
-        mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, LAT, LON, ALT,
+        0,
+        0,
+        0,
+        mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+        mavutil.mavlink.MAV_CMD_NAV_WAYPOINT,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        LAT,
+        LON,
+        ALT,
     )
     cmd_int = CommandInt.from_command(cmd)
 
@@ -202,12 +277,25 @@ def test_int32_wire_precision_beats_float32_wire_precision_for_the_same_coordina
 # CommandInt interchangeably - no changes needed to the loader itself.
 # ---------------------------------------------------------------------------
 
+
 def test_bare_mavwp_loader_accepts_command_and_command_int_interchangeably():
     loader = mavwp.MAVWPLoader()
 
     cmd = Command(
-        0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
-        mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, LAT, LON, ALT,
+        0,
+        0,
+        0,
+        mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+        mavutil.mavlink.MAV_CMD_NAV_WAYPOINT,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        LAT,
+        LON,
+        ALT,
     )
     cmd_int = CommandInt.from_command(cmd)
 
@@ -219,31 +307,57 @@ def test_bare_mavwp_loader_accepts_command_and_command_int_interchangeably():
 
     item0 = loader.wp(0)
     item1 = loader.wp(1)
-    assert item0.get_type() == 'MISSION_ITEM'
-    assert item1.get_type() == 'MISSION_ITEM_INT'
+    assert item0.get_type() == "MISSION_ITEM"
+    assert item1.get_type() == "MISSION_ITEM_INT"
     # .add() stamps .seq for us, keyed purely by position - agnostic to message class.
     assert item0.seq == 0
     assert item1.seq == 1
 
     # .set() (used by CommandSequence.__setitem__) is equally agnostic.
-    replacement = CommandInt.from_command(Command(
-        0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
-        mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, 1.0, 2.0, 3,
-    ))
+    replacement = CommandInt.from_command(
+        Command(
+            0,
+            0,
+            0,
+            mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+            mavutil.mavlink.MAV_CMD_NAV_WAYPOINT,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1.0,
+            2.0,
+            3,
+        )
+    )
     loader.set(replacement, 0)
-    assert loader.wp(0).get_type() == 'MISSION_ITEM_INT'
+    assert loader.wp(0).get_type() == "MISSION_ITEM_INT"
     assert loader.wp(0).x == int(round(1.0 * 1e7))
 
 
 def test_command_sequence_add_accepts_both_via_a_real_vehicle():
     """End-to-end through CommandSequence.add() (not just the bare loader): both
     Command and CommandInt objects can be queued for upload on the same mission."""
-    handler = MAVConnection('udpin:127.0.0.1:0')
+    handler = MAVConnection("udpin:127.0.0.1:0")
     try:
         v = Vehicle(handler)
         cmd = Command(
-            0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
-            mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, LAT, LON, ALT,
+            0,
+            0,
+            0,
+            mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+            mavutil.mavlink.MAV_CMD_NAV_WAYPOINT,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            LAT,
+            LON,
+            ALT,
         )
         cmd_int = CommandInt.from_command(cmd)
 
@@ -251,8 +365,8 @@ def test_command_sequence_add_accepts_both_via_a_real_vehicle():
         v.commands.add(cmd_int)
 
         assert v._wploader.count() == 2
-        assert v._wploader.wp(0).get_type() == 'MISSION_ITEM'
-        assert v._wploader.wp(1).get_type() == 'MISSION_ITEM_INT'
+        assert v._wploader.wp(0).get_type() == "MISSION_ITEM"
+        assert v._wploader.wp(1).get_type() == "MISSION_ITEM_INT"
     finally:
         handler.master.close()
 
@@ -263,12 +377,13 @@ def test_command_sequence_add_accepts_both_via_a_real_vehicle():
 # location special case.
 # ---------------------------------------------------------------------------
 
+
 class _FakeMissionCountMsg:
     def __init__(self, count):
         self.count = count
 
     def get_type(self):
-        return 'MISSION_COUNT'
+        return "MISSION_COUNT"
 
 
 class _FakeMissionItemMsg:
@@ -281,7 +396,7 @@ class _FakeMissionItemMsg:
         self.z = z
 
     def get_type(self):
-        return 'MISSION_ITEM'
+        return "MISSION_ITEM"
 
 
 class _FakeMissionItemIntMsg:
@@ -294,12 +409,12 @@ class _FakeMissionItemIntMsg:
         self.z = z
 
     def get_type(self):
-        return 'MISSION_ITEM_INT'
+        return "MISSION_ITEM_INT"
 
 
 @pytest.fixture
 def vehicle():
-    handler = MAVConnection('udpin:127.0.0.1:0')
+    handler = MAVConnection("udpin:127.0.0.1:0")
     v = Vehicle(handler)
     try:
         yield v
@@ -314,12 +429,14 @@ def test_download_listener_accepts_mission_item_int(vehicle):
     vehicle.commands.download()
     assert vehicle._wp_download_in_progress is True
 
-    vehicle.notify_message_listeners('MISSION_COUNT', _FakeMissionCountMsg(2))
+    vehicle.notify_message_listeners("MISSION_COUNT", _FakeMissionCountMsg(2))
     vehicle.notify_message_listeners(
-        'MISSION_ITEM_INT', _FakeMissionItemIntMsg(0, x=int(round(LAT * 1e7)), y=int(round(LON * 1e7)), z=0))
+        "MISSION_ITEM_INT", _FakeMissionItemIntMsg(0, x=int(round(LAT * 1e7)), y=int(round(LON * 1e7)), z=0)
+    )
     vehicle.notify_message_listeners(
-        'MISSION_ITEM_INT',
-        _FakeMissionItemIntMsg(1, x=int(round((LAT + 1) * 1e7)), y=int(round((LON + 1) * 1e7)), z=ALT))
+        "MISSION_ITEM_INT",
+        _FakeMissionItemIntMsg(1, x=int(round((LAT + 1) * 1e7)), y=int(round((LON + 1) * 1e7)), z=ALT),
+    )
 
     assert vehicle._wp_download_in_progress is False
     assert vehicle._wploader.count() == 2
@@ -334,9 +451,9 @@ def test_download_listener_scales_mission_item_int_home_location_by_1e7(vehicle)
     lat=-343641140 for a MISSION_ITEM_INT. The listener must divide by 1e7 first."""
     vehicle.commands.download()
 
-    vehicle.notify_message_listeners('MISSION_COUNT', _FakeMissionCountMsg(1))
+    vehicle.notify_message_listeners("MISSION_COUNT", _FakeMissionCountMsg(1))
     vehicle.notify_message_listeners(
-        'MISSION_ITEM_INT',
+        "MISSION_ITEM_INT",
         _FakeMissionItemIntMsg(0, x=int(round(LAT * 1e7)), y=int(round(LON * 1e7)), z=0),
     )
 
@@ -352,14 +469,15 @@ def test_download_listener_accepts_mixed_mission_item_and_mission_item_int(vehic
     exercised through the real Vehicle listener rather than the bare loader."""
     vehicle.commands.download()
 
-    vehicle.notify_message_listeners('MISSION_COUNT', _FakeMissionCountMsg(3))
-    vehicle.notify_message_listeners('MISSION_ITEM', _FakeMissionItemMsg(0, x=LAT, y=LON, z=0))
+    vehicle.notify_message_listeners("MISSION_COUNT", _FakeMissionCountMsg(3))
+    vehicle.notify_message_listeners("MISSION_ITEM", _FakeMissionItemMsg(0, x=LAT, y=LON, z=0))
     vehicle.notify_message_listeners(
-        'MISSION_ITEM_INT', _FakeMissionItemIntMsg(1, x=int(round(LAT * 1e7)), y=int(round(LON * 1e7)), z=ALT))
-    vehicle.notify_message_listeners('MISSION_ITEM', _FakeMissionItemMsg(2, x=LAT, y=LON, z=ALT))
+        "MISSION_ITEM_INT", _FakeMissionItemIntMsg(1, x=int(round(LAT * 1e7)), y=int(round(LON * 1e7)), z=ALT)
+    )
+    vehicle.notify_message_listeners("MISSION_ITEM", _FakeMissionItemMsg(2, x=LAT, y=LON, z=ALT))
 
     assert vehicle._wp_download_in_progress is False
     assert vehicle._wploader.count() == 3
-    assert vehicle._wploader.wp(0).get_type() == 'MISSION_ITEM'
-    assert vehicle._wploader.wp(1).get_type() == 'MISSION_ITEM_INT'
-    assert vehicle._wploader.wp(2).get_type() == 'MISSION_ITEM'
+    assert vehicle._wploader.wp(0).get_type() == "MISSION_ITEM"
+    assert vehicle._wploader.wp(1).get_type() == "MISSION_ITEM_INT"
+    assert vehicle._wploader.wp(2).get_type() == "MISSION_ITEM"

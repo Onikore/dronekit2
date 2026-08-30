@@ -51,7 +51,7 @@ class Parameters(MutableMapping, HasObservers):
         self.set(name, value)
 
     def __delitem__(self, name: str) -> None:
-        raise APIException('Cannot delete value from parameters list.')
+        raise APIException("Cannot delete value from parameters list.")
 
     def __len__(self) -> int:
         return len(self._vehicle._params_map)
@@ -76,7 +76,7 @@ class Parameters(MutableMapping, HasObservers):
 
         name = name.upper()
         # convert to single precision floating point number (the type used by low level mavlink messages)
-        value = float(struct.unpack('f', struct.pack('f', value))[0])
+        value = float(struct.unpack("f", struct.pack("f", value))[0])
         remaining = retries
         while True:
             self._vehicle._master.param_set_send(name, value)
@@ -97,7 +97,7 @@ class Parameters(MutableMapping, HasObservers):
         """
         Block the calling thread until parameters have been downloaded
         """
-        self._vehicle.wait_ready('parameters', **kwargs)
+        self._vehicle.wait_ready("parameters", **kwargs)
 
     def add_attribute_listener(self, attr_name: str, *args: Any, **kwargs: Any) -> None:
         """

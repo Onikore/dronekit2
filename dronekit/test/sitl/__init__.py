@@ -5,12 +5,7 @@ from pymavlink import mavutil
 
 
 @contextmanager
-def assert_command_ack(
-    vehicle,
-    command_type,
-    ack_result=mavutil.mavlink.MAV_RESULT_ACCEPTED,
-    timeout=10
-):
+def assert_command_ack(vehicle, command_type, ack_result=mavutil.mavlink.MAV_RESULT_ACCEPTED, timeout=10):
     """Context manager to assert that:
 
     1) exactly one COMMAND_ACK is received from a Vehicle;
@@ -33,14 +28,14 @@ def assert_command_ack(
         if message.command == command_type:
             acks.append(message)
 
-    vehicle.add_message_listener('COMMAND_ACK', on_ack)
+    vehicle.add_message_listener("COMMAND_ACK", on_ack)
 
     yield
 
     start_time = time.time()
     while not acks and time.time() - start_time < timeout:
         time.sleep(0.1)
-    vehicle.remove_message_listener('COMMAND_ACK', on_ack)
+    vehicle.remove_message_listener("COMMAND_ACK", on_ack)
 
     assert len(acks) == 1  # one and only one ACK
     assert acks[0].command == command_type  # for the correct command

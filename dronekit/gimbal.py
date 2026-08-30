@@ -42,19 +42,19 @@ class Gimbal:
         self._yaw: float | None = None
         self._vehicle = vehicle
 
-        @vehicle.on_message('MOUNT_STATUS')
+        @vehicle.on_message("MOUNT_STATUS")
         def listener(vehicle: VehicleLike, name: str, m: Any) -> None:
             self._pitch = m.pointing_a / 100.0
             self._roll = m.pointing_b / 100.0
             self._yaw = m.pointing_c / 100.0
-            vehicle.notify_attribute_listeners('gimbal', vehicle.gimbal)
+            vehicle.notify_attribute_listeners("gimbal", vehicle.gimbal)
 
-        @vehicle.on_message('MOUNT_ORIENTATION')
+        @vehicle.on_message("MOUNT_ORIENTATION")
         def listener(vehicle: VehicleLike, name: str, m: Any) -> None:  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
             self._pitch = m.pitch
             self._roll = m.roll
             self._yaw = m.yaw
-            vehicle.notify_attribute_listeners('gimbal', vehicle.gimbal)
+            vehicle.notify_attribute_listeners("gimbal", vehicle.gimbal)
 
     @property
     def pitch(self) -> float | None:
@@ -108,19 +108,21 @@ class Gimbal:
         :param yaw: Gimbal yaw in degrees relative to *global frame* (0 is North, 90 is West, 180 is South etc.)
         """
         msg = self._vehicle.message_factory.mount_configure_encode(
-            0, 1,    # target system, target component
-            mavutil.mavlink.MAV_MOUNT_MODE_MAVLINK_TARGETING,  #mount_mode
+            0,
+            1,  # target system, target component
+            mavutil.mavlink.MAV_MOUNT_MODE_MAVLINK_TARGETING,  # mount_mode
             1,  # stabilize roll
             1,  # stabilize pitch
             1,  # stabilize yaw
         )
         self._vehicle.send_mavlink(msg)
         msg = self._vehicle.message_factory.mount_control_encode(
-            0, 1,    # target system, target component
+            0,
+            1,  # target system, target component
             pitch * 100,  # pitch is in centidegrees
             roll * 100,  # roll
             yaw * 100,  # yaw is in centidegrees
-            0  # save position
+            0,  # save position
         )
         self._vehicle.send_mavlink(msg)
 
@@ -143,7 +145,8 @@ class Gimbal:
         """
         # set gimbal to targeting mode
         msg = self._vehicle.message_factory.mount_configure_encode(
-            0, 1,    # target system, target component
+            0,
+            1,  # target system, target component
             mavutil.mavlink.MAV_MOUNT_MODE_GPS_POINT,  # mount_mode
             1,  # stabilize roll
             1,  # stabilize pitch
@@ -177,17 +180,21 @@ class Gimbal:
             # fixed here per the typing-only scope of this change.
             alt = roi.alt - self._vehicle.home_location.alt  # type: ignore[operator, union-attr]
         else:
-            raise ValueError('Expecting location to be LocationGlobal or LocationGlobalRelative.')
+            raise ValueError("Expecting location to be LocationGlobal or LocationGlobalRelative.")
 
         # set the ROI
         msg = self._vehicle.message_factory.command_long_encode(
-            0, 1,    # target system, target component
+            0,
+            1,  # target system, target component
             mavutil.mavlink.MAV_CMD_DO_SET_ROI,  # command
             0,  # confirmation
-            0, 0, 0, 0,  # params 1-4
+            0,
+            0,
+            0,
+            0,  # params 1-4
             roi.lat,
             roi.lon,
-            alt
+            alt,
         )
         self._vehicle.send_mavlink(msg)
 
@@ -199,7 +206,8 @@ class Gimbal:
         or :py:func:`target_location`. Control will automatically be released if you change vehicle mode.
         """
         msg = self._vehicle.message_factory.mount_configure_encode(
-            0, 1,    # target system, target component
+            0,
+            1,  # target system, target component
             mavutil.mavlink.MAV_MOUNT_MODE_RC_TARGETING,  # mount_mode
             1,  # stabilize roll
             1,  # stabilize pitch
