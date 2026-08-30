@@ -39,20 +39,19 @@ To run the examples:
        cd dronekit2/examples/vehicle_state/
 
 
-#. Start the example as shown:
+#. Start the example, passing its :ref:`connection string <get_started_connect_string>` via the
+   ``--connect`` argument (see the tip above - there is no auto-launched simulator to fall back
+   to). For example, to connect to a SITL instance you started yourself on UDP port 14550:
 
-   * To connect to a simulator started/managed by the script:
-   
-     .. code-block:: bash
+   .. code-block:: bash
 
-         python vehicle_state.py
+       python vehicle_state.py --connect udp:127.0.0.1:14550
 
-   * To connect to a specific vehicle, pass its :ref:`connection string <get_started_connect_string>` via the ``connect`` argument. 
-     For example, to run the example on Solo you would use the following command:
-   
-     .. code-block:: bash
+   Or to a specific vehicle, such as Solo:
 
-         python vehicle_state.py --connect udpin:0.0.0.0:14550
+   .. code-block:: bash
+
+       python vehicle_state.py --connect udpin:0.0.0.0:14550
 
 
 .. warning:: 
