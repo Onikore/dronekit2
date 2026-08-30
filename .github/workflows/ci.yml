@@ -88,7 +88,7 @@ jobs:
         run: pytest dronekit/test -q
 
   sitl:
-    name: sitl (ArduPilot SITL, best-effort)
+    name: sitl (ArduPilot SITL)
     needs: test
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -125,9 +125,7 @@ jobs:
     #
     # Fully verified end-to-end, locally in Docker against this exact
     # prebuilt binary and confirmed again in real CI: all 33 sitl tests
-    # pass. continue-on-error stays on for one more real CI cycle as a
-    # safety net before removing it as a hard gate.
-    continue-on-error: true
+    # pass, so this is now a real, blocking gate rather than best-effort.
     steps:
       - uses: actions/checkout@v4
 
