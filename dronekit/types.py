@@ -461,7 +461,7 @@ class VehicleMode:
 
         #Callback definition for mode observer
         def mode_callback(self, attr_name):
-            print "Vehicle Mode", self.mode
+            print("Vehicle Mode", self.mode)
 
         #Add observer callback for attribute `mode`
         vehicle.add_attribute_listener('mode', mode_callback)

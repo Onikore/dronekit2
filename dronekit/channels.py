@@ -135,9 +135,9 @@ class Channels(dict):
         .. code:: python
 
             # Get all channel overrides
-            print " Channel overrides: %s" % vehicle.channels.overrides
+            print(f" Channel overrides: {vehicle.channels.overrides}")
             # Print just one channel override
-            print " Ch2 override: %s" % vehicle.channels.overrides['2']
+            print(f" Ch2 override: {vehicle.channels.overrides['2']}")
         """
         return self._overrides
 

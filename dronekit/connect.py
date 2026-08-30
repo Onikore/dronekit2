@@ -119,7 +119,7 @@ def connect(
             autopilot, configure the ``dronekit`` and ``autopilot`` loggers using the Python ``logging`` module.
 
 
-    :returns: A connected vehicle of the type defined in ``vehicle_class`` (a superclass of :py:class:`Vehicle`).
+    :returns: A connected vehicle of the type defined in ``vehicle_class`` (a subclass of :py:class:`Vehicle`).
     """
 
     from dronekit.mavlink import MAVConnection

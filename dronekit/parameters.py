@@ -24,11 +24,11 @@ class Parameters(MutableMapping, HasObservers):
 
     .. code:: python
 
-        # Print the value of the THR_MIN parameter.
-        print "Param: %s" % vehicle.parameters['THR_MIN']
+        # Print the value of the MOT_SPIN_MIN parameter.
+        print(f"Param: {vehicle.parameters['MOT_SPIN_MIN']}")
 
         # Change the parameter value to something different.
-        vehicle.parameters['THR_MIN']=100
+        vehicle.parameters['MOT_SPIN_MIN'] = 0.1
 
     It is also possible to observe parameters and to iterate the :py:attr:`Vehicle.parameters`.
 
@@ -120,16 +120,16 @@ class Parameters(MutableMapping, HasObservers):
           if the same callback is used for watching multiple parameters.
         * ``msg`` - the new parameter value (so you don't need to re-query the vehicle object).
 
-        The example below shows how to get callbacks for the ``THR_MIN`` parameter:
+        The example below shows how to get callbacks for the ``MOT_SPIN_MIN`` parameter:
 
         .. code:: python
 
-            #Callback function for the THR_MIN parameter
-            def thr_min_callback(self, attr_name, value):
-                print " PARAMETER CALLBACK: %s changed to: %s" % (attr_name, value)
+            #Callback function for the MOT_SPIN_MIN parameter
+            def mot_spin_min_callback(self, attr_name, value):
+                print(f" PARAMETER CALLBACK: {attr_name} changed to: {value}")
 
-            #Add observer for the vehicle's THR_MIN parameter
-            vehicle.parameters.add_attribute_listener('THR_MIN', thr_min_callback)
+            #Add observer for the vehicle's MOT_SPIN_MIN parameter
+            vehicle.parameters.add_attribute_listener('MOT_SPIN_MIN', mot_spin_min_callback)
 
         See :ref:`vehicle_state_observing_parameters` for more information.
 
@@ -144,11 +144,11 @@ class Parameters(MutableMapping, HasObservers):
         """
         Remove a paremeter listener that was previously added using :py:func:`add_attribute_listener`.
 
-        For example to remove the ``thr_min_callback()`` callback function:
+        For example to remove the ``mot_spin_min_callback()`` callback function:
 
         .. code:: python
 
-            vehicle.parameters.remove_attribute_listener('thr_min', thr_min_callback)
+            vehicle.parameters.remove_attribute_listener('mot_spin_min', mot_spin_min_callback)
 
         See :ref:`vehicle_state_observing_parameters` for more information.
 
@@ -183,13 +183,13 @@ class Parameters(MutableMapping, HasObservers):
           if the same callback is used for watching multiple parameters.
         * ``msg`` - the new parameter value (so you don't need to re-query the vehicle object).
 
-        The code fragment below shows how to get callbacks for the ``THR_MIN`` parameter:
+        The code fragment below shows how to get callbacks for the ``MOT_SPIN_MIN`` parameter:
 
         .. code:: python
 
-            @vehicle.parameters.on_attribute('THR_MIN')
-            def decorated_thr_min_callback(self, attr_name, value):
-                print " PARAMETER CALLBACK: %s changed to: %s" % (attr_name, value)
+            @vehicle.parameters.on_attribute('MOT_SPIN_MIN')
+            def decorated_mot_spin_min_callback(self, attr_name, value):
+                print(f" PARAMETER CALLBACK: {attr_name} changed to: {value}")
 
         See :ref:`vehicle_state_observing_parameters` for more information.
 

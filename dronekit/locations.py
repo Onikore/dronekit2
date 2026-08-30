@@ -79,7 +79,7 @@ class Locations(HasObservers):
 
         .. code-block:: python
 
-            print "Local Location: %s" % vehicle.location.local_frame
+            print(f"Local Location: {vehicle.location.local_frame}")
 
         This location will not start to update until the vehicle is armed.
         """
@@ -98,8 +98,8 @@ class Locations(HasObservers):
 
         .. code-block:: python
 
-            print "Global Location: %s" % vehicle.location.global_frame
-            print "Sea level altitude is: %s" % vehicle.location.global_frame.alt
+            print(f"Global Location: {vehicle.location.global_frame}")
+            print(f"Sea level altitude is: {vehicle.location.global_frame.alt}")
 
         Its ``lat`` and ``lon`` attributes are populated shortly after GPS becomes available.
         The ``alt`` can take several seconds longer to populate (from the barometer).
@@ -112,7 +112,7 @@ class Locations(HasObservers):
 
             @vehicle.on_attribute('location.global_frame')
             def listener(self, attr_name, value):
-                print " Global: %s" % value
+                print(f" Global: {value}")
 
             #Alternatively, use decorator: ``@vehicle.location.on_attribute('global_frame')``.
         """
@@ -136,7 +136,7 @@ class Locations(HasObservers):
 
         .. code-block:: python
 
-            print "Global Location (relative altitude): %s" % vehicle.location.global_relative_frame
-            print "Altitude relative to home_location: %s" % vehicle.location.global_relative_frame.alt
+            print(f"Global Location (relative altitude): {vehicle.location.global_relative_frame}")
+            print(f"Altitude relative to home_location: {vehicle.location.global_relative_frame.alt}")
         """
         return copy.copy(self._global_relative_frame)

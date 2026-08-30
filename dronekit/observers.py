@@ -47,7 +47,7 @@ class HasObservers:
 
             #Callback to print the location in global frame
             def location_callback(self, attr_name, msg):
-                print "Location (Global): ", msg
+                print("Location (Global): ", msg)
 
             #Add observer for the vehicle's current location
             vehicle.add_attribute_listener('global_frame', location_callback)
@@ -159,7 +159,7 @@ class HasObservers:
 
             @vehicle.on_attribute('attitude')
             def attitude_listener(self, name, msg):
-                print '%s attribute is: %s' % (name, msg)
+                print(f"{name} attribute is: {msg}")
 
         See :ref:`vehicle_state_observe_attributes` for more information.
 

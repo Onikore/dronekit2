@@ -510,17 +510,17 @@ class Vehicle(HasObservers):
 
         .. code-block:: python
 
-            pause_script=False
+            pause_script = False
 
             @vehicle.on_attribute('last_heartbeat')
             def listener(self, attr_name, value):
                 global pause_script
                 if value > 1 and not pause_script:
-                    print "Pausing script due to bad link"
-                    pause_script=True;
+                    print("Pausing script due to bad link")
+                    pause_script = True
                 if value < 1 and pause_script:
-                    pause_script=False;
-                    print "Un-pausing script"
+                    pause_script = False
+                    print("Un-pausing script")
 
         The observer will be called at the period of the messaging loop (about every 0.01 seconds). Testing
         on SITL indicates that ``last_heartbeat`` averages about .5 seconds, but will rarely exceed 1.5 seconds
@@ -751,14 +751,14 @@ class Vehicle(HasObservers):
         .. code-block:: python
 
             # Print location information for `vehicle` in all frames (default printer)
-            print "Global Location: %s" % vehicle.location.global_frame
-            print "Global Location (relative altitude): %s" % vehicle.location.global_relative_frame
-            print "Local Location: %s" % vehicle.location.local_frame    #NED
+            print(f"Global Location: {vehicle.location.global_frame}")
+            print(f"Global Location (relative altitude): {vehicle.location.global_relative_frame}")
+            print(f"Local Location: {vehicle.location.local_frame}")  # NED
 
             # Print altitudes in the different frames (see class definitions for other available information)
-            print "Altitude (global frame): %s" % vehicle.location.global_frame.alt
-            print "Altitude (global relative frame): %s" % vehicle.location.global_relative_frame.alt
-            print "Altitude (NED frame): %s" % vehicle.location.local_frame.down
+            print(f"Altitude (global frame): {vehicle.location.global_frame.alt}")
+            print(f"Altitude (global relative frame): {vehicle.location.global_relative_frame.alt}")
+            print(f"Altitude (NED frame): {vehicle.location.local_frame.down}")
 
         .. note::
 
@@ -779,9 +779,9 @@ class Vehicle(HasObservers):
                 # `attr_name`: name of the observed attribute - 'location'
                 # `value` is the updated attribute value (a :py:class:`Locations`). This can be queried
                 # for the frame information
-                print " Global: %s" % value.global_frame
-                print " GlobalRelative: %s" % value.global_relative_frame
-                print " Local: %s" % value.local_frame
+                print(f" Global: {value.global_frame}")
+                print(f" GlobalRelative: {value.global_relative_frame}")
+                print(f" Local: {value.local_frame}")
 
         To watch for changes in just one attribute (in this case ``global_frame``):
 
@@ -792,7 +792,7 @@ class Vehicle(HasObservers):
                 # `self`: :py:class:`Locations` object that has been updated.
                 # `attr_name`: name of the observed attribute - 'global_frame'
                 # `value` is the updated attribute value.
-                print " Global: %s" % value
+                print(f" Global: {value}")
 
             #Or watch using decorator: ``@vehicle.location.on_attribute('global_frame')``.
         """
@@ -878,7 +878,7 @@ class Vehicle(HasObservers):
         .. code:: python
 
             # Print the armed state for the vehicle
-            print "Armed: %s" % vehicle.armed
+            print(f"Armed: {vehicle.armed}")
 
             # Disarm the vehicle
             vehicle.armed = False
@@ -1062,12 +1062,12 @@ class Vehicle(HasObservers):
         .. code:: python
 
             # Get all channel values from RC transmitter
-            print "Channel values from RC Tx:", vehicle.channels
+            print("Channel values from RC Tx:", vehicle.channels)
 
             # Access channels individually
-            print "Read channels individually:"
-            print " Ch1: %s" % vehicle.channels['1']
-            print " Ch2: %s" % vehicle.channels['2']
+            print("Read channels individually:")
+            print(f" Ch1: {vehicle.channels['1']}")
+            print(f" Ch2: {vehicle.channels['2']}")
 
         """
         return self._channels
