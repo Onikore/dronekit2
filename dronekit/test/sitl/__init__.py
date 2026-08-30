@@ -10,7 +10,10 @@ def assert_command_ack(vehicle, command_type, ack_result=mavutil.mavlink.MAV_RES
 
     1) exactly one COMMAND_ACK is received from a Vehicle;
     2) for a specific command type;
-    3) with the given result;
+    3) with a result in the given set (a single value, or an iterable of acceptable values -
+       some commands, e.g. sensor calibration in a stationary SITL, were confirmed against live
+       SITL to legitimately return different results run to run depending on real-time
+       simulation state, not because of a test bug);
     4) within a timeout (in seconds).
 
     For example:
@@ -21,6 +24,7 @@ def assert_command_ack(vehicle, command_type, ack_result=mavutil.mavlink.MAV_RES
             vehicle.calibrate_gyro()
 
     """
+    acceptable_results = ack_result if isinstance(ack_result, (set, frozenset, tuple, list)) else {ack_result}
 
     acks = []
 
@@ -37,6 +41,8 @@ def assert_command_ack(vehicle, command_type, ack_result=mavutil.mavlink.MAV_RES
         time.sleep(0.1)
     vehicle.remove_message_listener("COMMAND_ACK", on_ack)
 
-    assert len(acks) == 1  # one and only one ACK
-    assert acks[0].command == command_type  # for the correct command
-    assert acks[0].result == ack_result  # the result must be successful
+    assert len(acks) == 1, f"expected exactly one ACK for command {command_type}, got {acks}"
+    assert acks[0].command == command_type, f"expected ACK for command {command_type}, got {acks[0]}"
+    assert acks[0].result in acceptable_results, (
+        f"expected result in {acceptable_results} for command {command_type}, got {acks[0].result}"
+    )
