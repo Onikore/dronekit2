@@ -19,11 +19,8 @@ For releases prior to the fork, see `dronekit-python's release history <https://
 Working with releases
 =======================
 
-dronekit2 is not yet published to PyPI (see `the main README
-<https://github.com/Onikore/dronekit2#readme>`_ for installing straight from this repository in
-the meantime). Once it is, the following commands will work for installing and pinning specific
-versions of the ``dronekit2`` package (the import name is unchanged - it's still
-``import dronekit``):
+The following commands are useful for installing and pinning specific versions of the
+``dronekit2`` package (the import name is unchanged - it's still ``import dronekit``):
 
 .. code-block:: bash
 
@@ -32,6 +29,6 @@ versions of the ``dronekit2`` package (the import name is unchanged - it's still
     pip show dronekit2    # Find out what release you have installed
     pip install dronekit2==3.0.0    # Get a specific release (in this case 3.0.0)
 
-Once releases exist, they'll be listed on the
-`dronekit2 project page on PyPI <https://pypi.org/project/dronekit2/#history>`_.
+See the `dronekit2 project page on PyPI <https://pypi.org/project/dronekit2/#history>`_ for a
+list of all releases available.
 

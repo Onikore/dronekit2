@@ -29,7 +29,7 @@ Import name is unchanged:
 import dronekit
 ```
 
-Not yet on PyPI? Install straight from this repo:
+To track `main` instead of the latest release, install straight from this repo:
 
 ```bash
 pip install git+https://github.com/Onikore/dronekit2.git
@@ -55,18 +55,19 @@ and [`examples/`](examples/) for runnable end-to-end scripts.
 
 ## Documentation
 
-Docs live under [`docs/`](docs/) as reStructuredText and are not yet hosted anywhere - browse the
-source on GitHub, or build them locally:
+Full docs are hosted at **[onikore.github.io/dronekit2](https://onikore.github.io/dronekit2/)**
+(built from [`docs/`](docs/) on every push to `main`). You can also browse the reStructuredText
+source on GitHub, or build it locally:
 
 ```bash
 pip install -e ".[docs]"
 sphinx-build -b html docs docs/_build/html
 ```
 
-* [Guide](docs/guide/index.rst)
-* [API reference](docs/automodule.rst)
-* [Examples](docs/examples/index.rst)
-* [Migrating from 2.9.x](docs/about/migrating_v3.rst)
+* [Guide](https://onikore.github.io/dronekit2/guide/index.html)
+* [API reference](https://onikore.github.io/dronekit2/automodule.html)
+* [Examples](https://onikore.github.io/dronekit2/examples/index.html)
+* [Migrating from 2.9.x](https://onikore.github.io/dronekit2/about/migrating_v3.html)
 
 ## Testing against a real vehicle
 
