@@ -2,10 +2,51 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any, Callable, TypeVar, overload
 
 from dronekit.util import ErrprinterHandler
 from dronekit.vehicle import Vehicle, default_still_waiting_callback
+
+VehicleT = TypeVar("VehicleT", bound=Vehicle)
+
+
+@overload
+def connect(
+    ip: str,
+    _initialize: bool = True,
+    wait_ready: bool | list[str] | None = None,
+    timeout: float = 30,
+    still_waiting_callback: Callable[[Any], None] = default_still_waiting_callback,
+    still_waiting_interval: float = 1,
+    status_printer: Callable[[str], None] | None = None,
+    vehicle_class: None = None,
+    rate: int = 4,
+    baud: int = 115200,
+    heartbeat_timeout: float = 30,
+    source_system: int = 255,
+    source_component: int = 0,
+    use_native: bool = False,
+) -> Vehicle: ...
+
+
+@overload
+def connect(
+    ip: str,
+    _initialize: bool = True,
+    wait_ready: bool | list[str] | None = None,
+    timeout: float = 30,
+    still_waiting_callback: Callable[[Any], None] = default_still_waiting_callback,
+    still_waiting_interval: float = 1,
+    status_printer: Callable[[str], None] | None = None,
+    *,
+    vehicle_class: type[VehicleT],
+    rate: int = 4,
+    baud: int = 115200,
+    heartbeat_timeout: float = 30,
+    source_system: int = 255,
+    source_component: int = 0,
+    use_native: bool = False,
+) -> VehicleT: ...
 
 
 def connect(

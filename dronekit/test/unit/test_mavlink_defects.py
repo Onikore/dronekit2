@@ -50,14 +50,14 @@ def _broadcast_client():
     set SO_BROADCAST etc., but nothing after that does)."""
     m = mavudpin_multi("127.0.0.1:0", input=False, broadcast=True)
     m.port.close()
-    m.port = _RecordingSocket()
+    m.port = _RecordingSocket()  # type: ignore[assignment]
     return m
 
 
 def _udpin_client():
     m = mavudpin_multi("127.0.0.1:0", input=True)
     m.port.close()
-    m.port = _RecordingSocket()
+    m.port = _RecordingSocket()  # type: ignore[assignment]
     return m
 
 
@@ -174,6 +174,8 @@ def test_stop_threads_before_start_does_not_raise():
     """
     handler = MAVConnection("udpin:127.0.0.1:0")
     try:
+        assert handler.mavlink_thread_in is not None
+        assert handler.mavlink_thread_out is not None
         assert handler.mavlink_thread_in.ident is None
         assert handler.mavlink_thread_out.ident is None
 
@@ -194,6 +196,7 @@ def test_stop_threads_after_start_still_joins(monkeypatch):
     try:
         handler._alive = False  # thread functions loop on self._alive
         handler.start()
+        assert handler.mavlink_thread_in is not None
         assert handler.mavlink_thread_in.ident is not None
 
         handler.stop_threads()
@@ -363,7 +366,14 @@ def test_connect_closes_handler_when_vehicle_construction_raises(monkeypatch):
             raise RuntimeError("boom during vehicle construction")
 
     with pytest.raises(RuntimeError, match="boom during vehicle construction"):
-        dronekit.connect("udpin:127.0.0.1:0", vehicle_class=ExplodingVehicle, _initialize=False)
+        # ExplodingVehicle deliberately isn't a real Vehicle subclass - it
+        # only needs a constructor that raises, to exercise connect()'s
+        # cleanup path, not vehicle_class's normal typed contract.
+        dronekit.connect(
+            "udpin:127.0.0.1:0",
+            vehicle_class=ExplodingVehicle,  # type: ignore[type-var]
+            _initialize=False,
+        )
 
     assert len(created_handlers) == 1
     assert created_handlers[0].closed is True
