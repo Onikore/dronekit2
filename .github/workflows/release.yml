@@ -44,42 +44,40 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - name: Verify ci.yml's test job passed for this commit
+      - name: Verify ci.yml passed for this commit
         env:
           GH_TOKEN: ${{ github.token }}
         # Best-effort gate: releases are tagged commits, and ci.yml only runs
         # on push/pull_request (not on `release`), so there's no native GitHub
         # Actions `needs:` dependency that can span the two workflows. Instead
         # this queries the REST API for the most recent completed ci.yml run
-        # against this exact commit SHA and checks that every "test (...)"
-        # matrix job in it succeeded. This has not been exercised against a
-        # real GitHub Actions run - if it turns out to be unreliable (e.g. the
-        # release commit was never pushed to main and so never ran ci.yml at
-        # all), the documented fallback is procedural: only publish releases
-        # tagged from a commit where ci.yml is green on main.
+        # against this exact commit SHA and checks the run's own overall
+        # conclusion - which GitHub Actions already computes as a failure if
+        # any of its jobs failed (lint, typecheck, the full test matrix, sitl,
+        # docs are all real gates now, none left continue-on-error), so this
+        # doesn't need to enumerate job names itself. This has not been
+        # exercised against a real GitHub Actions run - if it turns out to be
+        # unreliable (e.g. the release commit was never pushed to main and so
+        # never ran ci.yml at all), the documented fallback is procedural:
+        # only publish releases tagged from a commit where ci.yml is green on
+        # main.
         run: |
           set -euo pipefail
           SHA="${{ github.sha }}"
           echo "Looking for a completed ci.yml run for commit $SHA..."
-          RUN_ID=$(gh api "repos/${{ github.repository }}/actions/workflows/ci.yml/runs?head_sha=${SHA}&status=completed" \
-            --jq '.workflow_runs[0].id // empty')
-          if [ -z "$RUN_ID" ]; then
+          RESULT=$(gh api "repos/${{ github.repository }}/actions/workflows/ci.yml/runs?head_sha=${SHA}&status=completed" \
+            --jq '(.workflow_runs[0] // empty) | {id, conclusion}')
+          if [ -z "$RESULT" ]; then
             echo "::error::No completed ci.yml run found for commit $SHA. Only publish releases tagged from a commit where ci.yml has run and passed on main."
             exit 1
           fi
-          echo "Found ci.yml run $RUN_ID for $SHA, checking its 'test' matrix jobs..."
-          CONCLUSIONS=$(gh api "repos/${{ github.repository }}/actions/runs/${RUN_ID}/jobs" --paginate \
-            --jq '.jobs[] | select(.name | startswith("test")) | .conclusion')
-          if [ -z "$CONCLUSIONS" ]; then
-            echo "::error::ci.yml run $RUN_ID had no 'test' matrix jobs. Refusing to publish."
+          CONCLUSION=$(echo "$RESULT" | jq -r '.conclusion')
+          RUN_ID=$(echo "$RESULT" | jq -r '.id')
+          if [ "$CONCLUSION" != "success" ]; then
+            echo "::error::ci.yml run $RUN_ID for commit $SHA did not succeed (conclusion: $CONCLUSION). Refusing to publish."
             exit 1
           fi
-          if echo "$CONCLUSIONS" | grep -qv '^success$'; then
-            echo "::error::One or more ci.yml 'test' matrix jobs did not succeed for commit $SHA (run $RUN_ID). Refusing to publish."
-            echo "$CONCLUSIONS"
-            exit 1
-          fi
-          echo "All ci.yml 'test' matrix jobs succeeded for $SHA."
+          echo "ci.yml run $RUN_ID succeeded for $SHA."
 
       - name: Download dist artifact
         uses: actions/download-artifact@v4
