@@ -42,11 +42,12 @@ jobs:
   typecheck:
     name: typecheck (mypy)
     runs-on: ubuntu-latest
-    # PROVISIONAL: best-effort only. The codebase has no inline type annotations
-    # and this is the first time mypy has ever run in CI here, so a hard gate
-    # would be premature even though it currently passes cleanly with the
-    # permissive [tool.mypy] settings in pyproject.toml (ignore_missing_imports).
-    continue-on-error: true
+    # The 47 pre-existing errors this job used to continue-on-error past are
+    # now fixed: the intentional decorator/listener-closure redefinitions and
+    # test-double type mismatches are scoped with per-line `# type: ignore[...]`
+    # (not a blanket suppression), a couple of test files got real narrowing
+    # fixes (Thread | None), and connect() is now generic over vehicle_class
+    # so a caller's subclass survives through the return type. Real gate now.
     steps:
       - uses: actions/checkout@v4
 
