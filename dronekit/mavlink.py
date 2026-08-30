@@ -5,7 +5,6 @@ import copy
 import errno
 import logging
 import os
-import platform
 import socket
 import sys
 import time
@@ -18,7 +17,7 @@ from pymavlink import mavutil
 
 from dronekit import APIException
 
-if platform.system() == "Windows":
+if sys.platform == "win32":
     from errno import WSAECONNRESET as ECONNABORTED
 else:
     from errno import ECONNABORTED
