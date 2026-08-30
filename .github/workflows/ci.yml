@@ -160,11 +160,18 @@ jobs:
       - name: Install dronekit2 with dev dependencies
         run: pip install -e ".[dev]"
 
-      - name: Download prebuilt ArduCopter SITL binary
+      - name: Download prebuilt ArduCopter SITL binary and its default params
         run: |
           curl -fsSL -o arducopter \
             https://firmware.ardupilot.org/Copter/stable/SITL_x86_64_linux_gnu/arducopter
           chmod +x arducopter
+          # sim_vehicle.py always loads this file for Copter; bypassing it
+          # (as this job does) left FRAME_CLASS/FRAME_TYPE unset, so the
+          # autopilot refused to arm at all ("PreArm: Motors: Check frame
+          # class and type") - confirmed locally: 3 arming-dependent tests
+          # failed with it missing, passed once it was loaded.
+          curl -fsSL -o copter.parm \
+            https://raw.githubusercontent.com/ArduPilot/ardupilot/master/Tools/autotest/default_params/copter.parm
 
       - name: Launch ArduCopter SITL in the background
         run: |
@@ -179,6 +186,7 @@ jobs:
           # trustworthy real-time signal instead of a delayed one.
           nohup stdbuf -oL -eL ./arducopter --model quad --instance 0 --speedup 1 \
             --home -35.363261,149.165230,584,353 --wipe \
+            --defaults copter.parm \
             --serial0=tcp:0 \
             --serial1=udpclient:127.0.0.1:14550 \
             > /tmp/arducopter.log 2>&1 &
@@ -189,9 +197,11 @@ jobs:
         # comment above for why that matters here. Greps the binary's own
         # log for the "UDP connection ..." line _begin() prints once it's
         # parsed --serial1 and connect()ed the UDP socket, so the
-        # heartbeat-wait step (next) doesn't race that setup.
+        # heartbeat-wait step (next) doesn't race that setup. Verified
+        # locally this line lands well under 30s, but real CI runners are
+        # shared/throttled, so 90s buys real margin over the bare minimum.
         run: |
-          deadline=$((SECONDS + 30))
+          deadline=$((SECONDS + 90))
           while [ $SECONDS -lt $deadline ]; do
             if grep -q "UDP connection 127.0.0.1:14550" /tmp/arducopter.log 2>/dev/null; then
               echo "SITL's SERIAL1 UDP output is up:"
@@ -200,7 +210,7 @@ jobs:
             fi
             sleep 1
           done
-          echo "SITL never printed 'UDP connection 127.0.0.1:14550' within 30s:" >&2
+          echo "SITL never printed 'UDP connection 127.0.0.1:14550' within 90s:" >&2
           cat /tmp/arducopter.log >&2 || true
           exit 1
 
