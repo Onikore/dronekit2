@@ -199,16 +199,17 @@ jobs:
         # parsed --serial1 and connect()ed the UDP socket, so the
         # heartbeat-wait step (next) doesn't race that setup.
         #
-        # PROVISIONAL/diagnostic: two real CI runs both stopped dead at
-        # "Smoothing reset at 0.001" (the first FDM physics tick - so the
-        # process genuinely reached its main loop, this isn't stuck in
-        # setup()) and never printed the UDP connection line even after a
-        # full 180s, while a local Docker run with the identical binary and
-        # flags reached it in under 1s. That's a real behavioral difference
-        # between this runner and Docker, not just slowness - so instead of
-        # continuing to guess timeout values, this now attaches strace to
-        # the still-running process on timeout and dumps what syscall it's
-        # actually blocked in, to diagnose from evidence next run.
+        # PROVISIONAL/diagnostic: three real CI runs (at 30s/90s/180s
+        # deadlines) all stopped dead at "Smoothing reset at 0.001" (the
+        # first FDM physics tick, so the process genuinely reached its main
+        # loop - this isn't stuck in setup()), while local Docker with the
+        # identical binary and flags reaches the UDP connection line in
+        # under 1s from that point. The strace-attach added here found
+        # nothing to attach to - pgrep -x arducopter came back empty - which
+        # means the process isn't hung at all, it has already exited or
+        # crashed by the time we check, silently (a backgrounded, disowned
+        # job has no shell left to report a crash like "Segmentation fault"
+        # when it dies). Dumping ps aux and dmesg here to find out why.
         run: |
           deadline=$((SECONDS + 30))
           while [ $SECONDS -lt $deadline ]; do
@@ -221,6 +222,10 @@ jobs:
           done
           echo "SITL never printed 'UDP connection 127.0.0.1:14550' within 30s:" >&2
           cat /tmp/arducopter.log >&2 || true
+          echo "--- ps aux (is arducopter even still alive?) ---" >&2
+          ps aux >&2 || true
+          echo "--- dmesg tail (segfault? OOM-killed?) ---" >&2
+          sudo dmesg --time-format iso 2>&1 | tail -80 >&2 || true
           pid=$(pgrep -x arducopter || true)
           if [ -n "$pid" ]; then
             command -v strace >/dev/null 2>&1 || sudo apt-get install -y -qq strace >&2
@@ -231,6 +236,8 @@ jobs:
             kill "$strace_pid" 2>/dev/null || true
             wait "$strace_pid" 2>/dev/null || true
             cat /tmp/strace.log >&2 || true
+          else
+            echo "arducopter is NOT running - it exited/crashed silently after the last log line above." >&2
           fi
           exit 1
 
