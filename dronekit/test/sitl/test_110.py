@@ -22,9 +22,9 @@ def test_110(vehicle):
 
     # Define example callback for mode
     def armed_callback(vehicle, attribute, value):
-        armed_callback.called += 1
+        armed_callback.called += 1  # type: ignore[attr-defined]
 
-    armed_callback.called = 0
+    armed_callback.called = 0  # type: ignore[attr-defined]
 
     # When the same (event, callback) pair is passed to add_attribute_listener,
     # only one instance of the observer callback should be added.
@@ -39,10 +39,10 @@ def test_110(vehicle):
 
     # Wait for ACK.
     time_max = 10
-    wait_for(lambda: armed_callback.called, time_max)
+    wait_for(lambda: armed_callback.called, time_max)  # type: ignore[attr-defined]
 
     # Ensure the callback was called.
-    assert armed_callback.called > 0, f"Callback should have been called within {time_max} seconds"
+    assert armed_callback.called > 0, f"Callback should have been called within {time_max} seconds"  # type: ignore[attr-defined]
 
     # Rmove all listeners. The first call should remove all listeners
     # we've added; the second call should be ignored and not throw.
@@ -51,7 +51,7 @@ def test_110(vehicle):
     # case, there would be three callbacks still attached.
     vehicle.remove_attribute_listener("armed", armed_callback)
     vehicle.remove_attribute_listener("armed", armed_callback)
-    callcount = armed_callback.called
+    callcount = armed_callback.called  # type: ignore[attr-defined]
 
     # Disarm and see update.
     vehicle.armed = False
@@ -60,4 +60,4 @@ def test_110(vehicle):
     time.sleep(3)
 
     # Ensure the callback was called zero times.
-    assert armed_callback.called == callcount, "Callback should not have been called once removed."
+    assert armed_callback.called == callcount, "Callback should not have been called once removed."  # type: ignore[attr-defined]

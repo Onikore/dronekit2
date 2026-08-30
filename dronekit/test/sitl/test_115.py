@@ -8,9 +8,9 @@ def test_115(vehicle):
 
     # Dummy callback
     def mavlink_callback(*args):
-        mavlink_callback.count += 1
+        mavlink_callback.count += 1  # type: ignore[attr-defined]
 
-    mavlink_callback.count = 0
+    mavlink_callback.count = 0  # type: ignore[attr-defined]
 
     # Set the callback.
     v.add_message_listener("*", mavlink_callback)
@@ -21,11 +21,11 @@ def test_115(vehicle):
     time.sleep(3)
 
     # Expect the callback to have been called
-    assert mavlink_callback.count > 0
+    assert mavlink_callback.count > 0  # type: ignore[attr-defined]
 
     # Unset the callback.
     v.remove_message_listener("*", mavlink_callback)
-    savecount = mavlink_callback.count
+    savecount = mavlink_callback.count  # type: ignore[attr-defined]
 
     # Disarm. A callback of None should not throw errors
     v.armed = False
@@ -33,7 +33,7 @@ def test_115(vehicle):
     time.sleep(3)
 
     # Expect the callback to have been called
-    assert savecount == mavlink_callback.count
+    assert savecount == mavlink_callback.count  # type: ignore[attr-defined]
 
     # Re-arm should not throw errors.
     v.armed = True
