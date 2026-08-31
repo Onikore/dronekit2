@@ -126,14 +126,14 @@ class Vehicle(HasObservers):
         self._default_ready_attrs = ["parameters", "gps_0", "armed", "mode", "attitude"]
 
         @self.on_attribute("*")
-        def listener(_, name, value):
+        def _ready_attrs_listener(_, name, value):
             self._ready_attrs.add(name)
 
         # Attaches message listeners.
         self._message_listeners: dict[str, list[Callable[..., Any]]] = dict()
 
-        @handler.forward_message  # type: ignore[no-redef]
-        def listener(_, msg):  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
+        @handler.forward_message
+        def _message_forward_listener(_, msg):
             self.notify_message_listeners(msg.get_type(), msg)
 
         self._location = Locations(self)
@@ -145,8 +145,8 @@ class Vehicle(HasObservers):
         self._wind_speed: float | None = None
         self._wind_speed_z: float | None = None
 
-        @self.on_message("WIND")  # type: ignore[no-redef]
-        def listener(self, name, m):  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
+        @self.on_message("WIND")
+        def _wind_listener(self, name, m):
             """WIND {direction : -180.0, speed : 0.0, speed_z : 0.0}"""
             self._wind_direction = m.direction
             self._wind_speed = m.speed
@@ -157,8 +157,8 @@ class Vehicle(HasObservers):
             # Log the STATUSTEXT on the autopilot logger, with the correct severity
             self._autopilot_logger.log(msg=m.text.strip(), level=self._mavlink_statustext_severity[m.severity])
 
-        @self.on_message("GLOBAL_POSITION_INT")  # type: ignore[no-redef]
-        def listener(self, name, m):  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
+        @self.on_message("GLOBAL_POSITION_INT")
+        def _velocity_listener(self, name, m):
             (self._vx, self._vy, self._vz) = (m.vx / 100.0, m.vy / 100.0, m.vz / 100.0)
             self.notify_attribute_listeners("velocity", self.velocity)
 
@@ -169,8 +169,8 @@ class Vehicle(HasObservers):
         self._yawspeed: float | None = None
         self._rollspeed: float | None = None
 
-        @self.on_message("ATTITUDE")  # type: ignore[no-redef]
-        def listener(self, name, m):  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
+        @self.on_message("ATTITUDE")
+        def _attitude_listener(self, name, m):
             self._pitch = m.pitch
             self._yaw = m.yaw
             self._roll = m.roll
@@ -183,8 +183,8 @@ class Vehicle(HasObservers):
         self._airspeed: float | None = None
         self._groundspeed: float | None = None
 
-        @self.on_message("VFR_HUD")  # type: ignore[no-redef]
-        def listener(self, name, m):  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
+        @self.on_message("VFR_HUD")
+        def _vfr_hud_listener(self, name, m):
             self._heading = m.heading
             self.notify_attribute_listeners("heading", self.heading)
             self._airspeed = m.airspeed
@@ -195,8 +195,8 @@ class Vehicle(HasObservers):
         self._rngfnd_distance: float | None = None
         self._rngfnd_voltage: float | None = None
 
-        @self.on_message("RANGEFINDER")  # type: ignore[no-redef]
-        def listener(self, name, m):  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
+        @self.on_message("RANGEFINDER")
+        def _rangefinder_listener(self, name, m):
             self._rngfnd_distance = m.distance
             self._rngfnd_voltage = m.voltage
             self.notify_attribute_listeners("rangefinder", self.rangefinder)
@@ -205,8 +205,8 @@ class Vehicle(HasObservers):
         self._mount_yaw: float | None = None
         self._mount_roll: float | None = None
 
-        @self.on_message("MOUNT_STATUS")  # type: ignore[no-redef]
-        def listener(self, name, m):  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
+        @self.on_message("MOUNT_STATUS")
+        def _mount_listener(self, name, m):
             self._mount_pitch = m.pointing_a / 100.0
             self._mount_roll = m.pointing_b / 100.0
             self._mount_yaw = m.pointing_c / 100.0
@@ -216,8 +216,8 @@ class Vehicle(HasObservers):
         self._raw_version: int | None = None
         self._autopilot_version_msg_count = 0
 
-        @self.on_message("AUTOPILOT_VERSION")  # type: ignore[no-redef]
-        def listener(vehicle, name, m):  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
+        @self.on_message("AUTOPILOT_VERSION")
+        def _autopilot_version_listener(vehicle, name, m):
             self._capabilities = m.capabilities
             self._raw_version = m.flight_sw_version
             self._autopilot_version_msg_count += 1
@@ -234,8 +234,8 @@ class Vehicle(HasObservers):
         # All keys are strings.
         self._channels = Channels(self, 8)
 
-        @self.on_message(["RC_CHANNELS_RAW", "RC_CHANNELS"])  # type: ignore[no-redef]
-        def listener(self, name, m):  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
+        @self.on_message(["RC_CHANNELS_RAW", "RC_CHANNELS"])
+        def _channels_listener(self, name, m):
             def set_rc(chnum, v):
                 """Private utility for handling rc channel messages"""
                 # use port to allow ch nums greater than 8
@@ -251,8 +251,8 @@ class Vehicle(HasObservers):
         self._current: float | None = None
         self._level: float | None = None
 
-        @self.on_message("SYS_STATUS")  # type: ignore[no-redef]
-        def listener(self, name, m):  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
+        @self.on_message("SYS_STATUS")
+        def _battery_listener(self, name, m):
             self._voltage = m.voltage_battery
             self._current = m.current_battery
             self._level = m.battery_remaining
@@ -263,8 +263,8 @@ class Vehicle(HasObservers):
         self._satellites_visible: int | None = None
         self._fix_type: int | None = None  # FIXME support multiple GPSs per vehicle - possibly by using componentId
 
-        @self.on_message("GPS_RAW_INT")  # type: ignore[no-redef]
-        def listener(self, name, m):  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
+        @self.on_message("GPS_RAW_INT")
+        def _gps_listener(self, name, m):
             self._eph = m.eph
             self._epv = m.epv
             self._satellites_visible = m.satellites_visible
@@ -273,16 +273,16 @@ class Vehicle(HasObservers):
 
         self._current_waypoint = 0
 
-        @self.on_message(["WAYPOINT_CURRENT", "MISSION_CURRENT"])  # type: ignore[no-redef]
-        def listener(self, name, m):  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
+        @self.on_message(["WAYPOINT_CURRENT", "MISSION_CURRENT"])
+        def _current_waypoint_listener(self, name, m):
             self._current_waypoint = m.seq
 
         self._ekf_poshorizabs = False
         self._ekf_constposmode = False
         self._ekf_predposhorizabs = False
 
-        @self.on_message("EKF_STATUS_REPORT")  # type: ignore[no-redef]
-        def listener(self, name, m):  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
+        @self.on_message("EKF_STATUS_REPORT")
+        def _ekf_listener(self, name, m):
             # boolean: EKF's horizontal position (absolute) estimate is good
             self._ekf_poshorizabs = (m.flags & ardupilotmega.EKF_POS_HORIZ_ABS) > 0
             # boolean: EKF is in constant position mode and does not know it's absolute or relative position
@@ -298,8 +298,8 @@ class Vehicle(HasObservers):
         self._autopilot_type: int | None = None  # PX4, ArduPilot, etc.
         self._vehicle_type: int | None = None  # quadcopter, plane, etc.
 
-        @self.on_message("HEARTBEAT")  # type: ignore[no-redef]
-        def listener(self, name, m):  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
+        @self.on_message("HEARTBEAT")
+        def _heartbeat_state_listener(self, name, m):
             # ignore groundstations
             if m.type == mavutil.mavlink.MAV_TYPE_GCS or (not self._handler.master.probably_vehicle_heartbeat(m)):
                 return
@@ -332,20 +332,20 @@ class Vehicle(HasObservers):
         self._wp_download_in_progress = False
         self._commands = CommandSequence(self)
 
-        @self.on_message(["WAYPOINT_COUNT", "MISSION_COUNT"])  # type: ignore[no-redef]
-        def listener(self, name, msg):  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
+        @self.on_message(["WAYPOINT_COUNT", "MISSION_COUNT"])
+        def _waypoint_count_listener(self, name, msg):
             if not self._wp_loaded:
                 self._wploader.clear()
                 self._wploader.expected_count = msg.count
                 self._master.waypoint_request_send(0)
 
-        @self.on_message(["HOME_POSITION"])  # type: ignore[no-redef]
-        def listener(self, name, msg):  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
+        @self.on_message(["HOME_POSITION"])
+        def _home_location_listener(self, name, msg):
             self._home_location = LocationGlobal(msg.latitude / 1.0e7, msg.longitude / 1.0e7, msg.altitude / 1000.0)
             self.notify_attribute_listeners("home_location", self.home_location, cache=True)
 
-        @self.on_message(["WAYPOINT", "MISSION_ITEM", "MISSION_ITEM_INT"])  # type: ignore[no-redef]
-        def listener(self, name, msg):  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
+        @self.on_message(["WAYPOINT", "MISSION_ITEM", "MISSION_ITEM_INT"])
+        def _waypoint_item_listener(self, name, msg):
             if not self._wp_loaded:
                 if msg.seq == 0:
                     if not (msg.x == 0 and msg.y == 0 and msg.z == 0):
@@ -375,8 +375,8 @@ class Vehicle(HasObservers):
                         self.notify_attribute_listeners("commands", self.commands)
 
         # Waypoint send to master
-        @self.on_message(["WAYPOINT_REQUEST", "MISSION_REQUEST"])  # type: ignore[no-redef]
-        def listener(self, name, msg):  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
+        @self.on_message(["WAYPOINT_REQUEST", "MISSION_REQUEST"])
+        def _waypoint_request_listener(self, name, msg):
             if self._wp_uploaded is not None:
                 wp = self._wploader.wp(msg.seq)
                 handler.fix_targets(wp)
@@ -399,8 +399,8 @@ class Vehicle(HasObservers):
         self._params_duration = start_duration
         self._parameters = Parameters(self)
 
-        @handler.forward_loop  # type: ignore[no-redef]
-        def listener(_):  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
+        @handler.forward_loop
+        def _parameters_watchdog_loop(_):
             # Check the time duration for last "new" params exceeds watchdog.
             if not self._params_start:
                 return
@@ -420,8 +420,8 @@ class Vehicle(HasObservers):
                 self._params_duration = repeat_duration
                 self._params_last = time.monotonic()
 
-        @self.on_message(["PARAM_VALUE"])  # type: ignore[no-redef]
-        def listener(self, name, msg):  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
+        @self.on_message(["PARAM_VALUE"])
+        def _param_value_listener(self, name, msg):
             # If we discover a new param count, assume we
             # are receiving a new param set.
             if self._params_count != msg.param_count:
@@ -458,8 +458,8 @@ class Vehicle(HasObservers):
         self._heartbeat_error: float = 30
         self._heartbeat_system: int | None = None
 
-        @handler.forward_loop  # type: ignore[no-redef]
-        def listener(_):  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
+        @handler.forward_loop
+        def _heartbeat_send_loop(_):
             # Send 1 heartbeat per second
             if time.monotonic() - self._heartbeat_lastsent > 1:
                 self._master.mav.heartbeat_send(
@@ -479,8 +479,8 @@ class Vehicle(HasObservers):
                         self._logger.warning(f"Link timeout, no heartbeat in last {self._heartbeat_warning} seconds")
                         self._heartbeat_timeout = True
 
-        @self.on_message(["HEARTBEAT"])  # type: ignore[no-redef]
-        def listener(self, name, msg):  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
+        @self.on_message(["HEARTBEAT"])
+        def _heartbeat_link_listener(self, name, msg):
             # ignore groundstations
             if msg.type == mavutil.mavlink.MAV_TYPE_GCS or (not self._handler.master.probably_vehicle_heartbeat(msg)):
                 return
@@ -492,8 +492,8 @@ class Vehicle(HasObservers):
 
         self._last_heartbeat: float | None = None
 
-        @handler.forward_loop  # type: ignore[no-redef]
-        def listener(_):  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
+        @handler.forward_loop
+        def _last_heartbeat_loop(_):
             if self._heartbeat_lastreceived:
                 self._last_heartbeat = time.monotonic() - self._heartbeat_lastreceived
                 self.notify_attribute_listeners("last_heartbeat", self.last_heartbeat)
