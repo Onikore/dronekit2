@@ -164,7 +164,7 @@ class Parameters(MutableMapping, HasObservers):
         attr_name = attr_name.upper()
         return super().notify_attribute_listeners(attr_name, *args, **kwargs)
 
-    def on_attribute(self, attr_name: str, *args: Any, **kwargs: Any) -> Callable[[Callable[..., Any]], None]:  # type: ignore[override]
+    def on_attribute(self, name: str | list[str]) -> Callable[[Callable[..., Any]], None]:
         """
         Decorator for parameter listeners.
 
@@ -193,9 +193,8 @@ class Parameters(MutableMapping, HasObservers):
 
         See :ref:`vehicle_state_observing_parameters` for more information.
 
-        :param String attr_name: The name of the attribute to watch (or '*' to watch all attributes).
-        :param args: The callback to invoke when a change in the attribute is detected.
+        :param name: The name of the attribute to watch (or '*' to watch all attributes), or a list of names.
 
         """
-        attr_name = attr_name.upper()
-        return super().on_attribute(attr_name, *args, **kwargs)
+        names = [name] if isinstance(name, str) else name
+        return super().on_attribute([n.upper() for n in names])
