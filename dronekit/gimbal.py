@@ -43,14 +43,14 @@ class Gimbal:
         self._vehicle = vehicle
 
         @vehicle.on_message("MOUNT_STATUS")
-        def listener(vehicle: VehicleLike, name: str, m: Any) -> None:
+        def _mount_status_listener(vehicle: VehicleLike, name: str, m: Any) -> None:
             self._pitch = m.pointing_a / 100.0
             self._roll = m.pointing_b / 100.0
             self._yaw = m.pointing_c / 100.0
             vehicle.notify_attribute_listeners("gimbal", vehicle.gimbal)
 
-        @vehicle.on_message("MOUNT_ORIENTATION")  # type: ignore[no-redef]
-        def listener(vehicle: VehicleLike, name: str, m: Any) -> None:  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
+        @vehicle.on_message("MOUNT_ORIENTATION")
+        def _mount_orientation_listener(vehicle: VehicleLike, name: str, m: Any) -> None:
             self._pitch = m.pitch
             self._roll = m.roll
             self._yaw = m.yaw

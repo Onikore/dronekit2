@@ -40,7 +40,7 @@ class Locations(HasObservers):
         self._global_relative_frame = LocationGlobalRelative(None, None, None)
 
         @vehicle.on_message("GLOBAL_POSITION_INT")
-        def listener(vehicle: VehicleLike, name: str, m: Any) -> None:
+        def _global_position_listener(vehicle: VehicleLike, name: str, m: Any) -> None:
             lat = m.lat / 1.0e7
             lon = m.lon / 1.0e7
 
@@ -61,8 +61,8 @@ class Locations(HasObservers):
         self._east: float | None = None
         self._down: float | None = None
 
-        @vehicle.on_message("LOCAL_POSITION_NED")  # type: ignore[no-redef]
-        def listener(vehicle: VehicleLike, name: str, m: Any) -> None:  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
+        @vehicle.on_message("LOCAL_POSITION_NED")
+        def _local_position_listener(vehicle: VehicleLike, name: str, m: Any) -> None:
             self._north = m.x
             self._east = m.y
             self._down = m.z

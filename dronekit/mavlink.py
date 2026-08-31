@@ -389,7 +389,7 @@ class MAVConnection:
 
         # vehicle -> self -> target
         @self.forward_message
-        def callback(_: Any, msg: Any) -> None:
+        def _forward_listener(_: Any, msg: Any) -> None:
             try:
                 target.out_queue.put(msg.pack(target.master.mav))
             except Exception:
@@ -400,8 +400,8 @@ class MAVConnection:
                     self._logger.exception(f"Could not pack this object on receive: {type(msg)}", exc_info=True)
 
         # target -> self -> vehicle
-        @target.forward_message  # type: ignore[no-redef]
-        def callback(_: Any, msg: Any) -> None:  # noqa: F811 - consumed immediately by the decorator above, not a real redefinition
+        @target.forward_message
+        def _reverse_listener(_: Any, msg: Any) -> None:
             msg = copy.copy(msg)
             target.fix_targets(msg)
             try:
