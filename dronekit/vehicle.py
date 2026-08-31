@@ -1546,12 +1546,8 @@ class Vehicle(HasObservers):
         raise_exception = kwargs.get("raise_exception", True)
 
         # Vehicle defaults for wait_ready(True) or wait_ready()
-        # `types` is a tuple (from *types); reassigning it to the list
-        # self._default_ready_attrs is a pre-existing type mismatch that
-        # is harmless at runtime - both are only ever iterated or passed
-        # to set()/all() below, never treated as specifically tuple-shaped.
         if list(types) == [True] or list(types) == []:
-            types = self._default_ready_attrs  # type: ignore[assignment]
+            types = tuple(self._default_ready_attrs)
 
         if not all(isinstance(item, str) for item in types):
             raise ValueError("wait_ready expects one or more string arguments.")
