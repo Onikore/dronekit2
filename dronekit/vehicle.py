@@ -125,16 +125,12 @@ class Vehicle(HasObservers):
         # Default parameters when calling wait_ready() or wait_ready(True).
         self._default_ready_attrs = ["parameters", "gps_0", "armed", "mode", "attitude"]
 
-        @self.on_attribute("*")
-        def _ready_attrs_listener(_, name, value):
-            self._ready_attrs.add(name)
+        self.on_attribute("*")(self._ready_attrs_listener)
 
         # Attaches message listeners.
         self._message_listeners: dict[str, list[Callable[..., Any]]] = dict()
 
-        @handler.forward_message
-        def _message_forward_listener(_, msg):
-            self.notify_message_listeners(msg.get_type(), msg)
+        handler.forward_message(self._message_forward_listener)
 
         self._location = Locations(self)
         self._vx: float | None = None
@@ -145,22 +141,9 @@ class Vehicle(HasObservers):
         self._wind_speed: float | None = None
         self._wind_speed_z: float | None = None
 
-        @self.on_message("WIND")
-        def _wind_listener(self, name, m):
-            """WIND {direction : -180.0, speed : 0.0, speed_z : 0.0}"""
-            self._wind_direction = m.direction
-            self._wind_speed = m.speed
-            self._wind_speed_z = m.speed_z
-
-        @self.on_message("STATUSTEXT")
-        def statustext_listener(self, name, m):
-            # Log the STATUSTEXT on the autopilot logger, with the correct severity
-            self._autopilot_logger.log(msg=m.text.strip(), level=self._mavlink_statustext_severity[m.severity])
-
-        @self.on_message("GLOBAL_POSITION_INT")
-        def _velocity_listener(self, name, m):
-            (self._vx, self._vy, self._vz) = (m.vx / 100.0, m.vy / 100.0, m.vz / 100.0)
-            self.notify_attribute_listeners("velocity", self.velocity)
+        self.on_message("WIND")(self._wind_listener)
+        self.on_message("STATUSTEXT")(self._statustext_listener)
+        self.on_message("GLOBAL_POSITION_INT")(self._velocity_listener)
 
         self._pitch: float | None = None
         self._yaw: float | None = None
@@ -169,64 +152,30 @@ class Vehicle(HasObservers):
         self._yawspeed: float | None = None
         self._rollspeed: float | None = None
 
-        @self.on_message("ATTITUDE")
-        def _attitude_listener(self, name, m):
-            self._pitch = m.pitch
-            self._yaw = m.yaw
-            self._roll = m.roll
-            self._pitchspeed = m.pitchspeed
-            self._yawspeed = m.yawspeed
-            self._rollspeed = m.rollspeed
-            self.notify_attribute_listeners("attitude", self.attitude)
+        self.on_message("ATTITUDE")(self._attitude_listener)
 
         self._heading: int | None = None
         self._airspeed: float | None = None
         self._groundspeed: float | None = None
 
-        @self.on_message("VFR_HUD")
-        def _vfr_hud_listener(self, name, m):
-            self._heading = m.heading
-            self.notify_attribute_listeners("heading", self.heading)
-            self._airspeed = m.airspeed
-            self.notify_attribute_listeners("airspeed", self.airspeed)
-            self._groundspeed = m.groundspeed
-            self.notify_attribute_listeners("groundspeed", self.groundspeed)
+        self.on_message("VFR_HUD")(self._vfr_hud_listener)
 
         self._rngfnd_distance: float | None = None
         self._rngfnd_voltage: float | None = None
 
-        @self.on_message("RANGEFINDER")
-        def _rangefinder_listener(self, name, m):
-            self._rngfnd_distance = m.distance
-            self._rngfnd_voltage = m.voltage
-            self.notify_attribute_listeners("rangefinder", self.rangefinder)
+        self.on_message("RANGEFINDER")(self._rangefinder_listener)
 
         self._mount_pitch: float | None = None
         self._mount_yaw: float | None = None
         self._mount_roll: float | None = None
 
-        @self.on_message("MOUNT_STATUS")
-        def _mount_listener(self, name, m):
-            self._mount_pitch = m.pointing_a / 100.0
-            self._mount_roll = m.pointing_b / 100.0
-            self._mount_yaw = m.pointing_c / 100.0
-            self.notify_attribute_listeners("mount", self.mount_status)
+        self.on_message("MOUNT_STATUS")(self._mount_listener)
 
         self._capabilities: int | None = None
         self._raw_version: int | None = None
         self._autopilot_version_msg_count = 0
 
-        @self.on_message("AUTOPILOT_VERSION")
-        def _autopilot_version_listener(vehicle, name, m):
-            self._capabilities = m.capabilities
-            self._raw_version = m.flight_sw_version
-            self._autopilot_version_msg_count += 1
-            if self._capabilities != 0 or self._autopilot_version_msg_count > 5:
-                # ArduPilot <3.4 fails to send capabilities correctly
-                # straight after boot, and even older versions send
-                # this back as always-0.
-                vehicle.remove_message_listener("HEARTBEAT", self.send_capabilities_request)
-            self.notify_attribute_listeners("autopilot_version", self._raw_version)
+        self.on_message("AUTOPILOT_VERSION")(self._autopilot_version_listener)
 
         # gimbal
         self._gimbal = Gimbal(self)
@@ -234,63 +183,30 @@ class Vehicle(HasObservers):
         # All keys are strings.
         self._channels = Channels(self, 8)
 
-        @self.on_message(["RC_CHANNELS_RAW", "RC_CHANNELS"])
-        def _channels_listener(self, name, m):
-            def set_rc(chnum, v):
-                """Private utility for handling rc channel messages"""
-                # use port to allow ch nums greater than 8
-                port = 0 if name == "RC_CHANNELS" else m.port
-                self._channels._update_channel(str(port * 8 + chnum), v)
-
-            for i in range(1, (18 if name == "RC_CHANNELS" else 8) + 1):
-                set_rc(i, getattr(m, f"chan{i}_raw"))
-
-            self.notify_attribute_listeners("channels", self.channels)
+        self.on_message(["RC_CHANNELS_RAW", "RC_CHANNELS"])(self._channels_listener)
 
         self._voltage: float | None = None
         self._current: float | None = None
         self._level: float | None = None
 
-        @self.on_message("SYS_STATUS")
-        def _battery_listener(self, name, m):
-            self._voltage = m.voltage_battery
-            self._current = m.current_battery
-            self._level = m.battery_remaining
-            self.notify_attribute_listeners("battery", self.battery)
+        self.on_message("SYS_STATUS")(self._battery_listener)
 
         self._eph: int | None = None
         self._epv: int | None = None
         self._satellites_visible: int | None = None
         self._fix_type: int | None = None  # FIXME support multiple GPSs per vehicle - possibly by using componentId
 
-        @self.on_message("GPS_RAW_INT")
-        def _gps_listener(self, name, m):
-            self._eph = m.eph
-            self._epv = m.epv
-            self._satellites_visible = m.satellites_visible
-            self._fix_type = m.fix_type
-            self.notify_attribute_listeners("gps_0", self.gps_0)
+        self.on_message("GPS_RAW_INT")(self._gps_listener)
 
         self._current_waypoint = 0
 
-        @self.on_message(["WAYPOINT_CURRENT", "MISSION_CURRENT"])
-        def _current_waypoint_listener(self, name, m):
-            self._current_waypoint = m.seq
+        self.on_message(["WAYPOINT_CURRENT", "MISSION_CURRENT"])(self._current_waypoint_listener)
 
         self._ekf_poshorizabs = False
         self._ekf_constposmode = False
         self._ekf_predposhorizabs = False
 
-        @self.on_message("EKF_STATUS_REPORT")
-        def _ekf_listener(self, name, m):
-            # boolean: EKF's horizontal position (absolute) estimate is good
-            self._ekf_poshorizabs = (m.flags & ardupilotmega.EKF_POS_HORIZ_ABS) > 0
-            # boolean: EKF is in constant position mode and does not know it's absolute or relative position
-            self._ekf_constposmode = (m.flags & ardupilotmega.EKF_CONST_POS_MODE) > 0
-            # boolean: EKF's predicted horizontal position (absolute) estimate is good
-            self._ekf_predposhorizabs = (m.flags & ardupilotmega.EKF_PRED_POS_HORIZ_ABS) > 0
-
-            self.notify_attribute_listeners("ekf_ok", self.ekf_ok, cache=True)
+        self.on_message("EKF_STATUS_REPORT")(self._ekf_listener)
 
         self._flightmode = "AUTO"
         self._armed = False
@@ -298,24 +214,7 @@ class Vehicle(HasObservers):
         self._autopilot_type: int | None = None  # PX4, ArduPilot, etc.
         self._vehicle_type: int | None = None  # quadcopter, plane, etc.
 
-        @self.on_message("HEARTBEAT")
-        def _heartbeat_state_listener(self, name, m):
-            # ignore groundstations
-            if m.type == mavutil.mavlink.MAV_TYPE_GCS or (not self._handler.master.probably_vehicle_heartbeat(m)):
-                return
-            self._armed = (m.base_mode & mavutil.mavlink.MAV_MODE_FLAG_SAFETY_ARMED) != 0
-            self.notify_attribute_listeners("armed", self.armed, cache=True)
-            self._autopilot_type = m.autopilot
-            self._vehicle_type = m.type
-            if self._is_mode_available(m.custom_mode, m.base_mode) is False:
-                raise APIException(f"mode ({m.custom_mode}, {m.base_mode}) not available on mavlink definition")
-            if self._autopilot_type == mavutil.mavlink.MAV_AUTOPILOT_PX4:
-                self._flightmode = mavutil.interpret_px4_mode(m.base_mode, m.custom_mode)
-            else:
-                self._flightmode = self._mode_mapping_bynumber[m.custom_mode]
-            self.notify_attribute_listeners("mode", self.mode, cache=True)
-            self._system_status = m.system_status
-            self.notify_attribute_listeners("system_status", self.system_status, cache=True)
+        self.on_message("HEARTBEAT")(self._heartbeat_state_listener)
 
         # Waypoints.
 
@@ -332,63 +231,19 @@ class Vehicle(HasObservers):
         self._wp_download_in_progress = False
         self._commands = CommandSequence(self)
 
-        @self.on_message(["WAYPOINT_COUNT", "MISSION_COUNT"])
-        def _waypoint_count_listener(self, name, msg):
-            if not self._wp_loaded:
-                self._wploader.clear()
-                self._wploader.expected_count = msg.count
-                self._master.waypoint_request_send(0)
-
-        @self.on_message(["HOME_POSITION"])
-        def _home_location_listener(self, name, msg):
-            self._home_location = LocationGlobal(msg.latitude / 1.0e7, msg.longitude / 1.0e7, msg.altitude / 1000.0)
-            self.notify_attribute_listeners("home_location", self.home_location, cache=True)
-
-        @self.on_message(["WAYPOINT", "MISSION_ITEM", "MISSION_ITEM_INT"])
-        def _waypoint_item_listener(self, name, msg):
-            if not self._wp_loaded:
-                if msg.seq == 0:
-                    if not (msg.x == 0 and msg.y == 0 and msg.z == 0):
-                        if name == "MISSION_ITEM_INT":
-                            # MISSION_ITEM_INT carries x/y as int32 degrees * 1e7
-                            # (see dronekit.mission.CommandInt); MISSION_ITEM/WAYPOINT
-                            # carry them as plain float32 degrees. z (altitude) is a
-                            # float in both message types.
-                            self._home_location = LocationGlobal(msg.x / 1.0e7, msg.y / 1.0e7, msg.z)
-                        else:
-                            self._home_location = LocationGlobal(msg.x, msg.y, msg.z)
-
-                if msg.seq > self._wploader.count():
-                    # Unexpected waypoint
-                    pass
-                elif msg.seq < self._wploader.count():
-                    # Waypoint duplicate
-                    pass
-                else:
-                    self._wploader.add(msg)
-
-                    if msg.seq + 1 < self._wploader.expected_count:
-                        self._master.waypoint_request_send(msg.seq + 1)
-                    else:
-                        self._wp_loaded = True
-                        self._wp_download_in_progress = False
-                        self.notify_attribute_listeners("commands", self.commands)
+        self.on_message(["WAYPOINT_COUNT", "MISSION_COUNT"])(self._waypoint_count_listener)
+        self.on_message(["HOME_POSITION"])(self._home_location_listener)
+        self.on_message(["WAYPOINT", "MISSION_ITEM", "MISSION_ITEM_INT"])(self._waypoint_item_listener)
 
         # Waypoint send to master
-        @self.on_message(["WAYPOINT_REQUEST", "MISSION_REQUEST"])
-        def _waypoint_request_listener(self, name, msg):
-            if self._wp_uploaded is not None:
-                wp = self._wploader.wp(msg.seq)
-                handler.fix_targets(wp)
-                self._master.mav.send(wp)
-                self._wp_uploaded[msg.seq] = True
+        self.on_message(["WAYPOINT_REQUEST", "MISSION_REQUEST"])(self._waypoint_request_listener)
 
         # TODO: Waypoint loop listeners
 
         # Parameters.
 
-        start_duration = 0.2
-        repeat_duration = 1
+        self._params_start_duration = 0.2
+        self._params_repeat_duration = 1
 
         self._params_count = -1
         self._params_set: list[Any] = []
@@ -396,56 +251,11 @@ class Vehicle(HasObservers):
         self._params_start = False
         self._params_map: dict[str, float] = {}
         self._params_last = time.monotonic()  # Last new param.
-        self._params_duration = start_duration
+        self._params_duration = self._params_start_duration
         self._parameters = Parameters(self)
 
-        @handler.forward_loop
-        def _parameters_watchdog_loop(_):
-            # Check the time duration for last "new" params exceeds watchdog.
-            if not self._params_start:
-                return
-
-            if not self._params_loaded and all(x is not None for x in self._params_set):
-                self._params_loaded = True
-                self.notify_attribute_listeners("parameters", self.parameters)
-
-            if not self._params_loaded and time.monotonic() - self._params_last > self._params_duration:
-                c = 0
-                for i, v in enumerate(self._params_set):
-                    if v is None:
-                        self._master.mav.param_request_read_send(0, 0, b"", i)
-                        c += 1
-                        if c > 50:
-                            break
-                self._params_duration = repeat_duration
-                self._params_last = time.monotonic()
-
-        @self.on_message(["PARAM_VALUE"])
-        def _param_value_listener(self, name, msg):
-            # If we discover a new param count, assume we
-            # are receiving a new param set.
-            if self._params_count != msg.param_count:
-                self._params_loaded = False
-                self._params_start = True
-                self._params_count = msg.param_count
-                self._params_set = [None] * msg.param_count
-
-            # Attempt to set the params. We throw an error
-            # if the index is out of range of the count or
-            # we lack a param_id.
-            try:
-                if msg.param_index < msg.param_count and msg:
-                    if self._params_set[msg.param_index] is None:
-                        self._params_last = time.monotonic()
-                        self._params_duration = start_duration
-                    self._params_set[msg.param_index] = msg
-
-                self._params_map[msg.param_id] = msg.param_value
-                self._parameters.notify_attribute_listeners(msg.param_id, msg.param_value, cache=True)
-            except Exception:
-                import traceback
-
-                traceback.print_exc()
+        handler.forward_loop(self._parameters_watchdog_loop)
+        self.on_message(["PARAM_VALUE"])(self._param_value_listener)
 
         # Heartbeats.
 
@@ -458,45 +268,261 @@ class Vehicle(HasObservers):
         self._heartbeat_error: float = 30
         self._heartbeat_system: int | None = None
 
-        @handler.forward_loop
-        def _heartbeat_send_loop(_):
-            # Send 1 heartbeat per second
-            if time.monotonic() - self._heartbeat_lastsent > 1:
-                self._master.mav.heartbeat_send(
-                    mavutil.mavlink.MAV_TYPE_GCS, mavutil.mavlink.MAV_AUTOPILOT_INVALID, 0, 0, 0
-                )
-                self._heartbeat_lastsent = time.monotonic()
-
-            # Timeouts.
-            if self._heartbeat_started:
-                if (
-                    self._heartbeat_error
-                    and time.monotonic() - self._heartbeat_lastreceived > self._heartbeat_error > 0
-                ):
-                    raise APIException(f"No heartbeat in {self._heartbeat_error} seconds, aborting.")
-                elif time.monotonic() - self._heartbeat_lastreceived > self._heartbeat_warning:
-                    if self._heartbeat_timeout is False:
-                        self._logger.warning(f"Link timeout, no heartbeat in last {self._heartbeat_warning} seconds")
-                        self._heartbeat_timeout = True
-
-        @self.on_message(["HEARTBEAT"])
-        def _heartbeat_link_listener(self, name, msg):
-            # ignore groundstations
-            if msg.type == mavutil.mavlink.MAV_TYPE_GCS or (not self._handler.master.probably_vehicle_heartbeat(msg)):
-                return
-            self._heartbeat_system = msg.get_srcSystem()
-            self._heartbeat_lastreceived = time.monotonic()
-            if self._heartbeat_timeout:
-                self._logger.info("...link restored.")
-            self._heartbeat_timeout = False
+        handler.forward_loop(self._heartbeat_send_loop)
+        self.on_message(["HEARTBEAT"])(self._heartbeat_link_listener)
 
         self._last_heartbeat: float | None = None
 
-        @handler.forward_loop
-        def _last_heartbeat_loop(_):
-            if self._heartbeat_lastreceived:
-                self._last_heartbeat = time.monotonic() - self._heartbeat_lastreceived
-                self.notify_attribute_listeners("last_heartbeat", self.last_heartbeat)
+        handler.forward_loop(self._last_heartbeat_loop)
+
+    # -- Internal listener/loop callbacks registered by __init__ above. --
+    #
+    # Each is registered as a bound method, so it must accept the same
+    # explicit first argument its dispatcher passes to every listener it
+    # calls (self.on_message/self.on_attribute always pass the vehicle
+    # itself; handler.forward_message/forward_loop pass the MAVConnection).
+    # Vehicle.send_capabilities_request below is the pre-existing example of
+    # this exact pattern - `vehicle` and `self` are always the same object
+    # here, it's just given a name because the dispatcher requires the slot.
+
+    def _ready_attrs_listener(self, vehicle, name, value):
+        self._ready_attrs.add(name)
+
+    def _message_forward_listener(self, _handler, msg):
+        self.notify_message_listeners(msg.get_type(), msg)
+
+    def _wind_listener(self, vehicle, name, m):
+        """WIND {direction : -180.0, speed : 0.0, speed_z : 0.0}"""
+        self._wind_direction = m.direction
+        self._wind_speed = m.speed
+        self._wind_speed_z = m.speed_z
+
+    def _statustext_listener(self, vehicle, name, m):
+        # Log the STATUSTEXT on the autopilot logger, with the correct severity
+        self._autopilot_logger.log(msg=m.text.strip(), level=self._mavlink_statustext_severity[m.severity])
+
+    def _velocity_listener(self, vehicle, name, m):
+        (self._vx, self._vy, self._vz) = (m.vx / 100.0, m.vy / 100.0, m.vz / 100.0)
+        self.notify_attribute_listeners("velocity", self.velocity)
+
+    def _attitude_listener(self, vehicle, name, m):
+        self._pitch = m.pitch
+        self._yaw = m.yaw
+        self._roll = m.roll
+        self._pitchspeed = m.pitchspeed
+        self._yawspeed = m.yawspeed
+        self._rollspeed = m.rollspeed
+        self.notify_attribute_listeners("attitude", self.attitude)
+
+    def _vfr_hud_listener(self, vehicle, name, m):
+        self._heading = m.heading
+        self.notify_attribute_listeners("heading", self.heading)
+        self._airspeed = m.airspeed
+        self.notify_attribute_listeners("airspeed", self.airspeed)
+        self._groundspeed = m.groundspeed
+        self.notify_attribute_listeners("groundspeed", self.groundspeed)
+
+    def _rangefinder_listener(self, vehicle, name, m):
+        self._rngfnd_distance = m.distance
+        self._rngfnd_voltage = m.voltage
+        self.notify_attribute_listeners("rangefinder", self.rangefinder)
+
+    def _mount_listener(self, vehicle, name, m):
+        self._mount_pitch = m.pointing_a / 100.0
+        self._mount_roll = m.pointing_b / 100.0
+        self._mount_yaw = m.pointing_c / 100.0
+        self.notify_attribute_listeners("mount", self.mount_status)
+
+    def _autopilot_version_listener(self, vehicle, name, m):
+        self._capabilities = m.capabilities
+        self._raw_version = m.flight_sw_version
+        self._autopilot_version_msg_count += 1
+        if self._capabilities != 0 or self._autopilot_version_msg_count > 5:
+            # ArduPilot <3.4 fails to send capabilities correctly
+            # straight after boot, and even older versions send
+            # this back as always-0.
+            vehicle.remove_message_listener("HEARTBEAT", self.send_capabilities_request)
+        self.notify_attribute_listeners("autopilot_version", self._raw_version)
+
+    def _channels_listener(self, vehicle, name, m):
+        def set_rc(chnum, v):
+            """Private utility for handling rc channel messages"""
+            # use port to allow ch nums greater than 8
+            port = 0 if name == "RC_CHANNELS" else m.port
+            self._channels._update_channel(str(port * 8 + chnum), v)
+
+        for i in range(1, (18 if name == "RC_CHANNELS" else 8) + 1):
+            set_rc(i, getattr(m, f"chan{i}_raw"))
+
+        self.notify_attribute_listeners("channels", self.channels)
+
+    def _battery_listener(self, vehicle, name, m):
+        self._voltage = m.voltage_battery
+        self._current = m.current_battery
+        self._level = m.battery_remaining
+        self.notify_attribute_listeners("battery", self.battery)
+
+    def _gps_listener(self, vehicle, name, m):
+        self._eph = m.eph
+        self._epv = m.epv
+        self._satellites_visible = m.satellites_visible
+        self._fix_type = m.fix_type
+        self.notify_attribute_listeners("gps_0", self.gps_0)
+
+    def _current_waypoint_listener(self, vehicle, name, m):
+        self._current_waypoint = m.seq
+
+    def _ekf_listener(self, vehicle, name, m):
+        # boolean: EKF's horizontal position (absolute) estimate is good
+        self._ekf_poshorizabs = (m.flags & ardupilotmega.EKF_POS_HORIZ_ABS) > 0
+        # boolean: EKF is in constant position mode and does not know it's absolute or relative position
+        self._ekf_constposmode = (m.flags & ardupilotmega.EKF_CONST_POS_MODE) > 0
+        # boolean: EKF's predicted horizontal position (absolute) estimate is good
+        self._ekf_predposhorizabs = (m.flags & ardupilotmega.EKF_PRED_POS_HORIZ_ABS) > 0
+
+        self.notify_attribute_listeners("ekf_ok", self.ekf_ok, cache=True)
+
+    def _heartbeat_state_listener(self, vehicle, name, m):
+        # ignore groundstations
+        if m.type == mavutil.mavlink.MAV_TYPE_GCS or (not self._handler.master.probably_vehicle_heartbeat(m)):
+            return
+        self._armed = (m.base_mode & mavutil.mavlink.MAV_MODE_FLAG_SAFETY_ARMED) != 0
+        self.notify_attribute_listeners("armed", self.armed, cache=True)
+        self._autopilot_type = m.autopilot
+        self._vehicle_type = m.type
+        if self._is_mode_available(m.custom_mode, m.base_mode) is False:
+            raise APIException(f"mode ({m.custom_mode}, {m.base_mode}) not available on mavlink definition")
+        if self._autopilot_type == mavutil.mavlink.MAV_AUTOPILOT_PX4:
+            self._flightmode = mavutil.interpret_px4_mode(m.base_mode, m.custom_mode)
+        else:
+            self._flightmode = self._mode_mapping_bynumber[m.custom_mode]
+        self.notify_attribute_listeners("mode", self.mode, cache=True)
+        self._system_status = m.system_status
+        self.notify_attribute_listeners("system_status", self.system_status, cache=True)
+
+    def _waypoint_count_listener(self, vehicle, name, msg):
+        if not self._wp_loaded:
+            self._wploader.clear()
+            self._wploader.expected_count = msg.count
+            self._master.waypoint_request_send(0)
+
+    def _home_location_listener(self, vehicle, name, msg):
+        self._home_location = LocationGlobal(msg.latitude / 1.0e7, msg.longitude / 1.0e7, msg.altitude / 1000.0)
+        self.notify_attribute_listeners("home_location", self.home_location, cache=True)
+
+    def _waypoint_item_listener(self, vehicle, name, msg):
+        if not self._wp_loaded:
+            if msg.seq == 0:
+                if not (msg.x == 0 and msg.y == 0 and msg.z == 0):
+                    if name == "MISSION_ITEM_INT":
+                        # MISSION_ITEM_INT carries x/y as int32 degrees * 1e7
+                        # (see dronekit.mission.CommandInt); MISSION_ITEM/WAYPOINT
+                        # carry them as plain float32 degrees. z (altitude) is a
+                        # float in both message types.
+                        self._home_location = LocationGlobal(msg.x / 1.0e7, msg.y / 1.0e7, msg.z)
+                    else:
+                        self._home_location = LocationGlobal(msg.x, msg.y, msg.z)
+
+            if msg.seq > self._wploader.count():
+                # Unexpected waypoint
+                pass
+            elif msg.seq < self._wploader.count():
+                # Waypoint duplicate
+                pass
+            else:
+                self._wploader.add(msg)
+
+                if msg.seq + 1 < self._wploader.expected_count:
+                    self._master.waypoint_request_send(msg.seq + 1)
+                else:
+                    self._wp_loaded = True
+                    self._wp_download_in_progress = False
+                    self.notify_attribute_listeners("commands", self.commands)
+
+    def _waypoint_request_listener(self, vehicle, name, msg):
+        if self._wp_uploaded is not None:
+            wp = self._wploader.wp(msg.seq)
+            self._handler.fix_targets(wp)
+            self._master.mav.send(wp)
+            self._wp_uploaded[msg.seq] = True
+
+    def _parameters_watchdog_loop(self, _handler):
+        # Check the time duration for last "new" params exceeds watchdog.
+        if not self._params_start:
+            return
+
+        if not self._params_loaded and all(x is not None for x in self._params_set):
+            self._params_loaded = True
+            self.notify_attribute_listeners("parameters", self.parameters)
+
+        if not self._params_loaded and time.monotonic() - self._params_last > self._params_duration:
+            c = 0
+            for i, v in enumerate(self._params_set):
+                if v is None:
+                    self._master.mav.param_request_read_send(0, 0, b"", i)
+                    c += 1
+                    if c > 50:
+                        break
+            self._params_duration = self._params_repeat_duration
+            self._params_last = time.monotonic()
+
+    def _param_value_listener(self, vehicle, name, msg):
+        # If we discover a new param count, assume we
+        # are receiving a new param set.
+        if self._params_count != msg.param_count:
+            self._params_loaded = False
+            self._params_start = True
+            self._params_count = msg.param_count
+            self._params_set = [None] * msg.param_count
+
+        # Attempt to set the params. We throw an error
+        # if the index is out of range of the count or
+        # we lack a param_id.
+        try:
+            if msg.param_index < msg.param_count and msg:
+                if self._params_set[msg.param_index] is None:
+                    self._params_last = time.monotonic()
+                    self._params_duration = self._params_start_duration
+                self._params_set[msg.param_index] = msg
+
+            self._params_map[msg.param_id] = msg.param_value
+            self._parameters.notify_attribute_listeners(msg.param_id, msg.param_value, cache=True)
+        except Exception:
+            import traceback
+
+            traceback.print_exc()
+
+    def _heartbeat_send_loop(self, _handler):
+        # Send 1 heartbeat per second
+        if time.monotonic() - self._heartbeat_lastsent > 1:
+            self._master.mav.heartbeat_send(
+                mavutil.mavlink.MAV_TYPE_GCS, mavutil.mavlink.MAV_AUTOPILOT_INVALID, 0, 0, 0
+            )
+            self._heartbeat_lastsent = time.monotonic()
+
+        # Timeouts.
+        if self._heartbeat_started:
+            if self._heartbeat_error and time.monotonic() - self._heartbeat_lastreceived > self._heartbeat_error > 0:
+                raise APIException(f"No heartbeat in {self._heartbeat_error} seconds, aborting.")
+            elif time.monotonic() - self._heartbeat_lastreceived > self._heartbeat_warning:
+                if self._heartbeat_timeout is False:
+                    self._logger.warning(f"Link timeout, no heartbeat in last {self._heartbeat_warning} seconds")
+                    self._heartbeat_timeout = True
+
+    def _heartbeat_link_listener(self, vehicle, name, msg):
+        # ignore groundstations
+        if msg.type == mavutil.mavlink.MAV_TYPE_GCS or (not self._handler.master.probably_vehicle_heartbeat(msg)):
+            return
+        self._heartbeat_system = msg.get_srcSystem()
+        self._heartbeat_lastreceived = time.monotonic()
+        if self._heartbeat_timeout:
+            self._logger.info("...link restored.")
+        self._heartbeat_timeout = False
+
+    def _last_heartbeat_loop(self, _handler):
+        if self._heartbeat_lastreceived:
+            self._last_heartbeat = time.monotonic() - self._heartbeat_lastreceived
+            self.notify_attribute_listeners("last_heartbeat", self.last_heartbeat)
 
     @property
     def last_heartbeat(self) -> float | None:
