@@ -4,7 +4,6 @@ import atexit
 import copy
 import errno
 import logging
-import os
 import socket
 import sys
 import time
@@ -38,7 +37,7 @@ class MAVWriter:
 
     def read(self) -> None:
         self._logger.critical("writer should not have had a read request")
-        os._exit(43)
+        raise NotImplementedError("MAVWriter is write-only")
 
 
 class mavudpin_multi(mavutil.mavfile):
